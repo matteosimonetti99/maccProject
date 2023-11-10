@@ -1,0 +1,25 @@
+<!--THIS IS USELESS BY NOW-->
+
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    app:startDestination="@id/loginDestination">
+
+    <composable name="loginDestination" route="login">
+        <!-- Specify the composable for the login screen -->
+        <destination
+            android:id="@+id/loginDestination"
+            android:label="Login" />
+    </composable>
+
+    <composable name="homeDestination" route="home">
+        <!-- Specify the composable for the home screen -->
+        <argument
+            android:name="token"
+            app:argType="string" />
+
+        <destination
+            android:id="@+id/homeDestination"
+            android:label="Home" />
+    </composable>
+</navigation>
