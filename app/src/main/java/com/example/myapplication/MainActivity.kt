@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.absoluteOffset
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -22,6 +23,7 @@ import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.Card
 import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
+import androidx.compose.material.Snackbar
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.compose.material.TextField
@@ -75,7 +77,11 @@ class MainActivity : ComponentActivity() {
                         val token = backStackEntry.arguments?.getString("token") ?: ""
 
                         // Pass the token to the HomePage
-                        HomePage(token)
+                        HomePage(token, navController)
+                    }
+                    composable("registerDestination") {
+                        // Implement your RegisterPage composable here
+                        RegisterPage(navController)
                     }
                 }
             }
@@ -91,6 +97,7 @@ fun LoginPage(navController: NavHostController) {
 
     // Dichiarazione della variabile di stato per tracciare l'autenticazione
     var savedToken by remember { mutableStateOf("") }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
 
     MaterialTheme(
         typography = Typography(),
@@ -118,6 +125,13 @@ fun LoginPage(navController: NavHostController) {
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Center
                     ) {
+                        if (errorMessage != null) {
+                            Utility.ErrorSnackbar(errorMessage = errorMessage)
+                            Spacer(modifier = Modifier.height(16.dp))
+                        }
+
+
+
                         // Display a "Login" title with custom typography
                         Text(
                             text = "Login",
@@ -149,6 +163,7 @@ fun LoginPage(navController: NavHostController) {
                         // Create a "Login" button with a custom primary color
                         Button(
                             onClick = {
+                                errorMessage = null
                                 LoginBackend.login(username, password) { token ->
                                     if (token != null) {
                                         Log.d("mytag", "ho il token!")
@@ -163,15 +178,37 @@ fun LoginPage(navController: NavHostController) {
                                         }
                                     } else {
                                         Log.d("mytag", "NON ho il token!")
+                                        errorMessage = "Login failed. Please check your credentials."
                                     }
                                 }
                             },
                             modifier = Modifier.fillMaxWidth(),
-                            colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFF1976D2)) // Custom primary color
+                            colors = ButtonDefaults.buttonColors(backgroundColor = Utility.bootstrapBlue) // Custom primary color
                         ) {
                             Text("Login")
                         }
+
+                        Spacer(modifier = Modifier.height(64.dp))
+
+                        Text(
+                            text = "Are you new here?",
+                            modifier = Modifier.padding(top = 16.dp)
+                        )
+
+                        // Create a "Register" button
+                        Button(
+                            onClick = {
+                                navController.navigate("registerDestination")
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = ButtonDefaults.buttonColors(backgroundColor = Utility.bootstrapSecondary) // Custom color for registration button
+                        ) {
+                            Text("Register")
+                        }
+
+
                     }
+
                 }
             }
         }
@@ -181,7 +218,7 @@ fun LoginPage(navController: NavHostController) {
 
 
 @Composable
-fun HomePage(token: String) {
+fun HomePage(token: String, navController: NavHostController) {
     // Utilizza un Surface per contenere il contenuto della home page
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -254,6 +291,136 @@ fun HomePage(token: String) {
                         color = Color(0xFFE0E0E0)
                     )
                 }
+            }
+        }
+    }
+}
+
+
+@Composable
+fun RegisterPage(navController: NavHostController) {
+    // Define mutable state variables to hold registration details
+    var email by remember { mutableStateOf("") }
+    var name by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
+    var confirmPassword by remember { mutableStateOf("") }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
+
+    // Create a Box with a custom background color
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color(0xFFE0E0E0)) // Custom background color
+    ) {
+        // Create a Card with elevation and rounded corners
+        Card(
+            modifier = Modifier
+                .padding(16.dp)
+                .fillMaxWidth()
+                .padding(16.dp)
+                .clip(RoundedCornerShape(16.dp)),
+            elevation = 8.dp
+        ) {
+            // Create a Column layout for the content
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                // Display error message as a Snackbar
+                errorMessage?.let {
+                    Utility.ErrorSnackbar(errorMessage = errorMessage)
+                    Spacer(modifier = Modifier.height(16.dp))
+                }
+
+                // Display a "Register" title with custom typography
+                Text(
+                    text = "Register",
+                    style = MaterialTheme.typography.h4,
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+
+                // Create input fields for registration details
+                TextField(
+                    value = email,
+                    onValueChange = { email = it },
+                    label = { Text("Email") },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 16.dp)
+                )
+
+                TextField(
+                    value = name,
+                    onValueChange = { name = it },
+                    label = { Text("Name") },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 16.dp)
+                )
+
+                TextField(
+                    value = password,
+                    onValueChange = { password = it },
+                    label = { Text("Password") },
+                    visualTransformation = PasswordVisualTransformation(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 16.dp)
+                )
+
+                TextField(
+                    value = confirmPassword,
+                    onValueChange = { confirmPassword = it },
+                    label = { Text("Confirm Password") },
+                    visualTransformation = PasswordVisualTransformation(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 16.dp)
+                )
+
+                // Create a "Register" button with a custom color
+                Button(
+                    onClick = {
+                        errorMessage = null
+                        if (password == confirmPassword) {
+                            // Call the registration logic (replace with your actual registration logic)
+                            RegistrationBackend.register(email, name, password) { token ->
+                                if (token != null) {
+                                    // Navigate to the home destination after successful registration
+                                    MainScope().launch {
+                                        navController.navigate("homeDestination/$token")
+                                    }
+                                } else {
+                                    errorMessage = "Have you inserted a valid email? If you are already registered go back to login"
+                                }
+                            }
+                        } else {
+                            errorMessage = "Passwords do not match."
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(backgroundColor = Utility.bootstrapBlue) // Custom color for the button
+                ) {
+                    Text("Register")
+                }
+                Spacer(modifier = Modifier.height(64.dp))
+
+                Button(
+                    onClick = {
+                        // Navigate back to the login page
+                        navController.popBackStack("loginDestination", inclusive = false)
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 16.dp),
+                    colors = ButtonDefaults.buttonColors(backgroundColor = Utility.bootstrapSecondary)
+                ) {
+                    Text("Back to Login")
+                }
+
             }
         }
     }
