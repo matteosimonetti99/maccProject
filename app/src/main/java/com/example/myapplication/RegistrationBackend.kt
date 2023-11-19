@@ -9,7 +9,7 @@ import java.io.IOException
 
 object RegistrationBackend {
 
-    private const val BASE_LOGIN_URL = "https://maccproject.pythonanywhere.com/register"
+    private const val BASE_REGISTER_URL = "https://maccproject.pythonanywhere.com/register"
 
     // Funzione per effettuare registrazione e ottenere un token
     fun register(username: String, name: String, password: String, onResult: (String?) -> Unit) {
@@ -30,7 +30,7 @@ object RegistrationBackend {
         val requestBody = json.toString().toRequestBody(mediaType)
 
         val request = Request.Builder()
-            .url(BASE_LOGIN_URL)
+            .url(BASE_REGISTER_URL)
             .post(requestBody)
             .build()
 

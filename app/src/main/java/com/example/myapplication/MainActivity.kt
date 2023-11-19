@@ -2,6 +2,9 @@
 package com.example.myapplication
 
 // Other necessary imports
+import Event
+import EventsBackend
+import LoginBackend
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
@@ -11,27 +14,30 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.absoluteOffset
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.BottomNavigation
+import androidx.compose.material.BottomNavigationItem
 import androidx.compose.material.Button
 import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.Card
 import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Snackbar
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.compose.material.TextField
 import androidx.compose.material.TopAppBar
 import androidx.compose.material.Typography
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Home
+import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.Event
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -64,7 +70,7 @@ class MainActivity : ComponentActivity() {
                 NavHost(
                     navController = navController,
                     startDestination = "loginDestination"
-                ) {
+                ){
                     composable("loginDestination") {
                         // Pass the NavController to the LoginPage
                         LoginPage(navController)
@@ -83,6 +89,93 @@ class MainActivity : ComponentActivity() {
                         // Implement your RegisterPage composable here
                         RegisterPage(navController)
                     }
+                    composable("mapsDestination") {
+//                        MapPage(navController)
+                    }
+                    composable("profileDestination") {
+//                        ProfilePage(navController)
+                    }
+                    composable("settingsDestination") {
+//                        SettingsPage(navController)
+                    }
+                }
+
+                // Set up the BottomNavigation
+                BottomNavigation(
+                    modifier = Modifier.fillMaxWidth(),
+                    backgroundColor = Color.White
+                ) {
+                    // Home Page
+                    BottomNavigationItem(
+                        selected = navController.currentDestination?.route == "home",
+                        onClick = {
+//                            TODO: importare token e far sì che venga passato
+//                            navController.navigate("homeDestination/$token")
+                        },
+                        icon = {
+                            Icon(
+                                imageVector = Icons.Default.Home,
+                                contentDescription = "Home"
+                            )
+                        },
+                        label = {
+                            Text(text = "Home")
+                        }
+                    )
+
+                    // Events Page
+                    BottomNavigationItem(
+                        selected = navController.currentDestination?.route == "events",
+                        onClick = {
+//                            TODO: importare token e far sì che venga passato
+//                            navController.navigate("mapsDestination")
+                        },
+                        icon = {
+                            Icon(
+                                imageVector = Icons.Default.Event,
+                                contentDescription = "Events"
+                            )
+                        },
+                        label = {
+                            Text(text = "Events")
+                        }
+                    )
+
+                    // Profile Page
+                    BottomNavigationItem(
+                        selected = navController.currentDestination?.route == "profile",
+                        onClick = {
+//                            TODO: importare token e far sì che venga passato
+//                            navController.navigate("profileDestination")
+                        },
+                        icon = {
+                            Icon(
+                                imageVector = Icons.Default.AccountCircle,
+                                contentDescription = "Profile"
+                            )
+                        },
+                        label = {
+                            Text(text = "Profile")
+                        }
+                    )
+
+                    // Settings Page
+                    BottomNavigationItem(
+                        selected = navController.currentDestination?.route == "settings",
+                        onClick = {
+//                            TODO: importare token e far sì che venga passato
+//                            navController.navigate("settingsDestination")
+                        },
+                        icon = {
+                            Icon(
+                                imageVector = Icons.Default.Settings,
+                                contentDescription = "Settings"
+                            )
+                        },
+                        label = {
+                            Text(text = "Settings")
+                        }
+                    )
                 }
             }
         }
@@ -106,7 +199,7 @@ fun LoginPage(navController: NavHostController) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(Color(0xFFE0E0E0)) // Custom background color
+                    .background(Utility.bootstrapLight) // Custom background color
             ) {
                 // Create a Card with elevation and rounded corners
                 Card(
@@ -115,7 +208,8 @@ fun LoginPage(navController: NavHostController) {
                         .fillMaxWidth()
                         .padding(16.dp)
                         .clip(RoundedCornerShape(16.dp)),
-                    elevation = 8.dp
+                    elevation = 8.dp,
+                    backgroundColor = Color.White
                 ) {
                     // Create a Column layout for the content
                     Column(
@@ -129,8 +223,6 @@ fun LoginPage(navController: NavHostController) {
                             Utility.ErrorSnackbar(errorMessage = errorMessage)
                             Spacer(modifier = Modifier.height(16.dp))
                         }
-
-
 
                         // Display a "Login" title with custom typography
                         Text(
@@ -205,10 +297,7 @@ fun LoginPage(navController: NavHostController) {
                         ) {
                             Text("Register")
                         }
-
-
                     }
-
                 }
             }
         }
@@ -216,15 +305,32 @@ fun LoginPage(navController: NavHostController) {
 }
 
 
-
 @Composable
 fun HomePage(token: String, navController: NavHostController) {
-    // Utilizza un Surface per contenere il contenuto della home page
+    // Define mutable state variable to hold events data
+    var events by remember { mutableStateOf<List<Event>>(emptyList()) }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
+
+    // Fetch events data from the backend using the provided token
+    LaunchedEffect(token) {
+        // Make a network request to fetch events data
+        // Replace this with your actual API call to retrieve events
+        EventsBackend.fetchEvents(token) { result ->
+            result.onSuccess { eventsData ->
+                events = eventsData
+            }
+            result.onFailure { error ->
+                errorMessage = "Failed to fetch events: ${error.localizedMessage}"
+            }
+        }
+    }
+
+    // Utilize a Surface to contain the content of the home page
     Surface(
         modifier = Modifier.fillMaxSize(),
-        color = Color(0xFF607D8B) // A darker shade of blue-gray
+        color = Utility.bootstrapDark // A darker shade of blue-gray
     ) {
-        // Utilizza Column per organizzare il contenuto in una colonna
+        // Utilize Column to organize the content in a column
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -232,70 +338,90 @@ fun HomePage(token: String, navController: NavHostController) {
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Utilizza TopAppBar per una barra superiore stilizzata
+            // Utilize TopAppBar for a stylized top bar
             TopAppBar(
                 title = {
                     Text(
                         text = "Home Page",
                         style = MaterialTheme.typography.h6,
-                        color = Color(0xFFE0E0E0)
+                        color = Color.White
                     )
                 },
-                backgroundColor = Color(0xFF455A64) // A darker shade of blue-gray
+                backgroundColor = Utility.bootstrapSecondary // A darker shade of blue-gray
             )
 
-            // Aggiunge uno spazio
+            // Add spacing
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Utilizza una Card per un contenitore stilizzato
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                elevation = 8.dp,
-                backgroundColor = Color(0xFF78909C) // A lighter shade of blue-gray
-            ) {
-                // Aggiunge il contenuto della Card
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    verticalArrangement = Arrangement.Center,
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    // Utilizza un'icona Material Design
-                    Icon(
-                        imageVector = Icons.Rounded.Home,
-                        contentDescription = "Home",
-                        modifier = Modifier.size(48.dp),
-                        tint = Color(0xFFE0E0E0)
-                    )
+            // Display error message as a Snackbar
+            errorMessage?.let {
+                Utility.ErrorSnackbar(errorMessage = errorMessage)
+                Spacer(modifier = Modifier.height(16.dp))
+            }
 
-                    // Aggiunge spaziatura
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    // Aggiunge testo di benvenuto
-                    Text(
-                        text = "Welcome to the Home Page!",
-                        style = MaterialTheme.typography.body1,
-                        color = Color(0xFFE0E0E0)
-                    )
-
-                    // Aggiunge spaziatura
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    // Visualizza il token
-                    Text(
-                        text = "Token: $token",
-                        style = MaterialTheme.typography.body2,
-                        color = Color(0xFFE0E0E0)
-                    )
+            // Display events in a list
+            if (events.isNotEmpty()) {
+                Column {
+                    events.forEach { event ->
+                        EventCard(event = event)
+                        Spacer(modifier = Modifier.height(8.dp))
+                    }
                 }
+            } else {
+                Text(
+                    text = "No events available.",
+                    style = MaterialTheme.typography.body1,
+                    color = Color.White
+                )
             }
         }
     }
 }
 
+@Composable
+fun EventCard(event: Event) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(8.dp),
+        elevation = 8.dp,
+        backgroundColor = Utility.bootstrapInfo // A lighter shade of blue-gray
+    ) {
+        // Add content to the card
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            // Display event details
+            Text(
+                text = "Event: ${event.name}",
+                style = MaterialTheme.typography.body1,
+                color = Color.White
+            )
+
+            Text(
+                text = "Location: ${event.location}",
+                style = MaterialTheme.typography.body1,
+                color = Color.White
+            )
+
+            Text(
+                text = "Date: ${event.date}",
+                style = MaterialTheme.typography.body1,
+                color = Color.White
+            )
+
+            Text(
+                text = "Organizer: ${event.organizerName}",
+                style = MaterialTheme.typography.body1,
+                color = Color.White
+            )
+        }
+    }
+}
 
 @Composable
 fun RegisterPage(navController: NavHostController) {
@@ -310,7 +436,7 @@ fun RegisterPage(navController: NavHostController) {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFE0E0E0)) // Custom background color
+            .background(Utility.bootstrapLight) // Custom background color
     ) {
         // Create a Card with elevation and rounded corners
         Card(
@@ -319,7 +445,8 @@ fun RegisterPage(navController: NavHostController) {
                 .fillMaxWidth()
                 .padding(16.dp)
                 .clip(RoundedCornerShape(16.dp)),
-            elevation = 8.dp
+            elevation = 8.dp,
+            backgroundColor = Color.White
         ) {
             // Create a Column layout for the content
             Column(
@@ -420,7 +547,6 @@ fun RegisterPage(navController: NavHostController) {
                 ) {
                     Text("Back to Login")
                 }
-
             }
         }
     }
