@@ -65,119 +65,129 @@ class MainActivity : ComponentActivity() {
             MaterialTheme {
                 // Create a NavController
                 val navController = rememberNavController()
+                var showBottomNavigation by remember { mutableStateOf(true) }
 
-                // Set up the NavHost with the NavController and navigation graph
-                NavHost(
-                    navController = navController,
-                    startDestination = "loginDestination"
-                ){
-                    composable("loginDestination") {
-                        // Pass the NavController to the LoginPage
-                        LoginPage(navController)
-                    }
-                    composable(
-                        "homeDestination/{token}",
-                        arguments = listOf(navArgument("token") { type = NavType.StringType })
-                    ) { backStackEntry ->
-                        // Retrieve the token from the arguments
-                        val token = backStackEntry.arguments?.getString("token") ?: ""
-
-                        // Pass the token to the HomePage
-                        HomePage(token, navController)
-                    }
-                    composable("registerDestination") {
-                        // Implement your RegisterPage composable here
-                        RegisterPage(navController)
-                    }
-                    composable("mapsDestination") {
-//                        MapPage(navController)
-                    }
-                    composable("profileDestination") {
-//                        ProfilePage(navController)
-                    }
-                    composable("settingsDestination") {
-//                        SettingsPage(navController)
-                    }
-                }
-
-                // Set up the BottomNavigation
-                BottomNavigation(
-                    modifier = Modifier.fillMaxWidth(),
-                    backgroundColor = Color.White
+                Box(
+                    modifier = Modifier.fillMaxSize()
                 ) {
-                    // Home Page
-                    BottomNavigationItem(
-                        selected = navController.currentDestination?.route == "home",
-                        onClick = {
-//                            TODO: importare token e far sì che venga passato
-//                            navController.navigate("homeDestination/$token")
-                        },
-                        icon = {
-                            Icon(
-                                imageVector = Icons.Default.Home,
-                                contentDescription = "Home"
-                            )
-                        },
-                        label = {
-                            Text(text = "Home")
+                    // Set up the NavHost with the NavController and navigation graph
+                    NavHost(
+                        navController = navController,
+                        startDestination = "loginDestination"
+                    ) {
+                        composable("loginDestination") {
+                            // Pass the NavController to the LoginPage
+                            LoginPage(navController)
+                            showBottomNavigation = false
                         }
-                    )
+                        composable(
+                            "homeDestination/{token}",
+                            arguments = listOf(navArgument("token") { type = NavType.StringType })
+                        ) { backStackEntry ->
+                            // Retrieve the token from the arguments
+                            val token = backStackEntry.arguments?.getString("token") ?: ""
 
-                    // Events Page
-                    BottomNavigationItem(
-                        selected = navController.currentDestination?.route == "events",
-                        onClick = {
-//                            TODO: importare token e far sì che venga passato
-//                            navController.navigate("mapsDestination")
-                        },
-                        icon = {
-                            Icon(
-                                imageVector = Icons.Default.Event,
-                                contentDescription = "Events"
-                            )
-                        },
-                        label = {
-                            Text(text = "Events")
+                            // Pass the token to the HomePage
+                            HomePage(token, navController)
+                            showBottomNavigation = true
                         }
-                    )
+                        composable("registerDestination") {
+                            // Implement your RegisterPage composable here
+                            RegisterPage(navController)
+                            showBottomNavigation = false
 
-                    // Profile Page
-                    BottomNavigationItem(
-                        selected = navController.currentDestination?.route == "profile",
-                        onClick = {
-//                            TODO: importare token e far sì che venga passato
-//                            navController.navigate("profileDestination")
-                        },
-                        icon = {
-                            Icon(
-                                imageVector = Icons.Default.AccountCircle,
-                                contentDescription = "Profile"
-                            )
-                        },
-                        label = {
-                            Text(text = "Profile")
                         }
-                    )
+                        composable("mapsDestination") {
+                            //                        MapPage(navController)
+                        }
+                        composable("profileDestination") {
+                            //                        ProfilePage(navController)
+                        }
+                        composable("settingsDestination") {
+                            //                        SettingsPage(navController)
+                        }
+                    }
 
-                    // Settings Page
-                    BottomNavigationItem(
-                        selected = navController.currentDestination?.route == "settings",
-                        onClick = {
-//                            TODO: importare token e far sì che venga passato
-//                            navController.navigate("settingsDestination")
-                        },
-                        icon = {
-                            Icon(
-                                imageVector = Icons.Default.Settings,
-                                contentDescription = "Settings"
-                            )
-                        },
-                        label = {
-                            Text(text = "Settings")
-                        }
-                    )
+                    // Set up the BottomNavigation
+                    if (showBottomNavigation) BottomNavigation(
+                        modifier = Modifier.fillMaxWidth().align(Alignment.BottomCenter),
+                        backgroundColor = Color.White
+                    ) {
+                        // Home Page
+                        BottomNavigationItem(
+                            selected = navController.currentDestination?.route == "home",
+                            onClick = {
+                                //                            TODO: importare token e far sì che venga passato
+                                //                            navController.navigate("homeDestination/$token")
+                            },
+                            icon = {
+                                Icon(
+                                    imageVector = Icons.Default.Home,
+                                    contentDescription = "Home"
+                                )
+                            },
+                            label = {
+                                Text(text = "Home")
+                            }
+                        )
+
+                        // Events Page
+                        BottomNavigationItem(
+                            selected = navController.currentDestination?.route == "events",
+                            onClick = {
+                                //                            TODO: importare token e far sì che venga passato
+                                //                            navController.navigate("mapsDestination")
+                            },
+                            icon = {
+                                Icon(
+                                    imageVector = Icons.Default.Event,
+                                    contentDescription = "Events"
+                                )
+                            },
+                            label = {
+                                Text(text = "Events")
+                            }
+                        )
+
+                        // Profile Page
+                        BottomNavigationItem(
+                            selected = navController.currentDestination?.route == "profile",
+                            onClick = {
+                                //                            TODO: importare token e far sì che venga passato
+                                //                            navController.navigate("profileDestination")
+                            },
+                            icon = {
+                                Icon(
+                                    imageVector = Icons.Default.AccountCircle,
+                                    contentDescription = "Profile"
+                                )
+                            },
+                            label = {
+                                Text(text = "Profile")
+                            }
+                        )
+
+                        // Settings Page
+                        BottomNavigationItem(
+                            selected = navController.currentDestination?.route == "settings",
+                            onClick = {
+                                //                            TODO: importare token e far sì che venga passato
+                                //                            navController.navigate("settingsDestination")
+                            },
+                            icon = {
+                                Icon(
+                                    imageVector = Icons.Default.Settings,
+                                    contentDescription = "Settings"
+                                )
+                            },
+                            label = {
+                                Text(text = "Settings")
+                            }
+                        )
+                    }
                 }
             }
+
         }
     }
 }
