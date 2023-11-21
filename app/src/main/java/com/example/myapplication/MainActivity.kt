@@ -10,6 +10,7 @@ import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -35,12 +36,14 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Event
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -91,6 +94,21 @@ class MainActivity : ComponentActivity() {
                             HomePage(token, navController)
                             showBottomNavigation = true
                         }
+                        composable(
+                            "eventDetail/{token}/{id}",
+                            arguments = listOf(
+                                navArgument("token") { type = NavType.StringType },
+                                navArgument("id") { type = NavType.IntType }
+                            )
+                        ) { backStackEntry ->
+                            // Retrieve the token from the arguments
+                            val token = backStackEntry.arguments?.getString("token") ?: ""
+                            val id = backStackEntry.arguments?.getInt("id") ?: 0
+
+                            // Pass the token to the HomePage
+                            eventDetail(token, navController, id)
+                            showBottomNavigation = true
+                        }
                         composable("registerDestination") {
                             // Implement your RegisterPage composable here
                             RegisterPage(navController)
@@ -131,17 +149,17 @@ class MainActivity : ComponentActivity() {
                             }
                         )
 
-                        // Events Page
+                        // Map Page
                         BottomNavigationItem(
-                            selected = navController.currentDestination?.route == "events",
+                            selected = navController.currentDestination?.route == "map",
                             onClick = {
                                 //                            TODO: importare token e far sì che venga passato
                                 //                            navController.navigate("mapsDestination")
                             },
                             icon = {
                                 Icon(
-                                    imageVector = Icons.Default.Event,
-                                    contentDescription = "Events"
+                                    imageVector = Icons.Default.Map,
+                                    contentDescription = "Map"
                                 )
                             },
                             label = {
@@ -373,7 +391,11 @@ fun HomePage(token: String, navController: NavHostController) {
             if (events.isNotEmpty()) {
                 Column {
                     events.forEach { event ->
-                        EventCard(event = event)
+                        var id = event.id
+                        EventCard(
+                            event = event,
+                            onClick = { navController.navigate("eventDetail/$token/$id") }
+                        )
                         Spacer(modifier = Modifier.height(8.dp))
                     }
                 }
@@ -389,10 +411,11 @@ fun HomePage(token: String, navController: NavHostController) {
 }
 
 @Composable
-fun EventCard(event: Event) {
+fun EventCard(event: Event, onClick: () -> Unit) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
+            .clickable { onClick() }
             .padding(8.dp),
         elevation = 8.dp,
         backgroundColor = Utility.bootstrapInfo // A lighter shade of blue-gray
@@ -559,5 +582,27 @@ fun RegisterPage(navController: NavHostController) {
                 }
             }
         }
+    }
+}
+
+@Composable
+fun eventDetail(token: String, navController: NavHostController, id: Int) {
+    val coroutineScope = rememberCoroutineScope()
+    Column(modifier = Modifier.padding(16.dp)) {
+        /* NON TOCCARE, da finire, Matteo. TODO: prendere dati avendo id evento
+        Text(text = event.title, style = MaterialTheme.typography.h5)
+        Image(painter = rememberImagePainter(data = event.imageUrl), contentDescription = "Event Image")
+        Text(text = event.description, style = MaterialTheme.typography.body1)
+         */
+        Button(onClick = {
+            coroutineScope.launch {
+                //sendApiRequest() TODO: inserire entry in db per richiesta invito
+            }
+            navController.navigate("homeDestination/$token")
+        }) {
+            Text("Request an Invite")
+        }
+        Text(text = "Token: $token")
+        Text(text = "ID: $id")
     }
 }
