@@ -5,11 +5,14 @@ package com.example.myapplication
 import Event
 import EventsBackend
 import LoginBackend
+import android.icu.text.CaseMap.Title
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -35,12 +38,14 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Event
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -54,10 +59,20 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.google.android.gms.maps.model.CameraPosition
+import com.google.android.gms.maps.model.LatLng
+import com.google.maps.android.compose.CameraPositionState
+import com.google.maps.android.compose.GoogleMap
+import com.google.maps.android.compose.MapProperties
+import com.google.maps.android.compose.MapUiSettings
+import com.google.maps.android.compose.Marker
+import com.google.maps.android.compose.MarkerState
+import com.google.maps.android.compose.rememberCameraPositionState
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
@@ -73,7 +88,7 @@ class MainActivity : ComponentActivity() {
                     // Set up the NavHost with the NavController and navigation graph
                     NavHost(
                         navController = navController,
-                        startDestination = "loginDestination"
+                        startDestination = "mapsDestination"
                     ) {
                         composable("loginDestination") {
                             // Pass the NavController to the LoginPage
@@ -91,6 +106,21 @@ class MainActivity : ComponentActivity() {
                             HomePage(token, navController)
                             showBottomNavigation = true
                         }
+                        composable(
+                            "eventDetail/{token}/{id}",
+                            arguments = listOf(
+                                navArgument("token") { type = NavType.StringType },
+                                navArgument("id") { type = NavType.IntType }
+                            )
+                        ) { backStackEntry ->
+                            // Retrieve the token from the arguments
+                            val token = backStackEntry.arguments?.getString("token") ?: ""
+                            val id = backStackEntry.arguments?.getInt("id") ?: 0
+
+                            // Pass the token to the HomePage
+                            eventDetail(token, navController, id)
+                            showBottomNavigation = true
+                        }
                         composable("registerDestination") {
                             // Implement your RegisterPage composable here
                             RegisterPage(navController)
@@ -98,7 +128,8 @@ class MainActivity : ComponentActivity() {
 
                         }
                         composable("mapsDestination") {
-                            //                        MapPage(navController)
+                            ComposeMap(navController)
+
                         }
                         composable("profileDestination") {
                             //                        ProfilePage(navController)
@@ -110,7 +141,9 @@ class MainActivity : ComponentActivity() {
 
                     // Set up the BottomNavigation
                     if (showBottomNavigation) BottomNavigation(
-                        modifier = Modifier.fillMaxWidth().align(Alignment.BottomCenter),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .align(Alignment.BottomCenter),
                         backgroundColor = Color.White
                     ) {
                         // Home Page
@@ -131,17 +164,17 @@ class MainActivity : ComponentActivity() {
                             }
                         )
 
-                        // Events Page
+                        // Map Page
                         BottomNavigationItem(
-                            selected = navController.currentDestination?.route == "events",
+                            selected = navController.currentDestination?.route == "map",
                             onClick = {
                                 //                            TODO: importare token e far sì che venga passato
                                 //                            navController.navigate("mapsDestination")
                             },
                             icon = {
                                 Icon(
-                                    imageVector = Icons.Default.Event,
-                                    contentDescription = "Events"
+                                    imageVector = Icons.Default.Map,
+                                    contentDescription = "Map"
                                 )
                             },
                             label = {
@@ -191,9 +224,44 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
+@Composable
+fun ComposeMap(navController: NavHostController) {
+    val singapore = LatLng(1.35541170530446808,103.864542)
+    val cameraPositionState = rememberCameraPositionState{
+        position = CameraPosition.fromLatLngZoom(singapore, 8f)
+    }
 
+    val mapUiSettings = MapUiSettings (
+        mapToolbarEnabled = false,
+        zoomControlsEnabled = false,
+        zoomGesturesEnabled = true
+    )
+    val mapProperties = MapProperties (
+        maxZoomPreference =  12.0f,
+        minZoomPreference = 8f
+    )
+
+
+    GoogleMap (
+        modifier = Modifier.fillMaxSize(),
+        cameraPositionState = cameraPositionState,
+        uiSettings = mapUiSettings,
+        properties = mapProperties
+    ) {
+        Marker(
+            state = MarkerState(position = singapore),
+            title = "Singapore",
+            snippet = "test marker",
+            onInfoWindowClick = { /*code for on click*/ }
+
+            //draggable is a parameter
+            //icon = BitmapDescriptionFactory.defaultMarker(BitmapDescriptionFactory.HUE_ORANGE)
+        )
+    }
+}
 @Composable
 fun LoginPage(navController: NavHostController) {
+
     // Define two mutable state variables to hold username and password
     var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -280,7 +348,8 @@ fun LoginPage(navController: NavHostController) {
                                         }
                                     } else {
                                         Log.d("mytag", "NON ho il token!")
-                                        errorMessage = "Login failed. Please check your credentials."
+                                        errorMessage =
+                                            "Login failed. Please check your credentials."
                                     }
                                 }
                             },
@@ -313,8 +382,6 @@ fun LoginPage(navController: NavHostController) {
         }
     )
 }
-
-
 @Composable
 fun HomePage(token: String, navController: NavHostController) {
     // Define mutable state variable to hold events data
@@ -373,7 +440,11 @@ fun HomePage(token: String, navController: NavHostController) {
             if (events.isNotEmpty()) {
                 Column {
                     events.forEach { event ->
-                        EventCard(event = event)
+                        var id = event.id
+                        EventCard(
+                            event = event,
+                            onClick = { navController.navigate("eventDetail/$token/$id") }
+                        )
                         Spacer(modifier = Modifier.height(8.dp))
                     }
                 }
@@ -389,10 +460,11 @@ fun HomePage(token: String, navController: NavHostController) {
 }
 
 @Composable
-fun EventCard(event: Event) {
+fun EventCard(event: Event, onClick: () -> Unit) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
+            .clickable { onClick() }
             .padding(8.dp),
         elevation = 8.dp,
         backgroundColor = Utility.bootstrapInfo // A lighter shade of blue-gray
@@ -559,5 +631,27 @@ fun RegisterPage(navController: NavHostController) {
                 }
             }
         }
+    }
+}
+
+@Composable
+fun eventDetail(token: String, navController: NavHostController, id: Int) {
+    val coroutineScope = rememberCoroutineScope()
+    Column(modifier = Modifier.padding(16.dp)) {
+        /* NON TOCCARE, da finire, Matteo. TODO: prendere dati avendo id evento
+        Text(text = event.title, style = MaterialTheme.typography.h5)
+        Image(painter = rememberImagePainter(data = event.imageUrl), contentDescription = "Event Image")
+        Text(text = event.description, style = MaterialTheme.typography.body1)
+         */
+        Button(onClick = {
+            coroutineScope.launch {
+                //sendApiRequest() TODO: inserire entry in db per richiesta invito
+            }
+            navController.navigate("homeDestination/$token")
+        }) {
+            Text("Request an Invite")
+        }
+        Text(text = "Token: $token")
+        Text(text = "ID: $id")
     }
 }
