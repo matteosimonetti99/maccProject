@@ -11,12 +11,14 @@ import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -39,6 +41,7 @@ import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Event
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Map
+import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -51,6 +54,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
@@ -95,21 +101,15 @@ class MainActivity : ComponentActivity() {
                             LoginPage(navController)
                             showBottomNavigation = false
                         }
-                        composable(
-                            "homeDestination/{token}",
-                            arguments = listOf(navArgument("token") { type = NavType.StringType })
-                        ) { backStackEntry ->
-                            // Retrieve the token from the arguments
-                            val token = backStackEntry.arguments?.getString("token") ?: ""
+                        composable("homeDestination") { backStackEntry ->
 
                             // Pass the token to the HomePage
-                            HomePage(token, navController)
+                            HomePage(navController)
                             showBottomNavigation = true
                         }
                         composable(
-                            "eventDetail/{token}/{id}",
+                            "eventDetail/{id}",
                             arguments = listOf(
-                                navArgument("token") { type = NavType.StringType },
                                 navArgument("id") { type = NavType.IntType }
                             )
                         ) { backStackEntry ->
@@ -118,7 +118,7 @@ class MainActivity : ComponentActivity() {
                             val id = backStackEntry.arguments?.getInt("id") ?: 0
 
                             // Pass the token to the HomePage
-                            eventDetail(token, navController, id)
+                            eventDetail(navController, id)
                             showBottomNavigation = true
                         }
                         composable("registerDestination") {
@@ -150,8 +150,7 @@ class MainActivity : ComponentActivity() {
                         BottomNavigationItem(
                             selected = navController.currentDestination?.route == "home",
                             onClick = {
-                                //                            TODO: importare token e far sì che venga passato
-                                //                            navController.navigate("homeDestination/$token")
+                               navController.navigate("homeDestination")
                             },
                             icon = {
                                 Icon(
@@ -173,12 +172,12 @@ class MainActivity : ComponentActivity() {
                             },
                             icon = {
                                 Icon(
-                                    imageVector = Icons.Default.Map,
+                                    imageVector = Icons.Default.Place,
                                     contentDescription = "Map"
                                 )
                             },
                             label = {
-                                Text(text = "Events")
+                                Text(text = "Map")
                             }
                         )
 
@@ -302,13 +301,16 @@ fun LoginPage(navController: NavHostController) {
 
                         Button(
                             onClick = {
-                                navController.navigate("homeDestination/47358c79536a33cc29477bc094cf79fed4ec6ac242b37e88c34b906679c307b2")
+                                TokenHolder.token = "47358c79536a33cc29477bc094cf79fed4ec6ac242b37e88c34b906679c307b2"
+                                navController.navigate("homeDestination")
                             },
                             modifier = Modifier.fillMaxWidth(),
                             colors = ButtonDefaults.buttonColors(backgroundColor = Utility.bootstrapBlue) // Custom primary color
                         ) {
                             Text("SKIP login")
                         }
+
+                        //DA RIMUOVERE SOPRA
 
                         if (errorMessage != null) {
                             Utility.ErrorSnackbar(errorMessage = errorMessage)
@@ -357,7 +359,8 @@ fun LoginPage(navController: NavHostController) {
                                         // Use the MainScope to navigate on the main thread
                                         MainScope().launch {
                                             // Navigate to the home destination with the obtained token
-                                            navController.navigate("homeDestination/$token")
+                                            TokenHolder.token = token
+                                            navController.navigate("homeDestination")
                                         }
                                     } else {
                                         Log.d("mytag", "NON ho il token!")
@@ -369,7 +372,10 @@ fun LoginPage(navController: NavHostController) {
                             modifier = Modifier.fillMaxWidth(),
                             colors = ButtonDefaults.buttonColors(backgroundColor = Utility.bootstrapBlue) // Custom primary color
                         ) {
-                            Text("Login")
+                            Text(
+                                text = "Login",
+                                color = Color.White // Set the text color to white
+                            )
                         }
 
                         Spacer(modifier = Modifier.height(64.dp))
@@ -387,7 +393,10 @@ fun LoginPage(navController: NavHostController) {
                             modifier = Modifier.fillMaxWidth(),
                             colors = ButtonDefaults.buttonColors(backgroundColor = Utility.bootstrapSecondary) // Custom color for registration button
                         ) {
-                            Text("Register")
+                            Text(
+                                text = "Register",
+                                color = Color.White // Set the text color to white
+                            )
                         }
                     }
                 }
@@ -396,10 +405,12 @@ fun LoginPage(navController: NavHostController) {
     )
 }
 @Composable
-fun HomePage(token: String, navController: NavHostController) {
+fun HomePage(navController: NavHostController) {
     // Define mutable state variable to hold events data
     var events by remember { mutableStateOf<List<Event>>(emptyList()) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
+    var token = TokenHolder.token
+
 
     // Fetch events data from the backend using the provided token
     LaunchedEffect(token) {
@@ -456,7 +467,7 @@ fun HomePage(token: String, navController: NavHostController) {
                         var id = event.id
                         EventCard(
                             event = event,
-                            onClick = { navController.navigate("eventDetail/$token/$id") }
+                            onClick = { navController.navigate("eventDetail/$id") }
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                     }
@@ -498,7 +509,7 @@ fun EventCard(event: Event, onClick: () -> Unit) {
             )
 
             Text(
-                text = "Location: ${event.location}",
+                text = "Location: ${event.longitude} ${event.latitude}",
                 style = MaterialTheme.typography.body1,
                 color = Color.White
             )
@@ -613,7 +624,8 @@ fun RegisterPage(navController: NavHostController) {
                                 if (token != null) {
                                     // Navigate to the home destination after successful registration
                                     MainScope().launch {
-                                        navController.navigate("homeDestination/$token")
+                                        TokenHolder.token = token
+                                        navController.navigate("homeDestination")
                                     }
                                 } else {
                                     errorMessage = "Have you inserted a valid email? If you are already registered go back to login"
@@ -648,23 +660,89 @@ fun RegisterPage(navController: NavHostController) {
 }
 
 @Composable
-fun eventDetail(token: String, navController: NavHostController, id: Int) {
+fun eventDetail(navController: NavHostController, id: Int) {
+    var token = TokenHolder.token
+    var event by remember { mutableStateOf(Event(0, "", 0.0, 0.0, "", "", "", null)) }
     val coroutineScope = rememberCoroutineScope()
-    Column(modifier = Modifier.padding(16.dp)) {
-        /* NON TOCCARE, da finire, Matteo. TODO: prendere dati avendo id evento
-        Text(text = event.title, style = MaterialTheme.typography.h5)
-        Image(painter = rememberImagePainter(data = event.imageUrl), contentDescription = "Event Image")
-        Text(text = event.description, style = MaterialTheme.typography.body1)
-         */
-        Button(onClick = {
-            coroutineScope.launch {
-                //sendApiRequest() TODO: inserire entry in db per richiesta invito
+    var errorMessage by remember { mutableStateOf<String?>(null) }
+
+
+    // Fetch events data from the backend using the provided token
+    LaunchedEffect(token) {
+        // Make a network request to fetch event details
+        EventDetailsBackend.fetchEventDetails(token, id) { result ->
+            result.onSuccess { eventData ->
+                event = eventData
             }
-            navController.navigate("homeDestination/$token")
-        }) {
-            Text("Request an Invite")
+            result.onFailure { error ->
+                errorMessage = "Failed to fetch event details: ${error.localizedMessage}"
+            }
         }
-        Text(text = "Token: $token")
-        Text(text = "ID: $id")
+    }
+
+
+    // Utilize a Surface to contain the content of the home page
+    Surface(
+        modifier = Modifier.fillMaxSize(),
+        color = Utility.bootstrapDark // A darker shade of blue-gray
+    ) {
+        // Utilize Column to organize the content in a column
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+
+            // Utilize TopAppBar for a stylized top bar
+            TopAppBar(
+                title = {
+                    Text(
+                        text = "Event name",
+                        style = MaterialTheme.typography.h6,
+                        color = Color.White
+                    )
+                },
+                backgroundColor = Utility.bootstrapSecondary // A darker shade of blue-gray
+            )
+
+            // Add spacing
+            Spacer(modifier = Modifier.height(16.dp))
+
+
+            if (event.encoded_image != null && event.encoded_image != "") {
+
+                Text(text = event.name, style = MaterialTheme.typography.h5)
+
+                val image = Utility.base64ToBitmap(event.encoded_image)
+
+                Image(
+                    bitmap = image.asImageBitmap(),
+                    contentDescription = "contentDescription"
+                )
+                Text(text = event.description ?: "", style = MaterialTheme.typography.body1)
+                //todo: pulsante deve avere testo in base a stato invito
+            }
+
+            Button(onClick = {
+                coroutineScope.launch {
+                    //sendApiRequest() TODO: inserire entry in db per richiesta invito
+                }
+                navController.navigate("homeDestination")
+            },
+                colors = ButtonDefaults.buttonColors(backgroundColor = Utility.bootstrapBlue) // Change the background color to red
+            ) {
+                Text(
+                    text = "Request an invite",
+                    style = MaterialTheme.typography.h6,
+                    color = Color.White
+                )
+            }
+
+
+
+
+        }
     }
 }
