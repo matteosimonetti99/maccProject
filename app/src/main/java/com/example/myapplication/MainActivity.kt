@@ -247,6 +247,19 @@ fun LoginPage(navController: NavHostController) {
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Center
                     ) {
+
+                        //DA RIMUOVERE
+
+                        Button(
+                            onClick = {
+                                navController.navigate("homeDestination/47358c79536a33cc29477bc094cf79fed4ec6ac242b37e88c34b906679c307b2")
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = ButtonDefaults.buttonColors(backgroundColor = Utility.bootstrapBlue) // Custom primary color
+                        ) {
+                            Text("SKIP login")
+                        }
+
                         if (errorMessage != null) {
                             Utility.ErrorSnackbar(errorMessage = errorMessage)
                             Spacer(modifier = Modifier.height(16.dp))
