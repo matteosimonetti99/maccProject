@@ -44,6 +44,7 @@ android {
 dependencies {
 
     implementation("androidx.core:core-ktx:1.10.1")
+    implementation ("androidx.compose.ui:ui-graphics:1.1.0")
     implementation("androidx.compose.ui:ui:1.4.3")
     implementation("androidx.compose.material:material:1.4.3")
     implementation("androidx.compose.material:material-icons-extended:1.4.3")
