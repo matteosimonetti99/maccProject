@@ -103,7 +103,7 @@ class MainActivity : ComponentActivity() {
                     // Set up the NavHost with the NavController and navigation graph
                     NavHost(
                         navController = navController,
-                        startDestination = "mapsDestination"
+                        startDestination = "loginDestination"
                     ) {
                         composable("loginDestination") {
                             // Pass the NavController to the LoginPage
