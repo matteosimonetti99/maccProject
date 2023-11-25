@@ -5,12 +5,16 @@ package com.example.myapplication
 import Event
 import EventsBackend
 import LoginBackend
+import android.content.res.Resources
+import android.graphics.drawable.Drawable
 import android.icu.text.CaseMap.Title
 import android.os.Bundle
 import android.util.Log
+import android.widget.ImageView
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -51,14 +55,21 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.painter.BitmapPainter
+import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.core.graphics.createBitmap
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.CameraPositionState
@@ -66,6 +77,7 @@ import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.MapProperties
 import com.google.maps.android.compose.MapUiSettings
 import com.google.maps.android.compose.Marker
+import com.google.maps.android.compose.MarkerInfoWindow
 import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.rememberCameraPositionState
 import kotlinx.coroutines.MainScope
@@ -225,6 +237,7 @@ class MainActivity : ComponentActivity() {
     }
 }
 @Composable
+
 fun ComposeMap(navController: NavHostController) {
     val singapore = LatLng(1.35541170530446808,103.864542)
     val cameraPositionState = rememberCameraPositionState{
@@ -248,6 +261,60 @@ fun ComposeMap(navController: NavHostController) {
         uiSettings = mapUiSettings,
         properties = mapProperties
     ) {
+        MarkerInfoWindow (
+            state = MarkerState(position = singapore),
+            //icon = icon,
+        ){
+            marker ->
+            Box(
+                modifier = Modifier.background(
+                color = MaterialTheme.colors.onPrimary,
+                shape = RoundedCornerShape(35.dp,35.dp,35.dp,35.dp),
+            )
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Image(
+                        painter = R.drawable.map,
+                        contentDescription = null,
+                        contentScale = ContentScale.Fit,
+                        modifier = Modifier
+                            .height(80.dp)
+                            .fillMaxWidth(),
+                        )
+                    //.........................Spacer
+                    Spacer(modifier = Modifier.height(24.dp))
+                    //.........................Text: title
+                    Text(
+                        text = "Marker Title",
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier
+                            .padding(top = 10.dp)
+                            .fillMaxWidth(),
+                        style = MaterialTheme.typography.h3,
+                        color = MaterialTheme.colors.primary,
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    //.........................Text : description
+                    Text(
+                        text = "Customizing a marker's info window",
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier
+                            .padding(top = 10.dp, start = 25.dp, end = 25.dp)
+                            .fillMaxWidth(),
+                        style = MaterialTheme.typography.body1,
+                        color = MaterialTheme.colors.primary,
+                    )
+                    //.........................Spacer
+                    Spacer(modifier = Modifier.height(24.dp))
+
+                }
+            }
+            }
+        }
+
         Marker(
             state = MarkerState(position = singapore),
             title = "Singapore",
@@ -257,8 +324,8 @@ fun ComposeMap(navController: NavHostController) {
             //draggable is a parameter
             //icon = BitmapDescriptionFactory.defaultMarker(BitmapDescriptionFactory.HUE_ORANGE)
         )
-    }
 }
+
 @Composable
 fun LoginPage(navController: NavHostController) {
 
