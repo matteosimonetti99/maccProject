@@ -1,9 +1,5 @@
 import android.util.Log
-import okhttp3.Call
-import okhttp3.Callback
-import okhttp3.OkHttpClient
-import okhttp3.Request
-import okhttp3.Response
+import okhttp3.*
 import org.json.JSONArray
 import java.io.IOException
 
@@ -54,17 +50,19 @@ object EventsBackend {
             val event = Event(
                 id = eventObject.optInt("id"),
                 name = eventObject.optString("name"),
-                latitude = eventObject.optDouble("latitude"),  // Assuming latitude is a double value
+                latitude = eventObject.optDouble("latitude"),
                 longitude = eventObject.optDouble("longitude"),
-                date = eventObject.optString("date"),
+                date = eventObject.optString("datetime"),
                 organizerName = eventObject.optString("organizerName"),
-                encoded_image = eventObject.optString("encoded_image"),
-                description = eventObject.optString("description", null) // Assuming description can be null
+                description = eventObject.optString("description"),
+                encoded_image = eventObject.optString("encoded_image")
             )
+
+            Log.d("EventsBackend", "event: $event")
+
             events.add(event)
         }
 
         return events
     }
 }
-

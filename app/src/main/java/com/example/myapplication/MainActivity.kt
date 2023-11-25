@@ -8,7 +8,10 @@ import LoginBackend
 import android.content.res.Resources
 import android.graphics.drawable.Drawable
 import android.icu.text.CaseMap.Title
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.os.Bundle
+import android.util.Base64
 import android.util.Log
 import android.widget.ImageView
 import androidx.activity.ComponentActivity
@@ -20,11 +23,13 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.BottomNavigation
 import androidx.compose.material.BottomNavigationItem
@@ -40,7 +45,6 @@ import androidx.compose.material.TopAppBar
 import androidx.compose.material.Typography
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
-import androidx.compose.material.icons.filled.Event
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.Place
@@ -61,11 +65,13 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.graphics.createBitmap
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -75,7 +81,6 @@ import androidx.navigation.navArgument
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
-import com.google.maps.android.compose.CameraPositionState
 import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.MapProperties
 import com.google.maps.android.compose.MapUiSettings
@@ -503,40 +508,96 @@ fun EventCard(event: Event, onClick: () -> Unit) {
         elevation = 8.dp,
         backgroundColor = Utility.bootstrapInfo // A lighter shade of blue-gray
     ) {
-        // Add content to the card
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
+        // Use Row to create a two-column layout
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            // Display event details
-            Text(
-                text = "Event: ${event.name}",
-                style = MaterialTheme.typography.body1,
-                color = Color.White
-            )
+            // Column for the left side (image and date)
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(8.dp),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                // Decode base64 string to Bitmap
+                val decodedBitmap = decodeBase64ToBitmap(event.encoded_image)
 
-            Text(
-                text = "Location: ${event.longitude} ${event.latitude}",
-                style = MaterialTheme.typography.body1,
-                color = Color.White
-            )
+                // Display event image using Image composable
+                if (decodedBitmap != null) {
+                    Box(
+                        modifier = Modifier
+                            .size(150.dp) // Set the desired size for the image
+                            .clip(shape = RoundedCornerShape(8.dp))
+                    ) {
+                        Image(
+                            bitmap = decodedBitmap.asImageBitmap(),
+                            contentDescription = null,
+                            contentScale = ContentScale.Crop
+                        )
 
-            Text(
-                text = "Date: ${event.date}",
-                style = MaterialTheme.typography.body1,
-                color = Color.White
-            )
+                        // Display date in the upper left corner
+                        Box(
+                            modifier = Modifier
+                                .padding(8.dp)
+                                .background(Color.White, shape = RoundedCornerShape(8.dp))
+                                .padding(4.dp),
+                            contentAlignment = Alignment.CenterStart
+                        ) {
+                            Text(
+                                text = event.date,
+                                style = MaterialTheme.typography.caption,
+                                color = Color.Black,
+                            )
+                        }
+                    }
+                }
+            }
 
-            Text(
-                text = "Organizer: ${event.organizerName}",
-                style = MaterialTheme.typography.body1,
-                color = Color.White
-            )
+            // Column for the right side (event details and permission button)
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(8.dp),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.Start
+            ) {
+                // Display bold and larger event name
+                Text(
+                    text = event.name,
+                    style = MaterialTheme.typography.h5.copy(
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 20.sp
+                    ),
+                    color = Color.White
+                )
+
+
+                Text(
+                    text = "${event.organizerName}",
+                    style = MaterialTheme.typography.body1,
+                    color = Color.White
+                )
+
+                // Button to ask for permission to participate
+                Button(
+                    onClick = {  },
+                    modifier = Modifier
+                        .padding(top = 8.dp)
+                        .background(Color.Black)
+                ) {
+                    Text(text = "Request an invite")
+                }
+            }
         }
     }
+}
+
+// Function to decode base64 string to Bitmap
+fun decodeBase64ToBitmap(encoded_image: String): Bitmap? {
+    val decodedBytes = Base64.decode(encoded_image, Base64.DEFAULT)
+    return BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.size)
 }
 
 @Composable
