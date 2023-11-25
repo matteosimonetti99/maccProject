@@ -61,7 +61,6 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.ui.graphics.painter.Painter
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -177,8 +176,7 @@ class MainActivity : ComponentActivity() {
                         BottomNavigationItem(
                             selected = navController.currentDestination?.route == "map",
                             onClick = {
-                                //                            TODO: importare token e far sì che venga passato
-                                //                            navController.navigate("mapsDestination")
+                                navController.navigate("mapsDestination")
                             },
                             icon = {
                                 Icon(
@@ -234,8 +232,8 @@ class MainActivity : ComponentActivity() {
     }
 }
 @Composable
-
 fun ComposeMap(navController: NavHostController) {
+
     val singapore = LatLng(1.35541170530446808,103.864542)
     val cameraPositionState = rememberCameraPositionState{
         position = CameraPosition.fromLatLngZoom(singapore, 8f)
@@ -251,76 +249,22 @@ fun ComposeMap(navController: NavHostController) {
         minZoomPreference = 8f
     )
 
-
     GoogleMap (
         modifier = Modifier.fillMaxSize(),
         cameraPositionState = cameraPositionState,
         uiSettings = mapUiSettings,
         properties = mapProperties
-    ) {
-        MarkerInfoWindow (
-            state = MarkerState(position = singapore),
-            //icon = icon,
-        ){
-            marker ->
-            Box(
-                modifier = Modifier.background(
-                color = MaterialTheme.colors.onPrimary,
-                shape = RoundedCornerShape(35.dp,35.dp,35.dp,35.dp),
-            )
-            ) {
-                Column(
-                    modifier = Modifier.padding(16.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Image(
-                        painter = R.drawable.map,
-                        contentDescription = null,
-                        contentScale = ContentScale.Fit,
-                        modifier = Modifier
-                            .height(80.dp)
-                            .fillMaxWidth(),
-                        )
-                    //.........................Spacer
-                    Spacer(modifier = Modifier.height(24.dp))
-                    //.........................Text: title
-                    Text(
-                        text = "Marker Title",
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier
-                            .padding(top = 10.dp)
-                            .fillMaxWidth(),
-                        style = MaterialTheme.typography.h3,
-                        color = MaterialTheme.colors.primary,
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    //.........................Text : description
-                    Text(
-                        text = "Customizing a marker's info window",
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier
-                            .padding(top = 10.dp, start = 25.dp, end = 25.dp)
-                            .fillMaxWidth(),
-                        style = MaterialTheme.typography.body1,
-                        color = MaterialTheme.colors.primary,
-                    )
-                    //.........................Spacer
-                    Spacer(modifier = Modifier.height(24.dp))
-
-                }
-            }
-            }
-        }
-
+    )
+    {
         Marker(
             state = MarkerState(position = singapore),
             title = "Singapore",
             snippet = "test marker",
             onInfoWindowClick = { /*code for on click*/ }
-
             //draggable is a parameter
             //icon = BitmapDescriptionFactory.defaultMarker(BitmapDescriptionFactory.HUE_ORANGE)
         )
+    }
     }
 
 
