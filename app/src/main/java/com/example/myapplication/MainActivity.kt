@@ -65,6 +65,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
@@ -239,39 +240,71 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun ComposeMap(navController: NavHostController) {
 
-    val singapore = LatLng(1.35541170530446808,103.864542)
-    val cameraPositionState = rememberCameraPositionState{
+    val singapore = LatLng(1.35541170530446808, 103.864542)
+    val cameraPositionState = rememberCameraPositionState {
         position = CameraPosition.fromLatLngZoom(singapore, 8f)
     }
 
-    val mapUiSettings = MapUiSettings (
+    val mapUiSettings = MapUiSettings(
         mapToolbarEnabled = false,
         zoomControlsEnabled = false,
         zoomGesturesEnabled = true
     )
-    val mapProperties = MapProperties (
-        maxZoomPreference =  12.0f,
+    val mapProperties = MapProperties(
+        maxZoomPreference = 12.0f,
         minZoomPreference = 8f
     )
 
-    GoogleMap (
+    GoogleMap(
         modifier = Modifier.fillMaxSize(),
         cameraPositionState = cameraPositionState,
         uiSettings = mapUiSettings,
         properties = mapProperties
-    )
-    {
-        Marker(
+    ) {
+        MarkerInfoWindow(
             state = MarkerState(position = singapore),
-            title = "Singapore",
-            snippet = "test marker",
-            onInfoWindowClick = { /*code for on click*/ }
-            //draggable is a parameter
-            //icon = BitmapDescriptionFactory.defaultMarker(BitmapDescriptionFactory.HUE_ORANGE)
-        )
-    }
-    }
+        ) { marker ->
+            Box(
+                modifier = Modifier
+                    .background(
+                        color = MaterialTheme.colors.onPrimary,
+                        shape = RoundedCornerShape(35.dp, 35.dp, 35.dp, 35.dp)
+                    )
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = "Marker Title",
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier
+                            .padding(top = 10.dp)
+                            .fillMaxWidth(),
+                        style = MaterialTheme.typography.h3,
+                        color = MaterialTheme.colors.primary,
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    //.........................Text : description
+                    Text(
+                        text = "Customizing a marker's info window",
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier
+                            .padding(top = 10.dp, start = 25.dp, end = 25.dp)
+                            .fillMaxWidth(),
+                        style = MaterialTheme.typography.body1,
+                        color = MaterialTheme.colors.primary,
+                    )
+                    //.........................Spacer
+                    Spacer(modifier = Modifier.height(24.dp))
 
+                }
+
+            }
+
+        }
+    }
+}
 
 @Composable
 fun LoginPage(navController: NavHostController) {
@@ -708,10 +741,6 @@ fun eventDetail(navController: NavHostController, id: Int) {
                     color = Color.White
                 )
             }
-
-
-
-
         }
     }
 }
