@@ -7,14 +7,6 @@ import okhttp3.Response
 import org.json.JSONArray
 import java.io.IOException
 
-data class Event(
-    val id: Int,
-    val name: String,
-    val location: String,
-    val date: String,
-    val organizerName: String
-)
-
 object EventsBackend {
 
     private const val BASE_URL = "https://maccproject.pythonanywhere.com"
@@ -62,9 +54,12 @@ object EventsBackend {
             val event = Event(
                 id = eventObject.optInt("id"),
                 name = eventObject.optString("name"),
-                location = eventObject.optString("location"),
+                latitude = eventObject.optDouble("latitude"),  // Assuming latitude is a double value
+                longitude = eventObject.optDouble("longitude"),
                 date = eventObject.optString("date"),
-                organizerName = eventObject.optString("organizerName")
+                organizerName = eventObject.optString("organizerName"),
+                encoded_image = eventObject.optString("encoded_image"),
+                description = eventObject.optString("description", null) // Assuming description can be null
             )
             events.add(event)
         }
