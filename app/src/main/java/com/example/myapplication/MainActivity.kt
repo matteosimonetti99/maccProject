@@ -480,7 +480,7 @@ fun HomePage(navController: NavHostController) {
                 Column {
                     events.forEach { event ->
                         var id = event.id
-                        EventCard(
+                        Components.EventCard(
                             event = event,
                             onClick = { navController.navigate("eventDetail/$id") }
                         )
@@ -496,108 +496,6 @@ fun HomePage(navController: NavHostController) {
             }
         }
     }
-}
-
-@Composable
-fun EventCard(event: Event, onClick: () -> Unit) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { onClick() }
-            .padding(8.dp),
-        elevation = 8.dp,
-        backgroundColor = Utility.bootstrapInfo // A lighter shade of blue-gray
-    ) {
-        // Use Row to create a two-column layout
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            // Column for the left side (image and date)
-            Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(8.dp),
-                verticalArrangement = Arrangement.Center,
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                // Decode base64 string to Bitmap
-                val decodedBitmap = decodeBase64ToBitmap(event.encoded_image)
-
-                // Display event image using Image composable
-                if (decodedBitmap != null) {
-                    Box(
-                        modifier = Modifier
-                            .size(150.dp) // Set the desired size for the image
-                            .clip(shape = RoundedCornerShape(8.dp))
-                    ) {
-                        Image(
-                            bitmap = decodedBitmap.asImageBitmap(),
-                            contentDescription = null,
-                            contentScale = ContentScale.Crop
-                        )
-
-                        // Display date in the upper left corner
-                        Box(
-                            modifier = Modifier
-                                .padding(8.dp)
-                                .background(Color.White, shape = RoundedCornerShape(8.dp))
-                                .padding(4.dp),
-                            contentAlignment = Alignment.CenterStart
-                        ) {
-                            Text(
-                                text = event.date,
-                                style = MaterialTheme.typography.caption,
-                                color = Color.Black,
-                            )
-                        }
-                    }
-                }
-            }
-
-            // Column for the right side (event details and permission button)
-            Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(8.dp),
-                verticalArrangement = Arrangement.Center,
-                horizontalAlignment = Alignment.Start
-            ) {
-                // Display bold and larger event name
-                Text(
-                    text = event.name,
-                    style = MaterialTheme.typography.h5.copy(
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 20.sp
-                    ),
-                    color = Color.White
-                )
-
-
-                Text(
-                    text = "${event.organizerName}",
-                    style = MaterialTheme.typography.body1,
-                    color = Color.White
-                )
-
-                // Button to ask for permission to participate
-                Button(
-                    onClick = {  },
-                    modifier = Modifier
-                        .padding(top = 8.dp)
-                        .background(Color.Black)
-                ) {
-                    Text(text = "Request an invite")
-                }
-            }
-        }
-    }
-}
-
-// Function to decode base64 string to Bitmap
-fun decodeBase64ToBitmap(encoded_image: String): Bitmap? {
-    val decodedBytes = Base64.decode(encoded_image, Base64.DEFAULT)
-    return BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.size)
 }
 
 @Composable
