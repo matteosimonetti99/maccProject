@@ -1,5 +1,6 @@
 package com.example.myapplication
 
-object TokenHolder {
+object InformationHolder {
     var token: String = ""
+    var userID: Int = 0
 }

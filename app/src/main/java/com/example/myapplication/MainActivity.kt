@@ -3,33 +3,26 @@ package com.example.myapplication
 
 // Other necessary imports
 import Event
+import EventDetailsBackend
 import EventsBackend
+import Invite
+import InvitesBackend
 import LoginBackend
-import android.content.res.Resources
-import android.graphics.drawable.Drawable
-import android.icu.text.CaseMap.Title
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
+import android.annotation.SuppressLint
 import android.os.Bundle
-import android.util.Base64
 import android.util.Log
-import android.widget.ImageView
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.BottomNavigation
 import androidx.compose.material.BottomNavigationItem
@@ -46,9 +39,7 @@ import androidx.compose.material.Typography
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.Place
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -61,34 +52,26 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.graphics.painter.BitmapPainter
-import androidx.compose.ui.graphics.painter.Painter
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.core.graphics.createBitmap
-import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.google.android.gms.maps.model.BitmapDescriptorFactory
+import com.example.myapplication.Components.Companion.eventCard
+import com.example.myapplication.Components.Companion.inviteCard
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.MapProperties
 import com.google.maps.android.compose.MapUiSettings
 import com.google.maps.android.compose.Marker
-import com.google.maps.android.compose.MarkerInfoWindow
 import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.rememberCameraPositionState
 import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
@@ -145,11 +128,9 @@ class MainActivity : ComponentActivity() {
                             ComposeMap(navController)
 
                         }
-                        composable("profileDestination") {
-                            //                        ProfilePage(navController)
-                        }
-                        composable("settingsDestination") {
-                            //                        SettingsPage(navController)
+                        composable("myInvitesDestination") {
+                            myInvitesPage(navController)
+                            showBottomNavigation = true
                         }
                     }
 
@@ -198,35 +179,16 @@ class MainActivity : ComponentActivity() {
                         BottomNavigationItem(
                             selected = navController.currentDestination?.route == "profile",
                             onClick = {
-                                //                            TODO: importare token e far sì che venga passato
-                                //                            navController.navigate("profileDestination")
+                                navController.navigate("myInvitesDestination")
                             },
                             icon = {
                                 Icon(
                                     imageVector = Icons.Default.AccountCircle,
-                                    contentDescription = "Profile"
+                                    contentDescription = "My Invites"
                                 )
                             },
                             label = {
-                                Text(text = "Profile")
-                            }
-                        )
-
-                        // Settings Page
-                        BottomNavigationItem(
-                            selected = navController.currentDestination?.route == "settings",
-                            onClick = {
-                                //                            TODO: importare token e far sì che venga passato
-                                //                            navController.navigate("settingsDestination")
-                            },
-                            icon = {
-                                Icon(
-                                    imageVector = Icons.Default.Settings,
-                                    contentDescription = "Settings"
-                                )
-                            },
-                            label = {
-                                Text(text = "Settings")
+                                Text(text = "My Invites")
                             }
                         )
                     }
@@ -236,6 +198,7 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
+
 @Composable
 fun ComposeMap(navController: NavHostController) {
 
@@ -282,6 +245,7 @@ fun LoginPage(navController: NavHostController) {
 
     // Dichiarazione della variabile di stato per tracciare l'autenticazione
     var savedToken by remember { mutableStateOf("") }
+    var savedID by remember { mutableStateOf(-1) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
 
     MaterialTheme(
@@ -316,7 +280,8 @@ fun LoginPage(navController: NavHostController) {
 
                         Button(
                             onClick = {
-                                TokenHolder.token = "47358c79536a33cc29477bc094cf79fed4ec6ac242b37e88c34b906679c307b2"
+                                InformationHolder.token = "47358c79536a33cc29477bc094cf79fed4ec6ac242b37e88c34b906679c307b2"
+                                InformationHolder.userID = 1
                                 navController.navigate("homeDestination")
                             },
                             modifier = Modifier.fillMaxWidth(),
@@ -364,17 +329,21 @@ fun LoginPage(navController: NavHostController) {
                         Button(
                             onClick = {
                                 errorMessage = null
-                                LoginBackend.login(username, password) { token ->
+                                LoginBackend.login(username, password) { token, userID ->
                                     if (token != null) {
-                                        Log.d("mytag", "ho il token!")
-                                        Log.d("mytag", "token: " + token.toString())
                                         savedToken = token
+                                        if (userID != null) {
+                                            savedID = userID
+                                        }
 
                                         // Navigate to the home destination with the obtained token
                                         // Use the MainScope to navigate on the main thread
                                         MainScope().launch {
                                             // Navigate to the home destination with the obtained token
-                                            TokenHolder.token = token
+                                            InformationHolder.token = token
+                                            if (userID != null) {
+                                                InformationHolder.userID = userID
+                                            }
                                             navController.navigate("homeDestination")
                                         }
                                     } else {
@@ -419,18 +388,176 @@ fun LoginPage(navController: NavHostController) {
         }
     )
 }
+
+@SuppressLint("StateFlowValueCalledInComposition")
+@Composable
+fun myInvitesPage(navController: NavHostController) {
+    var invites by remember { mutableStateOf<List<Invite>>(emptyList()) }
+    var events by remember { mutableStateOf<List<Event>>(emptyList()) }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
+    var token = InformationHolder.token
+    var userID = InformationHolder.userID
+
+    // Create a MutableStateFlow to accumulate events over time
+    val eventsFlow = remember { MutableStateFlow<List<Event>>(emptyList()) }
+
+    // Fetch events data from the backend using the provided token
+    LaunchedEffect(token) {
+        // Make a network request to fetch events data
+        InvitesBackend.fetchInvites(token, userID) { result ->
+            result.onSuccess { invitesData ->
+                invites = invitesData
+
+                for (invite in invites) {
+                    EventDetailsBackend.fetchEventDetails(
+                        token,
+                        invite.eventID
+                    ) { eventResult ->
+                        eventResult.onSuccess { eventDetails ->
+                            // Update the MutableStateFlow with the current state
+                            eventsFlow.value = eventsFlow.value + eventDetails
+                        }
+                        eventResult.onFailure { error ->
+                            errorMessage =
+                                "Failed to fetch invite details: ${error.localizedMessage}"
+                        }
+                    }
+                }
+
+                Log.d("invitesDebug", eventsFlow.value.toString())
+            }
+            result.onFailure { error ->
+                errorMessage = "Failed to fetch events: ${error.localizedMessage}"
+            }
+        }
+    }
+
+    // Collect the eventsFlow and update the eventsState
+    LaunchedEffect(eventsFlow.value) {
+        eventsFlow.collect { newEvents ->
+            events = newEvents
+            Log.d("invitesDebug", events.toString())
+        }
+    }
+
+    /// Display the UI
+    Surface(
+        modifier = Modifier.fillMaxSize(),
+        color = Utility.bootstrapDark
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+
+            // TopAppBar
+            TopAppBar(
+                title = {
+                    Text(
+                        text = "Profile",
+                        style = MaterialTheme.typography.h6,
+                        color = Color.White
+                    )
+                },
+                backgroundColor = Utility.bootstrapSecondary
+            )
+
+            // Add spacing
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Logout Button
+            Button(
+                onClick = {
+                    // Perform logout actions
+                    // e.g., clear user session, navigate to login screen, etc.
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(50.dp)
+            ) {
+                Text("Logout", color = Color.White)
+            }
+
+            // Add spacing
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // TopAppBar
+            TopAppBar(
+                title = {
+                    Text(
+                        text = "My events",
+                        style = MaterialTheme.typography.h6,
+                        color = Color.White
+                    )
+                },
+                backgroundColor = Utility.bootstrapSecondary
+            )
+
+            // Add spacing
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Display error message as a Snackbar
+            errorMessage?.let {
+                Utility.ErrorSnackbar(errorMessage = errorMessage)
+                Spacer(modifier = Modifier.height(16.dp))
+            }
+
+            // Display events in a list
+            if (events.isNotEmpty()) {
+                Column {
+                    events.forEach { event ->
+                        var id = event.id
+                        inviteCard(
+                            event = event,
+                            onClick = { navController.navigate("eventDetail/$id") }
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                    }
+                }
+            } else {
+                Text(
+                    text = "No events available.",
+                    style = MaterialTheme.typography.body1,
+                    color = Color.White
+                )
+            }
+        }
+    }
+}
+
+
+//TODO: aggiungi parte utente
+//@Composable
+//fun UserProfileSection(user: User?) {
+//    // Customize this based on the user data you receive
+//    if (user != null) {
+//        // Display user profile information, e.g., name, email, etc.
+//        Text(text = "Name: ${user.name}", color = Color.White)
+//        Text(text = "Email: ${user.email}", color = Color.White)
+//
+//        // Display profile picture if available
+//        user.profilePictureUrl?.let { url ->
+//            ProfilePicture(url)
+//        }
+//    }
+//}
+
+
+
 @Composable
 fun HomePage(navController: NavHostController) {
     // Define mutable state variable to hold events data
     var events by remember { mutableStateOf<List<Event>>(emptyList()) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
-    var token = TokenHolder.token
+    var token = InformationHolder.token
 
 
     // Fetch events data from the backend using the provided token
     LaunchedEffect(token) {
         // Make a network request to fetch events data
-        // Replace this with your actual API call to retrieve events
         EventsBackend.fetchEvents(token) { result ->
             result.onSuccess { eventsData ->
                 events = eventsData
@@ -480,7 +607,7 @@ fun HomePage(navController: NavHostController) {
                 Column {
                     events.forEach { event ->
                         var id = event.id
-                        Components.EventCard(
+                        eventCard(
                             event = event,
                             onClick = { navController.navigate("eventDetail/$id") }
                         )
@@ -589,11 +716,14 @@ fun RegisterPage(navController: NavHostController) {
                         errorMessage = null
                         if (password == confirmPassword) {
                             // Call the registration logic (replace with your actual registration logic)
-                            RegistrationBackend.register(email, name, password) { token ->
+                            RegistrationBackend.register(email, name, password) { token, userID ->
                                 if (token != null) {
                                     // Navigate to the home destination after successful registration
                                     MainScope().launch {
-                                        TokenHolder.token = token
+                                        InformationHolder.token = token
+                                        if (userID != null) {
+                                            InformationHolder.userID = userID
+                                        }
                                         navController.navigate("homeDestination")
                                     }
                                 } else {
@@ -630,7 +760,7 @@ fun RegisterPage(navController: NavHostController) {
 
 @Composable
 fun eventDetail(navController: NavHostController, id: Int) {
-    var token = TokenHolder.token
+    var token = InformationHolder.token
     var event by remember { mutableStateOf(Event(0, "", 0.0, 0.0, "", "", "", null)) }
     val coroutineScope = rememberCoroutineScope()
     var errorMessage by remember { mutableStateOf<String?>(null) }

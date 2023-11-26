@@ -12,7 +12,7 @@ object RegistrationBackend {
     private const val BASE_REGISTER_URL = "https://maccproject.pythonanywhere.com/register"
 
     // Funzione per effettuare registrazione e ottenere un token
-    fun register(username: String, name: String, password: String, onResult: (String?) -> Unit) {
+    fun register(username: String, name: String, password: String, onResult: (String?, Int?) -> Unit) {
 
         val trimmedUsername = username.trim()
         val trimmedPassword = password.trim()
@@ -41,7 +41,7 @@ object RegistrationBackend {
                 Log.d("mytag", "risposta NON ricevuta")
 
                 // Gestione dell'errore di connessione
-                onResult(null)
+                onResult(null, null)
             }
 
             override fun onResponse(call: Call, response: Response) {
@@ -53,13 +53,14 @@ object RegistrationBackend {
                 if (response.isSuccessful && responseBody != null) {
                     val jsonResponse = JSONObject(responseBody)
                     val token = jsonResponse.optString("token", null)
+                    val userID = jsonResponse.optInt("user_id", -1) // Assuming the key is 'user_id'
 
-                    // Passa il token al chiamante
-                    onResult(token)
+                    // Passa il token e user ID al chiamante
+                    onResult(token, userID)
                 } else {
                     // Gestione degli errori dal backend
                     Log.d("mytag", responseBody.toString())
-                    onResult(null)
+                    onResult(null, null)
                 }
             }
         })
