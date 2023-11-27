@@ -41,6 +41,10 @@ android {
     }
     namespace = "com.example.jetpackcomposedemo"
 }
+
+
+
+
 dependencies {
 
     implementation("androidx.core:core-ktx:1.10.1")
@@ -55,7 +59,10 @@ dependencies {
     implementation ("com.google.android.material:material:1.10.0")
     implementation ("com.google.maps.android:maps-compose:2.2.0")
     implementation ("com.google.android.gms:play-services-maps:18.2.0")
-
+    implementation("com.google.android.gms:play-services-cast-framework:21.3.0")
+    implementation("com.google.accompanist:accompanist-insets:0.17.0")
+    implementation("com.google.accompanist:accompanist-systemuicontroller:0.17.0")
+    implementation("io.coil-kt:coil-compose:2.2.0")
 
 
     testImplementation("junit:junit:4.13.2")

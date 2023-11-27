@@ -10,7 +10,7 @@ object LoginBackend {
     private const val BASE_LOGIN_URL = "https://maccproject.pythonanywhere.com/login"
 
     // Funzione per effettuare il login e ottenere un token
-    fun login(username: String, password: String, onResult: (String?, Int?) -> Unit) {
+    fun login(username: String, password: String, onResult: (String?, Int?, String?) -> Unit) {
 
         val trimmedUsername = username.trim()
         val trimmedPassword = password.trim()
@@ -35,7 +35,7 @@ object LoginBackend {
             override fun onFailure(call: Call, e: IOException) {
 
                 Log.d("mytag", "risposta NON ricevuta")
-                onResult(null, null)
+                onResult(null, null, null)
             }
 
             override fun onResponse(call: Call, response: Response) {
@@ -47,14 +47,15 @@ object LoginBackend {
                 if (response.isSuccessful && responseBody != null) {
                     val jsonResponse = JSONObject(responseBody)
                     val token = jsonResponse.optString("token", null)
+                    val role = jsonResponse.optString("role", null)
                     val userID = jsonResponse.optInt("user_id", -1)
 
                     // Passa il token al chiamante
-                    onResult(token, userID)
+                    onResult(token, userID, role)
                 } else {
                     // Gestione degli errori dal backend
                     Log.d("mytag", responseBody.toString())
-                    onResult(null, null)
+                    onResult(null, null, null)
                 }
             }
         })

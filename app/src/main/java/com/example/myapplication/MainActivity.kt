@@ -9,12 +9,19 @@ import Invite
 import InvitesBackend
 import LoginBackend
 import android.annotation.SuppressLint
+import android.app.Activity
+import android.icu.text.SimpleDateFormat
+import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -24,6 +31,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material.BottomNavigation
 import androidx.compose.material.BottomNavigationItem
 import androidx.compose.material.Button
@@ -31,6 +39,7 @@ import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.Card
 import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
+import androidx.compose.material.Snackbar
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.compose.material.TextField
@@ -38,7 +47,9 @@ import androidx.compose.material.TopAppBar
 import androidx.compose.material.Typography
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.Event
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Mail
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -59,6 +70,7 @@ import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -68,17 +80,25 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.myapplication.Components.Companion.eventCard
 import com.example.myapplication.Components.Companion.inviteCard
+import com.google.android.gms.cast.framework.media.ImagePicker
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.MapProperties
 import com.google.maps.android.compose.MapUiSettings
 import com.google.maps.android.compose.Marker
+import com.google.maps.android.compose.MarkerInfoWindow
 import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.rememberCameraPositionState
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
+import com.google.android.material.datepicker.MaterialDatePicker
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.intl.Locale
+import com.google.accompanist.systemuicontroller.rememberSystemUiController
+import coil.compose.rememberImagePainter
+
 
 class MainActivity : ComponentActivity() {
 
@@ -89,7 +109,7 @@ class MainActivity : ComponentActivity() {
             MaterialTheme {
                 // Create a NavController
                 val navController = rememberNavController()
-                var showBottomNavigation by remember { mutableStateOf(true) }
+                var showBottomNavigation by remember { mutableStateOf("") }
 
                 Box(
                     modifier = Modifier.fillMaxSize()
@@ -102,13 +122,11 @@ class MainActivity : ComponentActivity() {
                         composable("loginDestination") {
                             // Pass the NavController to the LoginPage
                             LoginPage(navController)
-                            showBottomNavigation = false
+                            showBottomNavigation = ""
                         }
                         composable("homeDestination") { backStackEntry ->
-
-                            // Pass the token to the HomePage
                             HomePage(navController)
-                            showBottomNavigation = true
+                            showBottomNavigation = "user"
                         }
                         composable(
                             "eventDetail/{id}",
@@ -120,28 +138,34 @@ class MainActivity : ComponentActivity() {
                             val token = backStackEntry.arguments?.getString("token") ?: ""
                             val id = backStackEntry.arguments?.getInt("id") ?: 0
 
-                            // Pass the token to the HomePage
                             eventDetail(navController, id)
-                            showBottomNavigation = true
                         }
                         composable("registerDestination") {
                             // Implement your RegisterPage composable here
                             RegisterPage(navController)
-                            showBottomNavigation = false
-
                         }
                         composable("mapsDestination") {
                             ComposeMap(navController)
-
                         }
                         composable("myInvitesDestination") {
                             myInvitesPage(navController)
-                            showBottomNavigation = true
+                        }
+
+
+
+                        //Manager section
+                        composable("HomePageManager") {
+                            HomePageManager(navController)
+                            showBottomNavigation = "manager"
+                        }
+                        composable("EventCreation") {
+                            EventCreation(navController)
                         }
                     }
 
-                    // Set up the BottomNavigation
-                    if (showBottomNavigation) BottomNavigation(
+
+                    //USER BOTTOMBAR
+                    if (showBottomNavigation=="user") BottomNavigation(
                         modifier = Modifier
                             .fillMaxWidth()
                             .align(Alignment.BottomCenter),
@@ -149,7 +173,7 @@ class MainActivity : ComponentActivity() {
                     ) {
                         // Home Page
                         BottomNavigationItem(
-                            selected = navController.currentDestination?.route == "home",
+                            selected = navController.currentDestination?.route == "homeDestination",
                             onClick = {
                                navController.navigate("homeDestination")
                             },
@@ -166,7 +190,7 @@ class MainActivity : ComponentActivity() {
 
                         // Map Page
                         BottomNavigationItem(
-                            selected = navController.currentDestination?.route == "map",
+                            selected = navController.currentDestination?.route == "mapsDestination",
                             onClick = {
                                 navController.navigate("mapsDestination")
                             },
@@ -183,7 +207,7 @@ class MainActivity : ComponentActivity() {
 
                         // Profile Page
                         BottomNavigationItem(
-                            selected = navController.currentDestination?.route == "profile",
+                            selected = navController.currentDestination?.route == "myInvitesDestination",
                             onClick = {
                                 navController.navigate("myInvitesDestination")
                             },
@@ -198,6 +222,77 @@ class MainActivity : ComponentActivity() {
                             }
                         )
                     }
+
+
+
+
+
+
+                    //MANAGER BOTTOMBAR
+                    else if (showBottomNavigation=="manager")
+                        BottomNavigation(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .align(Alignment.BottomCenter),
+                            backgroundColor = Color.White
+                        ) {
+                            // Home Page
+                            BottomNavigationItem(
+                                selected = navController.currentDestination?.route == "HomePageManager",
+                                onClick = {
+                                    navController.navigate("HomePageManager")
+                                },
+                                icon = {
+                                    Icon(
+                                        imageVector = Icons.Default.Home,
+                                        contentDescription = "Home"
+                                    )
+                                },
+                                label = {
+                                    Text(text = "Home")
+                                }
+                            )
+
+                            // Map Page
+                            BottomNavigationItem(
+                                selected = navController.currentDestination?.route == "EventCreation",
+                                onClick = {
+                                    navController.navigate("EventCreation")
+                                },
+                                icon = {
+                                    Icon(
+                                        imageVector = Icons.Default.Event,
+                                        contentDescription = "Event"
+                                    )
+                                },
+                                label = {
+                                    Text(text = "Event Creation")
+                                }
+                            )
+
+                            // Profile Page
+                            BottomNavigationItem(
+                                selected = navController.currentDestination?.route == "ManagerInvites",
+                                onClick = {
+                                    navController.navigate("ManagerInvites")
+                                },
+                                icon = {
+                                    Icon(
+                                        imageVector = Icons.Default.Mail,
+                                        contentDescription = "Invites"
+                                    )
+                                },
+                                label = {
+                                    Text(text = "Invites")
+                                }
+                            )
+                        }
+
+
+
+
+
+
                 }
             }
 
@@ -319,7 +414,7 @@ fun LoginPage(navController: NavHostController) {
                         Button(
                             onClick = {
                                 InformationHolder.token = "47358c79536a33cc29477bc094cf79fed4ec6ac242b37e88c34b906679c307b2"
-                                InformationHolder.userID = 1
+                                InformationHolder.userID = 3
                                 navController.navigate("homeDestination")
                             },
                             modifier = Modifier.fillMaxWidth(),
@@ -328,7 +423,22 @@ fun LoginPage(navController: NavHostController) {
                             Text("SKIP login")
                         }
 
+                        Button(
+                            onClick = {
+                                InformationHolder.token = "1cb0395ab04ba4d3a7e61dfe57126a11996f0fea30683b8a30693c7d40d6a977"
+                                InformationHolder.userID = 1
+                                navController.navigate("HomePageManager")
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = ButtonDefaults.buttonColors(backgroundColor = Utility.bootstrapBlue) // Custom primary color
+                        ) {
+                            Text("SKIP login admin")
+                        }
+
                         //DA RIMUOVERE SOPRA
+
+
+
 
                         if (errorMessage != null) {
                             Utility.ErrorSnackbar(errorMessage = errorMessage)
@@ -367,7 +477,7 @@ fun LoginPage(navController: NavHostController) {
                         Button(
                             onClick = {
                                 errorMessage = null
-                                LoginBackend.login(username, password) { token, userID ->
+                                LoginBackend.login(username, password) { token, userID, role ->
                                     if (token != null) {
                                         savedToken = token
                                         if (userID != null) {
@@ -382,7 +492,8 @@ fun LoginPage(navController: NavHostController) {
                                             if (userID != null) {
                                                 InformationHolder.userID = userID
                                             }
-                                            navController.navigate("homeDestination")
+                                            if (role=="user") navController.navigate("homeDestination")
+                                            else if (role=="manager") navController.navigate("HomePageManager")
                                         }
                                     } else {
                                         Log.d("mytag", "NON ho il token!")
@@ -435,6 +546,8 @@ fun myInvitesPage(navController: NavHostController) {
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var token = InformationHolder.token
     var userID = InformationHolder.userID
+    var fetched by remember { mutableStateOf(false) }
+
 
     // Create a MutableStateFlow to accumulate events over time
     val eventsFlow = remember { MutableStateFlow<List<Event>>(emptyList()) }
@@ -445,6 +558,8 @@ fun myInvitesPage(navController: NavHostController) {
         InvitesBackend.fetchInvites(token, userID) { result ->
             result.onSuccess { invitesData ->
                 invites = invitesData
+                fetched=true
+
 
                 for (invite in invites) {
                     EventDetailsBackend.fetchEventDetails(
@@ -509,8 +624,8 @@ fun myInvitesPage(navController: NavHostController) {
             // Logout Button
             Button(
                 onClick = {
-                    // Perform logout actions
-                    // e.g., clear user session, navigate to login screen, etc.
+                    InformationHolder.token=""
+                    navController.navigate("loginDestination")
                 },
                 modifier = Modifier
                     .fillMaxWidth()
@@ -555,9 +670,15 @@ fun myInvitesPage(navController: NavHostController) {
                         Spacer(modifier = Modifier.height(8.dp))
                     }
                 }
-            } else {
+            } else if (fetched==true) {
                 Text(
                     text = "No events available.",
+                    style = MaterialTheme.typography.body1,
+                    color = Color.White
+                )
+            } else {
+                Text(
+                    text = "Loading...",
                     style = MaterialTheme.typography.body1,
                     color = Color.White
                 )
@@ -591,6 +712,8 @@ fun HomePage(navController: NavHostController) {
     var events by remember { mutableStateOf<List<Event>>(emptyList()) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var token = InformationHolder.token
+    var fetched by remember { mutableStateOf(false) }
+
 
 
     // Fetch events data from the backend using the provided token
@@ -599,6 +722,7 @@ fun HomePage(navController: NavHostController) {
         EventsBackend.fetchEvents(token) { result ->
             result.onSuccess { eventsData ->
                 events = eventsData
+                fetched=true
             }
             result.onFailure { error ->
                 errorMessage = "Failed to fetch events: ${error.localizedMessage}"
@@ -652,9 +776,15 @@ fun HomePage(navController: NavHostController) {
                         Spacer(modifier = Modifier.height(8.dp))
                     }
                 }
-            } else {
+            } else if (fetched==true) {
                 Text(
                     text = "No events available.",
+                    style = MaterialTheme.typography.body1,
+                    color = Color.White
+                )
+            } else {
+                Text(
+                    text = "Loading...",
                     style = MaterialTheme.typography.body1,
                     color = Color.White
                 )
@@ -662,6 +792,177 @@ fun HomePage(navController: NavHostController) {
         }
     }
 }
+
+@Composable
+fun EventCreation(navController: NavHostController) {
+    // Define mutable state variables to hold event creation details
+    var eventName by remember { mutableStateOf("") }
+    var organizerName by remember { mutableStateOf("") }
+    var description by remember { mutableStateOf("") }
+    var datetime by remember { mutableStateOf("") }
+    var pictureUri by remember { mutableStateOf<Uri?>(null) }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
+
+    // Create a Box with a custom background color
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.Gray) // A darker shade of blue-gray
+    ) {
+        // Create a Card with elevation and rounded corners
+        Card(
+            modifier = Modifier
+                .padding(16.dp)
+                .fillMaxWidth()
+                .padding(16.dp)
+                .clip(RoundedCornerShape(16.dp)),
+            elevation = 8.dp,
+            backgroundColor = Color.White
+        ) {
+            // Create a Column layout for the content
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                // Display error message
+
+
+                // Display an "Event Creation" title with custom typography
+                Text(
+                    text = "Event Creation",
+                    style = MaterialTheme.typography.h4,
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+
+                // Create input fields for event creation details
+                TextField(
+                    value = eventName,
+                    onValueChange = { eventName = it },
+                    label = { Text("Event Name") },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 16.dp)
+                )
+
+                TextField(
+                    value = organizerName,
+                    onValueChange = { organizerName = it },
+                    label = { Text("Organizer Name") },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 16.dp)
+                )
+
+                TextField(
+                    value = description,
+                    onValueChange = { description = it },
+                    label = { Text("Description") },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 16.dp)
+                )
+
+                val dateTimePickerLauncher =
+                    rememberLauncherForActivityResult(contract = ActivityResultContracts.StartActivityForResult()) { result ->
+                        if (result.resultCode == Activity.RESULT_OK) {
+                            val selectedDateTime =
+                                result.data?.getLongExtra(MaterialDatePicker.EXTRA_SELECTION, 0)
+                            selectedDateTime?.let {
+                                val formattedDateTime =
+                                    SimpleDateFormat("MM/dd/yyyy HH:mm", Locale.getDefault()).format(it)
+                                datetime = formattedDateTime
+                            }
+                        }
+                    }
+
+                // Create a clickable text for datetime
+                SelectionContainer {
+                    Text(
+                        text = if (datetime.isEmpty()) "Select Date and Time" else datetime,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 16.dp)
+                            .clickable {
+                                val picker = MaterialDatePicker.Builder.datePicker()
+                                    .build()
+
+                                dateTimePickerLauncher.launch(picker)
+                            },                            //todo: sistema datetime
+                        color = if (datetime.isEmpty()) Color.Gray else Color.Blue
+                    )
+                }
+
+                // Add a way to upload a picture
+                ImageUploadButton(onImageSelected = { uri ->
+                    pictureUri = uri
+                    //todo: scegli formato immagine standard
+                })
+
+                // Create an "Create Event" button with a custom color
+                Button(
+                    onClick = {
+                        errorMessage = null
+                        // Add your event creation logic here using the provided details
+                        // For example, you can upload the details to a backend server
+                        // and navigate to the home destination on success
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(backgroundColor = Color.Blue) // Custom color for the button
+                ) {
+                    Text("Create Event")
+                    //todo: onclick send tutto ad api che salva dati in db e foto in images
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun ImageUploadButton(onImageSelected: (Uri) -> Unit) {
+    var imageUri by remember { mutableStateOf<Uri?>(null) }
+
+    // Create an activity result launcher for the image picker
+    val launcher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
+        uri?.let {
+            imageUri = it
+            onImageSelected(it)
+        }
+    }
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp)
+    ) {
+        // Display selected image
+        if (imageUri != null) {
+            Image(
+                painter = rememberImagePainter(imageUri),
+                contentDescription = null,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(200.dp)
+            )
+        }
+
+        // Button to launch the image picker
+        Button(
+            onClick = {
+                launcher.launch("image/*")
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 16.dp)
+        ) {
+            Text("Select Image")
+        }
+    }
+}
+
+
 
 @Composable
 fun RegisterPage(navController: NavHostController) {
@@ -796,6 +1097,12 @@ fun RegisterPage(navController: NavHostController) {
     }
 }
 
+
+
+
+
+
+
 @Composable
 fun eventDetail(navController: NavHostController, id: Int) {
     var token = InformationHolder.token
@@ -860,6 +1167,12 @@ fun eventDetail(navController: NavHostController, id: Int) {
                 )
                 Text(text = event.description ?: "", style = MaterialTheme.typography.body1)
                 //todo: pulsante deve avere testo in base a stato invito
+            } else {
+                Text(
+                    text = "Loading details",
+                    style = MaterialTheme.typography.body1,
+                    color = Color.White
+                )
             }
 
             Button(onClick = {
@@ -879,3 +1192,94 @@ fun eventDetail(navController: NavHostController, id: Int) {
         }
     }
 }
+
+//MANAGER COMPOSABLES
+
+@Composable
+//TODO: HomePageManager
+fun HomePageManager(navController: NavHostController) {
+    // Define mutable state variable to hold events data
+    var events by remember { mutableStateOf<List<Event>>(emptyList()) }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
+    var token = InformationHolder.token
+    var fetched by remember { mutableStateOf(false) }
+
+
+
+    // Fetch events data from the backend using the provided token
+    LaunchedEffect(token) {
+        // Make a network request to fetch events data
+        EventsBackend.fetchEvents(token) { result ->
+            result.onSuccess { eventsData ->
+                events = eventsData
+                fetched=true
+            }
+            result.onFailure { error ->
+                errorMessage = "Failed to fetch events: ${error.localizedMessage}"
+            }
+        }
+    }
+
+    // Utilize a Surface to contain the content of the home page
+    Surface(
+        modifier = Modifier.fillMaxSize(),
+        color = Utility.bootstrapDark // A darker shade of blue-gray
+    ) {
+        // Utilize Column to organize the content in a column
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            // Utilize TopAppBar for a stylized top bar
+            TopAppBar(
+                title = {
+                    Text(
+                        text = "Manager Home Page, da fare, per ora copiata da user",
+                        style = MaterialTheme.typography.h6,
+                        color = Color.White
+                    )
+                },
+                backgroundColor = Utility.bootstrapSecondary // A darker shade of blue-gray
+            )
+
+            // Add spacing
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Display error message as a Snackbar
+            errorMessage?.let {
+                Utility.ErrorSnackbar(errorMessage = errorMessage)
+                Spacer(modifier = Modifier.height(16.dp))
+            }
+
+            // Display events in a list
+            if (events.isNotEmpty()) {
+                Column {
+                    events.forEach { event ->
+                        var id = event.id
+                        eventCard(
+                            event = event,
+                            onClick = { navController.navigate("eventDetail/$id") }
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                    }
+                }
+            } else if (fetched==true) {
+                Text(
+                    text = "No events available.",
+                    style = MaterialTheme.typography.body1,
+                    color = Color.White
+                )
+            } else {
+                Text(
+                    text = "Loading...",
+                    style = MaterialTheme.typography.body1,
+                    color = Color.White
+                )
+            }
+        }
+    }
+}
+
