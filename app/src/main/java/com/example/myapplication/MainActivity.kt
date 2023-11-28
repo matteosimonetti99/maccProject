@@ -7,6 +7,7 @@ import EventDetailsBackend
 import EventsBackend
 import LoginBackend
 import android.Manifest
+import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.util.Log
@@ -76,14 +77,13 @@ import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.rememberCameraPositionState
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
+import com.example.myapplication.PositionHolder
 
 class MainActivity : ComponentActivity() {
     private val locationPermissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted: Boolean ->
             if (isGranted) {
-                // Permesso di localizzazione ottenuto, puoi ora accedere alla posizione GPS
-                // e posizionare la telecamera sulla posizione del telefono
-                // Aggiungi il codice per ottenere la posizione e muovere la telecamera qui
+                PositionHolder.UpdateLastPosition(applicationContext.applicationContext,this@MainActivity);
             } else {
                 // L'utente ha negato il permesso di localizzazione
                 // Puoi gestire questo caso di conseguenza
@@ -231,32 +231,14 @@ class MainActivity : ComponentActivity() {
             }
 
         }
-        if (ActivityCompat.checkSelfPermission(
-                this,
-                Manifest.permission.ACCESS_FINE_LOCATION
-            ) == PackageManager.PERMISSION_GRANTED
-        ) {
-            // Permesso di localizzazione già ottenuto, puoi ora accedere alla posizione GPS
-            // e posizionare la telecamera sulla posizione del telefono
-            // Aggiungi il codice per ottenere la posizione e muovere la telecamera qui
-        } else {
-            // Richiedi il permesso di localizzazione
-            locationPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
-        }
 
     }
 }
 @Composable
 fun ComposeMap(navController: NavHostController, activity: MainActivity) {
 
-    if(ActivityCompat.checkSelfPermission(LocalContext.current, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
-        &&
-        ActivityCompat.checkSelfPermission(LocalContext.current, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED)
-    {
-        ActivityCompat.requestPermissions(activity, arrayOf(android.Manifest.permission.ACCESS_FINE_LOCATION), 101)
-    }
 
-    var currentPosition by remember { mutableStateOf(LatLng(1.0, 1.0)) }
+    var currentPosition by remember { mutableStateOf(PositionHolder.lastPostion) }
     var events by remember { mutableStateOf<List<Event>>(emptyList()) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var token = TokenHolder.token
@@ -275,13 +257,6 @@ fun ComposeMap(navController: NavHostController, activity: MainActivity) {
                 errorMessage = "Failed to fetch events: ${error.localizedMessage}"
             }
     }}
-
-    // Richiedi il permesso di localizzazione quando necessari
-    val fusedLocationClient = LocationServices.getFusedLocationProviderClient(LocalContext.current)
-    fusedLocationClient.lastLocation.addOnSuccessListener { location ->
-        Log.d("location",location.toString())
-        currentPosition = LatLng(location.latitude,location.longitude)
-    }
 
 
     val cameraPositionState = rememberCameraPositionState {
