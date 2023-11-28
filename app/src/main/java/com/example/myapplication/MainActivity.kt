@@ -3,33 +3,26 @@ package com.example.myapplication
 
 // Other necessary imports
 import Event
+import EventDetailsBackend
 import EventsBackend
 import LoginBackend
-import android.content.res.Resources
-import android.graphics.drawable.Drawable
-import android.icu.text.CaseMap.Title
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
+import android.Manifest
+import android.content.pm.PackageManager
 import android.os.Bundle
-import android.util.Base64
 import android.util.Log
-import android.widget.ImageView
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.BottomNavigation
 import androidx.compose.material.BottomNavigationItem
@@ -46,7 +39,6 @@ import androidx.compose.material.Typography
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.runtime.Composable
@@ -61,31 +53,24 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.graphics.painter.BitmapPainter
-import androidx.compose.ui.graphics.painter.Painter
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.core.graphics.createBitmap
-import androidx.compose.ui.unit.sp
+import androidx.core.app.ActivityCompat
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.google.android.gms.maps.model.BitmapDescriptorFactory
+import com.google.android.gms.location.LocationRequest
+import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.MapProperties
 import com.google.maps.android.compose.MapUiSettings
-import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.MarkerInfoWindow
 import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.rememberCameraPositionState
@@ -93,9 +78,20 @@ import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
-
+    private val locationPermissionLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted: Boolean ->
+            if (isGranted) {
+                // Permesso di localizzazione ottenuto, puoi ora accedere alla posizione GPS
+                // e posizionare la telecamera sulla posizione del telefono
+                // Aggiungi il codice per ottenere la posizione e muovere la telecamera qui
+            } else {
+                // L'utente ha negato il permesso di localizzazione
+                // Puoi gestire questo caso di conseguenza
+            }
+        }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         setContent {
             // Use the default MaterialTheme
             MaterialTheme {
@@ -143,7 +139,7 @@ class MainActivity : ComponentActivity() {
 
                         }
                         composable("mapsDestination") {
-                            ComposeMap(navController)
+                            ComposeMap(navController, this@MainActivity)
 
                         }
                         composable("profileDestination") {
@@ -235,34 +231,92 @@ class MainActivity : ComponentActivity() {
             }
 
         }
+        if (ActivityCompat.checkSelfPermission(
+                this,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED
+        ) {
+            // Permesso di localizzazione già ottenuto, puoi ora accedere alla posizione GPS
+            // e posizionare la telecamera sulla posizione del telefono
+            // Aggiungi il codice per ottenere la posizione e muovere la telecamera qui
+        } else {
+            // Richiedi il permesso di localizzazione
+            locationPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+        }
+
     }
 }
 @Composable
-fun ComposeMap(navController: NavHostController) {
+fun ComposeMap(navController: NavHostController, activity: MainActivity) {
 
-    val singapore = LatLng(1.35541170530446808, 103.864542)
+    if(ActivityCompat.checkSelfPermission(LocalContext.current, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
+        &&
+        ActivityCompat.checkSelfPermission(LocalContext.current, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED)
+    {
+        ActivityCompat.requestPermissions(activity, arrayOf(android.Manifest.permission.ACCESS_FINE_LOCATION), 101)
+    }
+
+    var currentPosition by remember { mutableStateOf(LatLng(1.0, 1.0)) }
+    var events by remember { mutableStateOf<List<Event>>(emptyList()) }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
+    var token = TokenHolder.token
+
+
+    //val currentPosition = LatLng(loca)
+    // Fetch events data from the backend using the provided token
+    LaunchedEffect(token) {
+        // Make a network request to fetch events data
+        // Replace this with your actual API call to retrieve events
+        EventsBackend.fetchEvents(token) { result ->
+            result.onSuccess { eventsData ->
+                events = eventsData
+            }
+            result.onFailure { error ->
+                errorMessage = "Failed to fetch events: ${error.localizedMessage}"
+            }
+    }}
+
+    // Richiedi il permesso di localizzazione quando necessari
+    val fusedLocationClient = LocationServices.getFusedLocationProviderClient(LocalContext.current)
+    fusedLocationClient.lastLocation.addOnSuccessListener { location ->
+        Log.d("location",location.toString())
+        currentPosition = LatLng(location.latitude,location.longitude)
+    }
+
+
     val cameraPositionState = rememberCameraPositionState {
-        position = CameraPosition.fromLatLngZoom(singapore, 8f)
+        position = CameraPosition.fromLatLngZoom(currentPosition, 8f)
     }
 
     val mapUiSettings = MapUiSettings(
-        mapToolbarEnabled = false,
         zoomControlsEnabled = false,
-        zoomGesturesEnabled = true
+        zoomGesturesEnabled = true,
+        myLocationButtonEnabled = true,
+        mapToolbarEnabled = false
     )
     val mapProperties = MapProperties(
         maxZoomPreference = 12.0f,
-        minZoomPreference = 8f
+        minZoomPreference = 2f,
+        isMyLocationEnabled = true
     )
 
-    GoogleMap(
+
+   GoogleMap(
         modifier = Modifier.fillMaxSize(),
         cameraPositionState = cameraPositionState,
         uiSettings = mapUiSettings,
-        properties = mapProperties
-    ) {
+        properties = mapProperties,
+        //onMyLocationClick = {location -> cameraPositionState.position = CameraPosition.fromLatLngZoom(LatLng(location.latitude,location.longitude), 8f)},
+
+
+    ) { events.forEach { event ->
+
+        val marker = LatLng(event.latitude,event.longitude)
+        var desc = ""
+        if(!event.description.isNullOrBlank())
+             desc = event.description.toString()
         MarkerInfoWindow(
-            state = MarkerState(position = singapore),
+            state = MarkerState(position = marker),
         ) { marker ->
             Box(
                 modifier = Modifier
@@ -276,7 +330,7 @@ fun ComposeMap(navController: NavHostController) {
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
-                        text = "Marker Title",
+                        text = event.name,
                         textAlign = TextAlign.Center,
                         modifier = Modifier
                             .padding(top = 10.dp)
@@ -287,7 +341,7 @@ fun ComposeMap(navController: NavHostController) {
                     Spacer(modifier = Modifier.height(8.dp))
                     //.........................Text : description
                     Text(
-                        text = "Customizing a marker's info window",
+                        text = desc,
                         textAlign = TextAlign.Center,
                         modifier = Modifier
                             .padding(top = 10.dp, start = 25.dp, end = 25.dp)
@@ -303,6 +357,8 @@ fun ComposeMap(navController: NavHostController) {
             }
 
         }
+    }
+
     }
 }
 
