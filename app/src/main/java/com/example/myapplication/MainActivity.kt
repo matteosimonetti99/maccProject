@@ -797,7 +797,6 @@ fun HomePage(navController: NavHostController) {
 fun EventCreation(navController: NavHostController) {
     // Define mutable state variables to hold event creation details
     var eventName by remember { mutableStateOf("") }
-    var organizerName by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
     var datetime by remember { mutableStateOf("") }
     var pictureUri by remember { mutableStateOf<Uri?>(null) }
@@ -848,23 +847,14 @@ fun EventCreation(navController: NavHostController) {
                 )
 
                 TextField(
-                    value = organizerName,
-                    onValueChange = { organizerName = it },
-                    label = { Text("Organizer Name") },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 16.dp)
-                )
-
-                TextField(
                     value = description,
                     onValueChange = { description = it },
-                    label = { Text("Description") },
+                    label = { Text("Description (optional)") },
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(bottom = 16.dp)
                 )
-
+/*              //TODO: TOGLI COMMENTO
                 val dateTimePickerLauncher =
                     rememberLauncherForActivityResult(contract = ActivityResultContracts.StartActivityForResult()) { result ->
                         if (result.resultCode == Activity.RESULT_OK) {
@@ -877,7 +867,7 @@ fun EventCreation(navController: NavHostController) {
                             }
                         }
                     }
-
+*/
                 // Create a clickable text for datetime
                 SelectionContainer {
                     Text(
@@ -888,8 +878,8 @@ fun EventCreation(navController: NavHostController) {
                             .clickable {
                                 val picker = MaterialDatePicker.Builder.datePicker()
                                     .build()
-
-                                dateTimePickerLauncher.launch(picker)
+                                //TODO: TOGLI COMMENTO
+                                //dateTimePickerLauncher.launch(picker)
                             },                            //todo: sistema datetime
                         color = if (datetime.isEmpty()) Color.Gray else Color.Blue
                     )
@@ -912,8 +902,10 @@ fun EventCreation(navController: NavHostController) {
                     modifier = Modifier.fillMaxWidth(),
                     colors = ButtonDefaults.buttonColors(backgroundColor = Color.Blue) // Custom color for the button
                 ) {
-                    Text("Create Event")
-                    //todo: onclick send tutto ad api che salva dati in db e foto in images
+                    Text(
+                        text = "Create event",
+                        color = Color.White // Set the text color to white
+                    )                    //todo: onclick send tutto ad api che salva dati in db e foto in images
                 }
             }
         }
