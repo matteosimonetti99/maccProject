@@ -17,8 +17,12 @@ import android.app.DatePickerDialog
 import android.app.TimePickerDialog
 import android.content.Context
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.os.Bundle
+import android.provider.MediaStore
 import android.text.format.DateUtils.formatDateTime
+import android.util.Base64
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -104,12 +108,15 @@ import androidx.compose.ui.window.Dialog
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import coil.compose.rememberImagePainter
 import com.example.myapplication.PositionHolder
+import java.io.ByteArrayOutputStream
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.ZoneId
 import java.util.Calendar
 import java.util.Date
+import android.content.ContentResolver
+import androidx.core.content.ContentProviderCompat.requireContext
 
 
 class MainActivity : ComponentActivity() {
@@ -859,7 +866,8 @@ fun EventCreation(navController: NavHostController) {
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var showDatePicker by remember { mutableStateOf(false) }
     var showTimePicker by remember { mutableStateOf(false) }
-
+    var dateready by remember { mutableStateOf(false) }
+    var dateready2 by remember { mutableStateOf(false) }
 
 
 
@@ -921,6 +929,7 @@ fun EventCreation(navController: NavHostController) {
                         onDateChange = { newDate ->
                             datetime = newDate
                             showDatePicker = false
+                            dateready=true
                             Log.d("mytag", "${datetime}")
                         },
                         onDismissRequest = { showDatePicker = false }
@@ -929,6 +938,7 @@ fun EventCreation(navController: NavHostController) {
                 Button(onClick = { showDatePicker = true }) {
                     Text("Select Date")
                 }
+                if(dateready) Text("${datetime.toLocalDate()}")
 
 
                 if (showTimePicker) {
@@ -942,6 +952,7 @@ fun EventCreation(navController: NavHostController) {
                         { _, hour, minute ->
                             datetime2 = LocalDateTime.of(datetime2.toLocalDate(), LocalTime.of(hour, minute))
                             showTimePicker = false
+                            dateready2=true
                             Log.d("mytag", "${datetime2}")
                         },
                         calendar.get(Calendar.HOUR_OF_DAY),
@@ -952,6 +963,7 @@ fun EventCreation(navController: NavHostController) {
                 Button(onClick = { showTimePicker = true }) {
                     Text("Select Time")
                 }
+                if(dateready2) Text("${datetime2.toLocalTime()}")
 
 
 
@@ -964,15 +976,23 @@ fun EventCreation(navController: NavHostController) {
 
 
 
+                val contentResolver = LocalContext.current.contentResolver
 
 
                 // Create an "Create Event" button with a custom color
                 Button(
                     onClick = {
+                        //todo: onclick send tutto ad api che salva dati in db e foto in images
                         errorMessage = null
-                        // Add your event creation logic here using the provided details
-                        // For example, you can upload the details to a backend server
-                        // and navigate to the home destination on success
+
+
+                        val datetimeReal=LocalDateTime.of(datetime.toLocalDate(),datetime2.toLocalTime())
+                        val base64Image=Utility.convertImageUriToBase64(contentResolver,pictureUri)
+                        Log.d("mytag", "${base64Image}")
+
+
+
+
                     },
                     modifier = Modifier.fillMaxWidth(),
                     colors = ButtonDefaults.buttonColors(backgroundColor = Color.Blue) // Custom color for the button
@@ -980,7 +1000,7 @@ fun EventCreation(navController: NavHostController) {
                     Text(
                         text = "Create event",
                         color = Color.White // Set the text color to white
-                    )                    //todo: onclick send tutto ad api che salva dati in db e foto in images
+                    )
                 }
             }
         }

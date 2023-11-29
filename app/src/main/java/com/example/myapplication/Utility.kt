@@ -1,7 +1,9 @@
 package com.example.myapplication
 
+import android.content.ContentResolver
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.net.Uri
 import android.util.Base64
 import androidx.compose.foundation.layout.absoluteOffset
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -11,6 +13,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import java.io.InputStream
 
 
 class Utility {
@@ -30,6 +33,28 @@ class Utility {
             val decodedByte = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.size)
             return decodedByte
         }
+
+
+
+        fun convertImageUriToBase64(contentResolver: ContentResolver, imageUri: Uri?): String? {
+            try {
+                // Step 1: Read image data from URI
+                val uri2=imageUri!!
+                val inputStream: InputStream? = contentResolver.openInputStream(uri2)
+
+                // Step 2: Convert to byte array
+                val byteArray: ByteArray? = inputStream?.readBytes()
+
+                // Step 3: Convert to Base64
+                if (byteArray != null) {
+                    return android.util.Base64.encodeToString(byteArray, android.util.Base64.DEFAULT)
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+            return null
+        }
+
 
 
         @Composable
