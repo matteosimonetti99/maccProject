@@ -3,6 +3,8 @@ import com.android.build.api.dsl.Packaging
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
+    id ("kotlin-android")
+    id ("kotlin-kapt")
 }
 
 android {
@@ -46,7 +48,6 @@ android {
 
 
 dependencies {
-
     implementation("androidx.core:core-ktx:1.10.1")
     implementation ("androidx.compose.ui:ui-graphics:1.1.0")
     implementation("androidx.compose.ui:ui:1.4.3")
@@ -64,6 +65,11 @@ dependencies {
     implementation("com.google.accompanist:accompanist-systemuicontroller:0.17.0")
     implementation("io.coil-kt:coil-compose:2.2.0")
     implementation ("com.google.android.gms:play-services-location:18.0.0")
+    implementation("androidx.compose.ui:ui:1.1.0-alpha01")
+    implementation("androidx.compose.material3:material3:1.1.0-alpha01")
+    implementation("androidx.activity:activity-compose:1.3.1")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:1.0.0-alpha07")
+    implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.3.1")
 
 
     testImplementation("junit:junit:4.13.2")

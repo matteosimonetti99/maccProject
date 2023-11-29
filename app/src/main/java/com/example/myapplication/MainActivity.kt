@@ -13,9 +13,12 @@ import android.app.Activity
 import android.icu.text.SimpleDateFormat
 import android.net.Uri
 import android.Manifest
+import android.app.DatePickerDialog
+import android.app.TimePickerDialog
 import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Bundle
+import android.text.format.DateUtils.formatDateTime
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -24,6 +27,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -41,6 +45,7 @@ import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.Card
 import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
+import androidx.compose.material.OutlinedTextField
 import androidx.compose.material.Snackbar
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
@@ -53,6 +58,7 @@ import androidx.compose.material.icons.filled.Event
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Mail
 import androidx.compose.material.icons.filled.Place
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -92,13 +98,19 @@ import com.google.maps.android.compose.rememberCameraPositionState
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
-import com.google.android.material.datepicker.MaterialDatePicker
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.intl.Locale
+import androidx.compose.ui.window.Dialog
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import coil.compose.rememberImagePainter
-
 import com.example.myapplication.PositionHolder
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.LocalTime
+import java.time.ZoneId
+import java.util.Calendar
+import java.util.Date
+
 
 class MainActivity : ComponentActivity() {
     private val locationPermissionLauncher =
@@ -154,7 +166,7 @@ class MainActivity : ComponentActivity() {
                             RegisterPage(navController)
                         }
                         composable("mapsDestination") {
-                            ComposeMap(navController)
+                            ComposeMap(navController, this@MainActivity)
                         }
                         composable("myInvitesDestination") {
                             myInvitesPage(navController)
@@ -317,7 +329,7 @@ fun ComposeMap(navController: NavHostController, activity: MainActivity) {
     var currentPosition by remember { mutableStateOf(PositionHolder.lastPostion) }
     var events by remember { mutableStateOf<List<Event>>(emptyList()) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
-    var token = TokenHolder.token
+    var token = InformationHolder.token
 
 
     //val currentPosition = LatLng(loca)
@@ -836,15 +848,20 @@ fun HomePage(navController: NavHostController) {
         }
     }
 }
-
 @Composable
 fun EventCreation(navController: NavHostController) {
     // Define mutable state variables to hold event creation details
     var eventName by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
-    var datetime by remember { mutableStateOf("") }
+    var datetime by remember { mutableStateOf(LocalDateTime.now()) }
+    var datetime2 by remember { mutableStateOf(LocalDateTime.now()) }
     var pictureUri by remember { mutableStateOf<Uri?>(null) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
+    var showDatePicker by remember { mutableStateOf(false) }
+    var showTimePicker by remember { mutableStateOf(false) }
+
+
+
 
     // Create a Box with a custom background color
     Box(
@@ -898,42 +915,56 @@ fun EventCreation(navController: NavHostController) {
                         .fillMaxWidth()
                         .padding(bottom = 16.dp)
                 )
-/*              //TODO: TOGLI COMMENTO
-                val dateTimePickerLauncher =
-                    rememberLauncherForActivityResult(contract = ActivityResultContracts.StartActivityForResult()) { result ->
-                        if (result.resultCode == Activity.RESULT_OK) {
-                            val selectedDateTime =
-                                result.data?.getLongExtra(MaterialDatePicker.EXTRA_SELECTION, 0)
-                            selectedDateTime?.let {
-                                val formattedDateTime =
-                                    SimpleDateFormat("MM/dd/yyyy HH:mm", Locale.getDefault()).format(it)
-                                datetime = formattedDateTime
-                            }
-                        }
-                    }
-*/
-                // Create a clickable text for datetime
-                SelectionContainer {
-                    Text(
-                        text = if (datetime.isEmpty()) "Select Date and Time" else datetime,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(bottom = 16.dp)
-                            .clickable {
-                                val picker = MaterialDatePicker.Builder.datePicker()
-                                    .build()
-                                //TODO: TOGLI COMMENTO
-                                //dateTimePickerLauncher.launch(picker)
-                            },                            //todo: sistema datetime
-                        color = if (datetime.isEmpty()) Color.Gray else Color.Blue
+                if (showDatePicker) {
+                    DatePickerDialog(
+                        selectedDate = datetime,
+                        onDateChange = { newDate ->
+                            datetime = newDate
+                            showDatePicker = false
+                            Log.d("mytag", "${datetime}")
+                        },
+                        onDismissRequest = { showDatePicker = false }
                     )
                 }
+                Button(onClick = { showDatePicker = true }) {
+                    Text("Select Date")
+                }
+
+
+                if (showTimePicker) {
+                    val context = LocalContext.current
+                    val calendar = Calendar.getInstance().apply {
+                        set(Calendar.HOUR_OF_DAY, datetime2.hour)
+                        set(Calendar.MINUTE, datetime2.minute)
+                    }
+                    TimePickerDialog(
+                        context,
+                        { _, hour, minute ->
+                            datetime2 = LocalDateTime.of(datetime2.toLocalDate(), LocalTime.of(hour, minute))
+                            showTimePicker = false
+                            Log.d("mytag", "${datetime2}")
+                        },
+                        calendar.get(Calendar.HOUR_OF_DAY),
+                        calendar.get(Calendar.MINUTE),
+                        true
+                    ).show()
+                }
+                Button(onClick = { showTimePicker = true }) {
+                    Text("Select Time")
+                }
+
+
 
                 // Add a way to upload a picture
                 ImageUploadButton(onImageSelected = { uri ->
                     pictureUri = uri
                     //todo: scegli formato immagine standard
                 })
+
+
+
+
+
 
                 // Create an "Create Event" button with a custom color
                 Button(
@@ -955,6 +986,34 @@ fun EventCreation(navController: NavHostController) {
         }
     }
 }
+
+
+@Composable
+fun DatePickerDialog(
+    selectedDate: LocalDateTime,
+    onDateChange: (LocalDateTime) -> Unit,
+    onDismissRequest: () -> Unit
+) {
+    val context = LocalContext.current
+    Dialog(onDismissRequest = onDismissRequest) {
+        val calendar = Calendar.getInstance().apply {
+            time = Date.from(selectedDate.atZone(ZoneId.systemDefault()).toInstant())
+        }
+        DatePickerDialog(
+            context,
+            { _, year, month, dayOfMonth ->
+                val newDate = LocalDateTime.of(year, month + 1, dayOfMonth, 0, 0)
+                onDateChange(newDate)
+            },
+            calendar.get(Calendar.YEAR),
+            calendar.get(Calendar.MONTH),
+            calendar.get(Calendar.DAY_OF_MONTH)
+        ).show()
+    }
+}
+
+
+
 
 @Composable
 fun ImageUploadButton(onImageSelected: (Uri) -> Unit) {
@@ -997,6 +1056,25 @@ fun ImageUploadButton(onImageSelected: (Uri) -> Unit) {
         }
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
