@@ -12,6 +12,9 @@ import android.annotation.SuppressLint
 import android.app.Activity
 import android.icu.text.SimpleDateFormat
 import android.net.Uri
+import android.Manifest
+import android.content.Context
+import android.content.pm.PackageManager
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
@@ -21,7 +24,6 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -63,15 +65,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.graphics.painter.BitmapPainter
-import androidx.compose.ui.graphics.painter.Painter
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.core.app.ActivityCompat
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -81,12 +79,13 @@ import androidx.navigation.navArgument
 import com.example.myapplication.Components.Companion.eventCard
 import com.example.myapplication.Components.Companion.inviteCard
 import com.google.android.gms.cast.framework.media.ImagePicker
+import com.google.android.gms.location.LocationRequest
+import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.MapProperties
 import com.google.maps.android.compose.MapUiSettings
-import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.MarkerInfoWindow
 import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.rememberCameraPositionState
@@ -99,11 +98,21 @@ import androidx.compose.ui.text.intl.Locale
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import coil.compose.rememberImagePainter
 
+import com.example.myapplication.PositionHolder
 
 class MainActivity : ComponentActivity() {
-
+    private val locationPermissionLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted: Boolean ->
+            if (isGranted) {
+                PositionHolder.UpdateLastPosition(applicationContext.applicationContext,this@MainActivity);
+            } else {
+                // L'utente ha negato il permesso di localizzazione
+                // Puoi gestire questo caso di conseguenza
+            }
+        }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         setContent {
             // Use the default MaterialTheme
             MaterialTheme {
@@ -297,35 +306,68 @@ class MainActivity : ComponentActivity() {
             }
 
         }
+
     }
 }
 
 @Composable
-fun ComposeMap(navController: NavHostController) {
+fun ComposeMap(navController: NavHostController, activity: MainActivity) {
 
-    val singapore = LatLng(1.35541170530446808, 103.864542)
+
+    var currentPosition by remember { mutableStateOf(PositionHolder.lastPostion) }
+    var events by remember { mutableStateOf<List<Event>>(emptyList()) }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
+    var token = TokenHolder.token
+
+
+    //val currentPosition = LatLng(loca)
+    // Fetch events data from the backend using the provided token
+    LaunchedEffect(token) {
+        // Make a network request to fetch events data
+        // Replace this with your actual API call to retrieve events
+        EventsBackend.fetchEvents(token) { result ->
+            result.onSuccess { eventsData ->
+                events = eventsData
+            }
+            result.onFailure { error ->
+                errorMessage = "Failed to fetch events: ${error.localizedMessage}"
+            }
+    }}
+
+
     val cameraPositionState = rememberCameraPositionState {
-        position = CameraPosition.fromLatLngZoom(singapore, 8f)
+        position = CameraPosition.fromLatLngZoom(currentPosition, 8f)
     }
 
     val mapUiSettings = MapUiSettings(
-        mapToolbarEnabled = false,
         zoomControlsEnabled = false,
-        zoomGesturesEnabled = true
+        zoomGesturesEnabled = true,
+        myLocationButtonEnabled = true,
+        mapToolbarEnabled = false
     )
     val mapProperties = MapProperties(
         maxZoomPreference = 12.0f,
-        minZoomPreference = 8f
+        minZoomPreference = 2f,
+        isMyLocationEnabled = true
     )
 
-    GoogleMap(
+
+   GoogleMap(
         modifier = Modifier.fillMaxSize(),
         cameraPositionState = cameraPositionState,
         uiSettings = mapUiSettings,
-        properties = mapProperties
-    ) {
+        properties = mapProperties,
+        //onMyLocationClick = {location -> cameraPositionState.position = CameraPosition.fromLatLngZoom(LatLng(location.latitude,location.longitude), 8f)},
+
+
+    ) { events.forEach { event ->
+
+        val marker = LatLng(event.latitude,event.longitude)
+        var desc = ""
+        if(!event.description.isNullOrBlank())
+             desc = event.description.toString()
         MarkerInfoWindow(
-            state = MarkerState(position = singapore),
+            state = MarkerState(position = marker),
         ) { marker ->
             Box(
                 modifier = Modifier
@@ -339,7 +381,7 @@ fun ComposeMap(navController: NavHostController) {
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
-                        text = "Marker Title",
+                        text = event.name,
                         textAlign = TextAlign.Center,
                         modifier = Modifier
                             .padding(top = 10.dp)
@@ -350,7 +392,7 @@ fun ComposeMap(navController: NavHostController) {
                     Spacer(modifier = Modifier.height(8.dp))
                     //.........................Text : description
                     Text(
-                        text = "Customizing a marker's info window",
+                        text = desc,
                         textAlign = TextAlign.Center,
                         modifier = Modifier
                             .padding(top = 10.dp, start = 25.dp, end = 25.dp)
@@ -366,6 +408,8 @@ fun ComposeMap(navController: NavHostController) {
             }
 
         }
+    }
+
     }
 }
 

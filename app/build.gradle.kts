@@ -63,6 +63,7 @@ dependencies {
     implementation("com.google.accompanist:accompanist-insets:0.17.0")
     implementation("com.google.accompanist:accompanist-systemuicontroller:0.17.0")
     implementation("io.coil-kt:coil-compose:2.2.0")
+    implementation ("com.google.android.gms:play-services-location:18.0.0")
 
 
     testImplementation("junit:junit:4.13.2")
