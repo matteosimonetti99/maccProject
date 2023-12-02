@@ -29,7 +29,25 @@ class Utility {
         val bootstrapDark = Color(0xFF343A40)
 
         fun base64ToBitmap(base64: String): Bitmap {
-            val decodedString: ByteArray = Base64.decode(base64, Base64.DEFAULT)
+            var newbase64=base64
+            val prefixesToRemove = arrayOf(
+                "data:image/jpeg;base64,",
+                "data:image/jpg;base64,",
+                "data:image/png;base64,"
+            )
+
+            // Iterate through each prefix
+
+            // Iterate through each prefix
+            for (prefix in prefixesToRemove) {
+                // Check if the Base64 string starts with the current prefix
+                if (base64.startsWith(prefix)) {
+                    // Remove the prefix
+                    newbase64 = base64.substring(prefix.length)
+                }
+            }
+
+            val decodedString: ByteArray = Base64.decode(newbase64, Base64.DEFAULT)
             val decodedByte = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.size)
             return decodedByte
         }
@@ -39,21 +57,27 @@ class Utility {
         fun convertImageUriToBase64(contentResolver: ContentResolver, imageUri: Uri?): String? {
             try {
                 // Step 1: Read image data from URI
-                val uri2=imageUri!!
+                val uri2 = imageUri!!
                 val inputStream: InputStream? = contentResolver.openInputStream(uri2)
 
                 // Step 2: Convert to byte array
                 val byteArray: ByteArray? = inputStream?.readBytes()
 
-                // Step 3: Convert to Base64
+                // Step 3: Determine image extension
+                val extension: String? = contentResolver.getType(uri2)?.substringAfterLast('/')
+                val mimeType = "image/$extension"
+
+                // Step 4: Convert to Base64
                 if (byteArray != null) {
-                    return android.util.Base64.encodeToString(byteArray, android.util.Base64.DEFAULT)
+                    val base64String = android.util.Base64.encodeToString(byteArray, android.util.Base64.DEFAULT)
+                    return "data:$mimeType;base64,$base64String"
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
             }
             return null
         }
+
 
 
 

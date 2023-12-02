@@ -116,6 +116,7 @@ import java.time.ZoneId
 import java.util.Calendar
 import java.util.Date
 import android.content.ContentResolver
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.core.content.ContentProviderCompat.requireContext
 
 
@@ -770,6 +771,179 @@ fun myInvitesPage(navController: NavHostController) {
 
 
 @Composable
+fun EventCreation(navController: NavHostController) {
+    // Define mutable state variables to hold event creation details
+    var eventName by remember { mutableStateOf("") }
+    var description by remember { mutableStateOf("") }
+    var datetime by remember { mutableStateOf(LocalDateTime.now()) }
+    var datetime2 by remember { mutableStateOf(LocalDateTime.now()) }
+    var pictureUri by remember { mutableStateOf<Uri?>(null) }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
+    var showDatePicker by remember { mutableStateOf(false) }
+    var showTimePicker by remember { mutableStateOf(false) }
+    var dateready by remember { mutableStateOf(false) }
+    var dateready2 by remember { mutableStateOf(false) }
+
+
+
+    // Create a Box with a custom background color
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.Gray) // A darker shade of blue-gray
+    ) {
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp)
+        ) {
+            // Create a Card with elevation and rounded corners
+            item {
+                // Create a Card with elevation and rounded corners
+                Card(
+                    modifier = Modifier
+                        .padding(16.dp)
+                        .fillMaxWidth()
+                        .padding(16.dp)
+                        .clip(RoundedCornerShape(16.dp)),
+                    elevation = 8.dp,
+                    backgroundColor = Color.White
+                ) {
+                    // Create a Column layout for the content
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(16.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        // Display error message
+
+
+                        // Display an "Event Creation" title with custom typography
+                        Text(
+                            text = "Event Creation",
+                            style = MaterialTheme.typography.h4,
+                            modifier = Modifier.padding(bottom = 16.dp)
+                        )
+
+                        // Create input fields for event creation details
+                        TextField(
+                            value = eventName,
+                            onValueChange = { eventName = it },
+                            label = { Text("Event Name") },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = 16.dp)
+                        )
+
+                        TextField(
+                            value = description,
+                            onValueChange = { description = it },
+                            label = { Text("Description (optional)") },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = 16.dp)
+                        )
+                        if (showDatePicker) {
+                            DatePickerDialog(
+                                selectedDate = datetime,
+                                onDateChange = { newDate ->
+                                    datetime = newDate
+                                    showDatePicker = false
+                                    dateready = true
+                                    Log.d("mytag", "${datetime}")
+                                },
+                                onDismissRequest = { showDatePicker = false }
+                            )
+                        }
+                        Button(onClick = { showDatePicker = true }) {
+                            Text("Select Date")
+                        }
+                        if (dateready) Text("${datetime.toLocalDate()}")
+
+
+                        if (showTimePicker) {
+                            val context = LocalContext.current
+                            val calendar = Calendar.getInstance().apply {
+                                set(Calendar.HOUR_OF_DAY, datetime2.hour)
+                                set(Calendar.MINUTE, datetime2.minute)
+                            }
+                            TimePickerDialog(
+                                context,
+                                { _, hour, minute ->
+                                    datetime2 = LocalDateTime.of(
+                                        datetime2.toLocalDate(),
+                                        LocalTime.of(hour, minute)
+                                    )
+                                    showTimePicker = false
+                                    dateready2 = true
+                                    Log.d("mytag", "${datetime2}")
+                                },
+                                calendar.get(Calendar.HOUR_OF_DAY),
+                                calendar.get(Calendar.MINUTE),
+                                true
+                            ).show()
+                        }
+                        Button(onClick = { showTimePicker = true }) {
+                            Text("Select Time")
+                        }
+                        if (dateready2) Text("${datetime2.toLocalTime()}")
+
+
+                        // Add a way to upload a picture
+                        ImageUploadButton(onImageSelected = { uri ->
+                            pictureUri = uri
+                            //todo: scegli formato immagine standard
+                        })
+
+
+                        val contentResolver = LocalContext.current.contentResolver
+
+
+                        // Create an "Create Event" button with a custom color
+                        Button(
+                            onClick = {
+                                errorMessage = null
+
+
+                                val datetimeReal = LocalDateTime.of(
+                                    datetime.toLocalDate(),
+                                    datetime2.toLocalTime()
+                                ).toString().replace('T', ' ')
+                                val base64Image =
+                                    Utility.convertImageUriToBase64(contentResolver, pictureUri)
+                                        .toString()
+                                val position: LatLng = PositionHolder.lastPostion
+                                val latitude: Double = position.latitude
+                                val longitude: Double = position.longitude
+                                //eventName e description
+                                EventCreationBackend.register(
+                                    datetimeReal,
+                                    base64Image,
+                                    latitude,
+                                    longitude,
+                                    eventName,
+                                    description
+                                )
+
+
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = ButtonDefaults.buttonColors(backgroundColor = Color.Blue) // Custom color for the button
+                        ) {
+                            Text(
+                                text = "Create event",
+                                color = Color.White // Set the text color to white
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+@Composable
 fun HomePage(navController: NavHostController) {
     // Define mutable state variable to hold events data
     var events by remember { mutableStateOf<List<Event>>(emptyList()) }
@@ -855,165 +1029,10 @@ fun HomePage(navController: NavHostController) {
         }
     }
 }
-@Composable
-fun EventCreation(navController: NavHostController) {
-    // Define mutable state variables to hold event creation details
-    var eventName by remember { mutableStateOf("") }
-    var description by remember { mutableStateOf("") }
-    var datetime by remember { mutableStateOf(LocalDateTime.now()) }
-    var datetime2 by remember { mutableStateOf(LocalDateTime.now()) }
-    var pictureUri by remember { mutableStateOf<Uri?>(null) }
-    var errorMessage by remember { mutableStateOf<String?>(null) }
-    var showDatePicker by remember { mutableStateOf(false) }
-    var showTimePicker by remember { mutableStateOf(false) }
-    var dateready by remember { mutableStateOf(false) }
-    var dateready2 by remember { mutableStateOf(false) }
-
-
-
-    // Create a Box with a custom background color
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color.Gray) // A darker shade of blue-gray
-    ) {
-        // Create a Card with elevation and rounded corners
-        Card(
-            modifier = Modifier
-                .padding(16.dp)
-                .fillMaxWidth()
-                .padding(16.dp)
-                .clip(RoundedCornerShape(16.dp)),
-            elevation = 8.dp,
-            backgroundColor = Color.White
-        ) {
-            // Create a Column layout for the content
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
-            ) {
-                // Display error message
-
-
-                // Display an "Event Creation" title with custom typography
-                Text(
-                    text = "Event Creation",
-                    style = MaterialTheme.typography.h4,
-                    modifier = Modifier.padding(bottom = 16.dp)
-                )
-
-                // Create input fields for event creation details
-                TextField(
-                    value = eventName,
-                    onValueChange = { eventName = it },
-                    label = { Text("Event Name") },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 16.dp)
-                )
-
-                TextField(
-                    value = description,
-                    onValueChange = { description = it },
-                    label = { Text("Description (optional)") },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 16.dp)
-                )
-                if (showDatePicker) {
-                    DatePickerDialog(
-                        selectedDate = datetime,
-                        onDateChange = { newDate ->
-                            datetime = newDate
-                            showDatePicker = false
-                            dateready=true
-                            Log.d("mytag", "${datetime}")
-                        },
-                        onDismissRequest = { showDatePicker = false }
-                    )
-                }
-                Button(onClick = { showDatePicker = true }) {
-                    Text("Select Date")
-                }
-                if(dateready) Text("${datetime.toLocalDate()}")
-
-
-                if (showTimePicker) {
-                    val context = LocalContext.current
-                    val calendar = Calendar.getInstance().apply {
-                        set(Calendar.HOUR_OF_DAY, datetime2.hour)
-                        set(Calendar.MINUTE, datetime2.minute)
-                    }
-                    TimePickerDialog(
-                        context,
-                        { _, hour, minute ->
-                            datetime2 = LocalDateTime.of(datetime2.toLocalDate(), LocalTime.of(hour, minute))
-                            showTimePicker = false
-                            dateready2=true
-                            Log.d("mytag", "${datetime2}")
-                        },
-                        calendar.get(Calendar.HOUR_OF_DAY),
-                        calendar.get(Calendar.MINUTE),
-                        true
-                    ).show()
-                }
-                Button(onClick = { showTimePicker = true }) {
-                    Text("Select Time")
-                }
-                if(dateready2) Text("${datetime2.toLocalTime()}")
-
-
-
-                // Add a way to upload a picture
-                ImageUploadButton(onImageSelected = { uri ->
-                    pictureUri = uri
-                    //todo: scegli formato immagine standard
-                })
-
-
-
-
-                val contentResolver = LocalContext.current.contentResolver
-
-
-                // Create an "Create Event" button with a custom color
-                Button(
-                    onClick = {
-                        //todo: onclick send tutto ad api che salva dati in db e foto in images
-                        errorMessage = null
-
-
-                        val datetimeReal=LocalDateTime.of(datetime.toLocalDate(),datetime2.toLocalTime())
-                        val base64Image=Utility.convertImageUriToBase64(contentResolver,pictureUri)
-                        Log.d("mytag", "${base64Image}")
-
-
-
-
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.buttonColors(backgroundColor = Color.Blue) // Custom color for the button
-                ) {
-                    Text(
-                        text = "Create event",
-                        color = Color.White // Set the text color to white
-                    )
-                }
-            }
-        }
-    }
-}
 
 
 @Composable
-fun DatePickerDialog(
-    selectedDate: LocalDateTime,
-    onDateChange: (LocalDateTime) -> Unit,
-    onDismissRequest: () -> Unit
-) {
+fun DatePickerDialog(selectedDate: LocalDateTime, onDateChange: (LocalDateTime) -> Unit, onDismissRequest: () -> Unit) {
     val context = LocalContext.current
     Dialog(onDismissRequest = onDismissRequest) {
         val calendar = Calendar.getInstance().apply {
