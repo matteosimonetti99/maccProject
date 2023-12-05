@@ -19,6 +19,8 @@ object InviteDetailsBackend {
     // Function to fetch invites data from the backend based on user ID and event ID
     fun fetchInvite(token: String, userID: Int, eventID: Int, onResult: (Result<Invite>) -> Unit) {
 
+        Log.d("inviteDetailDebug", "token = $token \n userID = $userID, eventID = $eventID")
+
         val client = OkHttpClient()
 
         val request = Request.Builder()
@@ -39,11 +41,22 @@ object InviteDetailsBackend {
                 Log.d("invitesDebug", responseBody.toString())
 
                 if (response.isSuccessful && responseBody != null) {
-                    val invite = parseInvite(responseBody)
-                    onResult(Result.success(invite))
+                    if (responseBody.trim().isNotEmpty()) { // Check for non-empty response
+                        try {
+                            val invite = parseInvite(responseBody)
+                            onResult(Result.success(invite))
+                        } catch (e: Exception) {
+                            Log.e("invitesDebug", "Error parsing invite", e)
+                            onResult(Result.failure(e))
+                        }
+                    } else {
+                        // Handle empty response
+                        Log.e("invitesDebug", "Empty response body")
+                        onResult(Result.failure(IOException("Empty response body")))
+                    }
                 } else {
                     // Handle errors from the backend
-                    Log.d("invitesDebug", responseBody.toString())
+                    Log.e("invitesDebug", "Failed to fetch invites. Response code: ${response.code}")
                     onResult(Result.failure(IOException("Failed to fetch invites")))
                 }
             }

@@ -35,9 +35,7 @@ class Utility {
                 "data:image/jpg;base64,",
                 "data:image/png;base64,"
             )
-
-            // Iterate through each prefix
-
+            
             // Iterate through each prefix
             for (prefix in prefixesToRemove) {
                 // Check if the Base64 string starts with the current prefix
@@ -77,32 +75,6 @@ class Utility {
             }
             return null
         }
-
-
-
-
-        @Composable
-        fun ErrorSnackbar(
-            errorMessage: String?,
-            modifier: Modifier = Modifier
-        ) {
-            Snackbar(
-                modifier = modifier
-                    .absoluteOffset(y = -16.dp) // Adjust the offset as needed
-                    .fillMaxWidth(),
-                action = {
-                    // Add an action if needed
-                },
-                backgroundColor = bootstrapRed, // Bootstrap danger color
-                elevation = 8.dp,
-                contentColor = Color.White // Text color
-            ) {
-                Text(errorMessage ?: "Default Error Message", color = Color.White)
-            }
-        }
-
-
-
 
     }
 }

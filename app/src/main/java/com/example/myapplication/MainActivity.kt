@@ -4,34 +4,22 @@ package com.example.myapplication
 // Other necessary imports
 import Event
 import EventDetailsBackend
-import EventsBackend
+import com.example.myapplication.Backend.EventsBackend
 import Invite
-import InvitesBackend
-import LoginBackend
+import com.example.myapplication.Backend.InvitesBackend
+import com.example.myapplication.Backend.LoginBackend
 import android.annotation.SuppressLint
-import android.app.Activity
-import android.icu.text.SimpleDateFormat
-import android.net.Uri
-import android.Manifest
 import android.app.DatePickerDialog
 import android.app.TimePickerDialog
-import android.content.Context
-import android.content.pm.PackageManager
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
+import android.net.Uri
 import android.os.Bundle
-import android.provider.MediaStore
-import android.text.format.DateUtils.formatDateTime
-import android.util.Base64
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -40,8 +28,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material.BottomNavigation
 import androidx.compose.material.BottomNavigationItem
 import androidx.compose.material.Button
@@ -49,8 +38,6 @@ import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.Card
 import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
-import androidx.compose.material.OutlinedTextField
-import androidx.compose.material.Snackbar
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.compose.material.TextField
@@ -62,13 +49,11 @@ import androidx.compose.material.icons.filled.Event
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Mail
 import androidx.compose.material.icons.filled.Place
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -79,18 +64,20 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.core.app.ActivityCompat
+import androidx.compose.ui.window.Dialog
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import coil.compose.rememberAsyncImagePainter
+import com.example.myapplication.Backend.EventCreationBackend
+import com.example.myapplication.Backend.RegistrationBackend
 import com.example.myapplication.Components.Companion.eventCard
 import com.example.myapplication.Components.Companion.inviteCard
-import com.google.android.gms.cast.framework.media.ImagePicker
-import com.google.android.gms.location.LocationRequest
-import com.google.android.gms.location.LocationServices
+import com.example.myapplication.DataHolders.InformationHolder
+import com.example.myapplication.DataHolders.PositionHolder
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.GoogleMap
@@ -102,22 +89,12 @@ import com.google.maps.android.compose.rememberCameraPositionState
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.intl.Locale
-import androidx.compose.ui.window.Dialog
-import com.google.accompanist.systemuicontroller.rememberSystemUiController
-import coil.compose.rememberImagePainter
-import com.example.myapplication.PositionHolder
-import java.io.ByteArrayOutputStream
-import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.ZoneId
 import java.util.Calendar
 import java.util.Date
-import android.content.ContentResolver
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.core.content.ContentProviderCompat.requireContext
+import java.util.Locale
 
 
 class MainActivity : ComponentActivity() {
@@ -164,7 +141,6 @@ class MainActivity : ComponentActivity() {
                             )
                         ) { backStackEntry ->
                             // Retrieve the token from the arguments
-                            val token = backStackEntry.arguments?.getString("token") ?: ""
                             val id = backStackEntry.arguments?.getInt("id") ?: 0
 
                             eventDetail(navController, id)
@@ -252,11 +228,6 @@ class MainActivity : ComponentActivity() {
                         )
                     }
 
-
-
-
-
-
                     //MANAGER BOTTOMBAR
                     else if (showBottomNavigation=="manager")
                         BottomNavigation(
@@ -316,23 +287,14 @@ class MainActivity : ComponentActivity() {
                                 }
                             )
                         }
-
-
-
-
-
-
                 }
             }
-
         }
-
     }
 }
 
 @Composable
 fun ComposeMap(navController: NavHostController, activity: MainActivity) {
-
 
     var currentPosition by remember { mutableStateOf(PositionHolder.lastPostion) }
     var events by remember { mutableStateOf<List<Event>>(emptyList()) }
@@ -477,8 +439,8 @@ fun LoginPage(navController: NavHostController) {
 
                         Button(
                             onClick = {
-                                InformationHolder.token = "47358c79536a33cc29477bc094cf79fed4ec6ac242b37e88c34b906679c307b2"
-                                InformationHolder.userID = 3
+                                InformationHolder.token = "fd37cea76abf6f9113720c945b4d6e8f1981d9b0f221c05dd65e066a6192ea13"
+                                InformationHolder.userID = 2
                                 navController.navigate("homeDestination")
                             },
                             modifier = Modifier.fillMaxWidth(),
@@ -505,7 +467,7 @@ fun LoginPage(navController: NavHostController) {
 
 
                         if (errorMessage != null) {
-                            Utility.ErrorSnackbar(errorMessage = errorMessage)
+                            Components.ErrorSnackbar(errorMessage = errorMessage)
                             Spacer(modifier = Modifier.height(16.dp))
                         }
 
@@ -718,7 +680,7 @@ fun myInvitesPage(navController: NavHostController) {
 
             // Display error message as a Snackbar
             errorMessage?.let {
-                Utility.ErrorSnackbar(errorMessage = errorMessage)
+                Components.ErrorSnackbar(errorMessage = errorMessage)
                 Spacer(modifier = Modifier.height(16.dp))
             }
 
@@ -948,7 +910,7 @@ fun HomePage(navController: NavHostController) {
     // Define mutable state variable to hold events data
     var events by remember { mutableStateOf<List<Event>>(emptyList()) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
-    var token = InformationHolder.token
+    val token = InformationHolder.token
     var fetched by remember { mutableStateOf(false) }
 
 
@@ -997,15 +959,16 @@ fun HomePage(navController: NavHostController) {
 
             // Display error message as a Snackbar
             errorMessage?.let {
-                Utility.ErrorSnackbar(errorMessage = errorMessage)
+                Components.ErrorSnackbar(errorMessage = errorMessage)
                 Spacer(modifier = Modifier.height(16.dp))
             }
 
             // Display events in a list
             if (events.isNotEmpty()) {
-                Column {
-                    events.forEach { event ->
-                        var id = event.id
+                LazyColumn() {
+                    items(events) { event ->
+                        val id = event.id
+                        Log.d("myeventi", id.toString())
                         eventCard(
                             event = event,
                             onClick = { navController.navigate("eventDetail/$id") }
@@ -1030,7 +993,6 @@ fun HomePage(navController: NavHostController) {
     }
 }
 
-
 @Composable
 fun DatePickerDialog(selectedDate: LocalDateTime, onDateChange: (LocalDateTime) -> Unit, onDismissRequest: () -> Unit) {
     val context = LocalContext.current
@@ -1050,9 +1012,6 @@ fun DatePickerDialog(selectedDate: LocalDateTime, onDateChange: (LocalDateTime) 
         ).show()
     }
 }
-
-
-
 
 @Composable
 fun ImageUploadButton(onImageSelected: (Uri) -> Unit) {
@@ -1074,7 +1033,7 @@ fun ImageUploadButton(onImageSelected: (Uri) -> Unit) {
         // Display selected image
         if (imageUri != null) {
             Image(
-                painter = rememberImagePainter(imageUri),
+                painter = rememberAsyncImagePainter(imageUri),
                 contentDescription = null,
                 modifier = Modifier
                     .fillMaxWidth()
@@ -1095,27 +1054,6 @@ fun ImageUploadButton(onImageSelected: (Uri) -> Unit) {
         }
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 @Composable
 fun RegisterPage(navController: NavHostController) {
@@ -1152,7 +1090,7 @@ fun RegisterPage(navController: NavHostController) {
             ) {
                 // Display error message as a Snackbar
                 errorMessage?.let {
-                    Utility.ErrorSnackbar(errorMessage = errorMessage)
+                    Components.ErrorSnackbar(errorMessage = errorMessage)
                     Spacer(modifier = Modifier.height(16.dp))
                 }
 
@@ -1250,18 +1188,14 @@ fun RegisterPage(navController: NavHostController) {
     }
 }
 
-
-
-
-
-
-
 @Composable
 fun eventDetail(navController: NavHostController, id: Int) {
     var token = InformationHolder.token
     var event by remember { mutableStateOf(Event(0, "", 0.0, 0.0, "", "", "", null)) }
-    val coroutineScope = rememberCoroutineScope()
     var errorMessage by remember { mutableStateOf<String?>(null) }
+    var invite by remember { mutableStateOf<Invite?>(null) }
+
+    Log.d("inviteDetailDebug", "fetcho l'evento $id")
 
 
     // Fetch events data from the backend using the provided token
@@ -1275,6 +1209,25 @@ fun eventDetail(navController: NavHostController, id: Int) {
                 errorMessage = "Failed to fetch event details: ${error.localizedMessage}"
             }
         }
+
+        try {
+            InviteDetailsBackend.fetchInvite(
+                token = InformationHolder.token,
+                userID = InformationHolder.userID,
+                eventID = id
+            ) { result ->
+                val fetchedInvite = result.getOrThrow()
+                invite = fetchedInvite
+                Log.d("fetchInvite", "Fetched the invite in details page")
+
+            }
+        } catch (e: Exception) {
+            Log.d("fetchInvite", "Failed fetching the invite in details page")
+        }
+    }
+
+    LaunchedEffect(Unit) {
+
     }
 
 
@@ -1328,21 +1281,40 @@ fun eventDetail(navController: NavHostController, id: Int) {
                 )
             }
 
-            Button(onClick = {
-                coroutineScope.launch {
-                    //sendApiRequest() TODO: inserire entry in db per richiesta invito
-                }
-                navController.navigate("homeDestination")
-            },
-                colors = ButtonDefaults.buttonColors(backgroundColor = Utility.bootstrapBlue) // Change the background color to red
-            ) {
-                Text(
-                    text = "Request an invite",
-                    style = MaterialTheme.typography.h6,
-                    color = Color.White
-                )
-            }
+            invite?.let { StatusButton(invite!!.status) }
+
+//            if (invite == null) {
+//                Button(
+//                    onClick = { /* Handle button click if needed */ },
+//                    modifier = Modifier
+//                        .padding(8.dp)
+//                        .background(color = Color.Transparent, shape = RoundedCornerShape(4.dp))
+//                ) {
+//                    Text(text = "Request Invite", color = Color.White)
+//                }
+//            }
+
         }
+    }
+}
+
+@Composable
+fun StatusButton(status: String) {
+    Button(
+        onClick = { /* Handle button click if needed */ },
+        modifier = Modifier
+            .padding(8.dp)
+            .background(getButtonColor(status), shape = RoundedCornerShape(4.dp))
+    ) {
+        Text(text = status, color = Color.White)
+    }
+}
+
+private fun getButtonColor(status: String): Color {
+    return when (status.lowercase(Locale.getDefault())) {
+        "accepted" -> Color.Green
+        "pending" -> Color.Yellow
+        else -> Color.Gray
     }
 }
 
@@ -1356,8 +1328,6 @@ fun HomePageManager(navController: NavHostController) {
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var token = InformationHolder.token
     var fetched by remember { mutableStateOf(false) }
-
-
 
     // Fetch events data from the backend using the provided token
     LaunchedEffect(token) {
@@ -1403,20 +1373,22 @@ fun HomePageManager(navController: NavHostController) {
 
             // Display error message as a Snackbar
             errorMessage?.let {
-                Utility.ErrorSnackbar(errorMessage = errorMessage)
+                Components.ErrorSnackbar(errorMessage = errorMessage)
                 Spacer(modifier = Modifier.height(16.dp))
             }
 
             // Display events in a list
             if (events.isNotEmpty()) {
-                Column {
-                    events.forEach { event ->
-                        var id = event.id
-                        eventCard(
-                            event = event,
-                            onClick = { navController.navigate("eventDetail/$id") }
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
+                LazyColumn() {
+                    items(events) {
+                        events.forEach { event ->
+                            var id = event.id
+                            eventCard(
+                                event = event,
+                                onClick = { navController.navigate("eventDetail/$id") }
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                        }
                     }
                 }
             } else if (fetched==true) {

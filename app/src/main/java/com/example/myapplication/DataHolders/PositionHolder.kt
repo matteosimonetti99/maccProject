@@ -1,12 +1,10 @@
-package com.example.myapplication
+package com.example.myapplication.DataHolders
 
 import android.Manifest
 import android.app.Activity
 import android.content.Context
 import android.content.pm.PackageManager
-import android.icu.text.Transliterator.Position
 import android.util.Log
-import androidx.compose.ui.platform.LocalContext
 import androidx.core.app.ActivityCompat
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.model.LatLng
