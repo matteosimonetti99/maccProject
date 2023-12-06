@@ -4,14 +4,11 @@ package com.example.myapplication
 // Other necessary imports
 import Event
 import EventDetailsBackend
-import EventsBackend
-import Invite
-import InvitesBackend
-import LoginBackend
 import android.Manifest
 import android.annotation.SuppressLint
 import android.app.DatePickerDialog
 import android.app.TimePickerDialog
+import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
@@ -30,6 +27,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.BottomNavigation
 import androidx.compose.material.BottomNavigationItem
@@ -66,15 +64,25 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import androidx.core.content.ContextCompat
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import coil.compose.rememberImagePainter
+import coil.compose.rememberAsyncImagePainter
+import com.example.myapplication.Backend.EventCreationBackend
+import com.example.myapplication.Backend.EventsBackend
+import com.example.myapplication.Backend.Invite
+import com.example.myapplication.Backend.InviteDetailsBackend
+import com.example.myapplication.Backend.InvitesBackend
+import com.example.myapplication.Backend.LoginBackend
+import com.example.myapplication.Backend.RegistrationBackend
 import com.example.myapplication.Components.Companion.eventCard
 import com.example.myapplication.Components.Companion.inviteCard
+import com.example.myapplication.DataHolders.InformationHolder
+import com.example.myapplication.DataHolders.PositionHolder
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.GoogleMap
@@ -91,15 +99,6 @@ import java.time.LocalTime
 import java.time.ZoneId
 import java.util.Calendar
 import java.util.Date
-import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.Dialog
-import androidx.core.content.ContextCompat
-import coil.compose.rememberAsyncImagePainter
-import com.example.myapplication.Backend.EventCreationBackend
-import com.example.myapplication.Backend.RegistrationBackend
-import coil.compose.rememberImagePainter
-import com.example.myapplication.DataHolders.InformationHolder
-import com.example.myapplication.DataHolders.PositionHolder
 import java.util.Locale
 
 
@@ -1331,7 +1330,7 @@ fun eventDetail(navController: NavHostController, id: Int) {
 //                        .padding(8.dp)
 //                        .background(color = Color.Transparent, shape = RoundedCornerShape(4.dp))
 //                ) {
-//                    Text(text = "Request Invite", color = Color.White)
+//                    Text(text = "Request com.example.myapplication.Backend.Invite", color = Color.White)
 //                }
 //            }
 
@@ -1422,18 +1421,18 @@ fun HomePageManager(navController: NavHostController) {
 
             // Display events in a list
             if (events.isNotEmpty()) {
-                LazyColumn() {
-                    items(events) {
-                        events.forEach { event ->
-                            var id = event.id
-                            eventCard(
-                                event = event,
-                                onClick = { navController.navigate("eventDetail/$id") }
-                            )
-                            Spacer(modifier = Modifier.height(8.dp))
-                        }
-                    }
-                }
+              LazyColumn() {
+                  items(events) { event ->
+                      val id = event.id
+                      Log.d("myeventi", id.toString())
+                      eventCard(
+                          event = event,
+                          onClick = { navController.navigate("eventDetail/$id") }
+                      )
+                      Spacer(modifier = Modifier.height(8.dp))
+                  }
+              }                                                                                                             
+
             } else if (fetched==true) {
                 Text(
                     text = "No events available.",

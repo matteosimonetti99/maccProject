@@ -1,6 +1,5 @@
 package com.example.myapplication.Backend
 
-import Invite
 import android.util.Log
 import okhttp3.*
 import org.json.JSONArray

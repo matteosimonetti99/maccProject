@@ -1,8 +1,8 @@
 package com.example.myapplication
 
 import Event
-import Invite
-import InviteDetailsBackend
+import com.example.myapplication.Backend.Invite
+import com.example.myapplication.Backend.InviteDetailsBackend
 import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
