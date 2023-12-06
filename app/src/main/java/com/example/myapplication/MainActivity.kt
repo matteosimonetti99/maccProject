@@ -8,30 +8,20 @@ import EventsBackend
 import Invite
 import InvitesBackend
 import LoginBackend
-import android.annotation.SuppressLint
-import android.app.Activity
-import android.icu.text.SimpleDateFormat
-import android.net.Uri
 import android.Manifest
+import android.annotation.SuppressLint
 import android.app.DatePickerDialog
 import android.app.TimePickerDialog
-import android.content.Context
 import android.content.pm.PackageManager
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
+import android.net.Uri
 import android.os.Bundle
-import android.provider.MediaStore
-import android.text.format.DateUtils.formatDateTime
-import android.util.Base64
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -40,8 +30,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material.BottomNavigation
 import androidx.compose.material.BottomNavigationItem
 import androidx.compose.material.Button
@@ -49,8 +39,6 @@ import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.Card
 import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
-import androidx.compose.material.OutlinedTextField
-import androidx.compose.material.Snackbar
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.compose.material.TextField
@@ -62,7 +50,6 @@ import androidx.compose.material.icons.filled.Event
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Mail
 import androidx.compose.material.icons.filled.Place
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -79,18 +66,17 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.core.app.ActivityCompat
+import androidx.compose.ui.window.Dialog
+import androidx.core.content.ContextCompat
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import coil.compose.rememberImagePainter
 import com.example.myapplication.Components.Companion.eventCard
 import com.example.myapplication.Components.Companion.inviteCard
-import com.google.android.gms.cast.framework.media.ImagePicker
-import com.google.android.gms.location.LocationRequest
-import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.GoogleMap
@@ -102,36 +88,38 @@ import com.google.maps.android.compose.rememberCameraPositionState
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.intl.Locale
-import androidx.compose.ui.window.Dialog
-import com.google.accompanist.systemuicontroller.rememberSystemUiController
-import coil.compose.rememberImagePainter
-import com.example.myapplication.PositionHolder
-import java.io.ByteArrayOutputStream
-import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.ZoneId
 import java.util.Calendar
 import java.util.Date
-import android.content.ContentResolver
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.core.content.ContentProviderCompat.requireContext
 
 
 class MainActivity : ComponentActivity() {
-    private val locationPermissionLauncher =
-        registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted: Boolean ->
-            if (isGranted) {
-                PositionHolder.UpdateLastPosition(applicationContext.applicationContext,this@MainActivity);
-            } else {
-                // L'utente ha negato il permesso di localizzazione
-                // Puoi gestire questo caso di conseguenza
-            }
+
+    private val requestPermissionLauncher =
+        registerForActivityResult(
+            ActivityResultContracts.RequestPermission()
+        ){isGranted: Boolean ->
+            if(isGranted)
+                PositionHolder.UpdateLastPosition(this@MainActivity.applicationContext,this@MainActivity)
         }
+
+    private fun askPermissions() = when {
+        ContextCompat.checkSelfPermission(
+            this@MainActivity.applicationContext,
+            Manifest.permission.ACCESS_FINE_LOCATION
+        ) == PackageManager.PERMISSION_GRANTED ->{
+            PositionHolder.UpdateLastPosition(this@MainActivity.applicationContext,this@MainActivity)
+        }
+        else -> {
+            requestPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        askPermissions()
 
         setContent {
             // Use the default MaterialTheme
@@ -253,10 +241,6 @@ class MainActivity : ComponentActivity() {
                     }
 
 
-
-
-
-
                     //MANAGER BOTTOMBAR
                     else if (showBottomNavigation=="manager")
                         BottomNavigation(
@@ -333,14 +317,12 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun ComposeMap(navController: NavHostController, activity: MainActivity) {
 
-
-    var currentPosition by remember { mutableStateOf(PositionHolder.lastPostion) }
+    var currentPosition by remember { mutableStateOf(LatLng(1.0,1.0)) }
     var events by remember { mutableStateOf<List<Event>>(emptyList()) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var token = InformationHolder.token
 
 
-    //val currentPosition = LatLng(loca)
     // Fetch events data from the backend using the provided token
     LaunchedEffect(token) {
         // Make a network request to fetch events data
@@ -377,8 +359,6 @@ fun ComposeMap(navController: NavHostController, activity: MainActivity) {
         cameraPositionState = cameraPositionState,
         uiSettings = mapUiSettings,
         properties = mapProperties,
-        //onMyLocationClick = {location -> cameraPositionState.position = CameraPosition.fromLatLngZoom(LatLng(location.latitude,location.longitude), 8f)},
-
 
     ) { events.forEach { event ->
 
