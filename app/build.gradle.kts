@@ -86,4 +86,7 @@ dependencies {
     implementation("com.squareup.okhttp3:okhttp:4.9.1")
 
     implementation("io.coil-kt:coil-compose:2.5.0")
+
+    //QR code
+    implementation("com.google.zxing:core:3.5.2")
 }

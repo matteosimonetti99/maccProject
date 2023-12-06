@@ -1,8 +1,7 @@
 package com.example.myapplication
 
 import Event
-import com.example.myapplication.Backend.Invite
-import com.example.myapplication.Backend.InviteDetailsBackend
+import android.graphics.Bitmap
 import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -16,11 +15,13 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.AlertDialog
 import androidx.compose.material.Button
 import androidx.compose.material.Card
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Snackbar
 import androidx.compose.material.Text
+import androidx.compose.material.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -32,11 +33,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.rememberAsyncImagePainter
+import com.example.myapplication.Backend.Invite
+import com.example.myapplication.Backend.InviteDetailsBackend
 import com.example.myapplication.DataHolders.InformationHolder
+import com.google.zxing.BarcodeFormat
+import com.google.zxing.qrcode.QRCodeWriter
 import java.util.Locale
 
 class Components {
@@ -220,21 +227,40 @@ class Components {
 
                         // Display the status button
                         Log.d("inviteTag", invite.toString())
-                        invite?.let { StatusButton(invite!!.status) }
+
+                        invite?.let { StatusButton(invite!!) }
+
                     }
                 }
             }
+
+
         }
 
         @Composable
-        fun StatusButton(status: String) {
+        fun StatusButton(invite: Invite) {
+            var showQRCode by remember { mutableStateOf(false) }
+
+            val buttonColor = getButtonColor(invite.status)
+
+            if (showQRCode) {
+                // Display QR code
+                generateAndShowQRCode(invite.inviteID)
+            }
+
+            // Display button
             Button(
-                onClick = { /* Handle button click if needed */ },
+                onClick = {
+                    // Handle button click
+                    if (invite.status == "accepted") {
+                        showQRCode = true
+                    }
+                },
                 modifier = Modifier
                     .padding(8.dp)
-                    .background(getButtonColor(status), shape = RoundedCornerShape(4.dp))
+                    .background(buttonColor, shape = RoundedCornerShape(4.dp))
             ) {
-                Text(text = status, color = Color.White)
+                Text(text = invite.status, color = Color.White)
             }
         }
 
@@ -244,6 +270,69 @@ class Components {
                 "pending" -> Color.Yellow
                 else -> Color.Gray
             }
+        }
+
+        @Composable
+        fun generateAndShowQRCode(inviteID: Int) {
+            val qrCodeBitmap: Bitmap = generateQRCodeBitmap(inviteID.toString(), size = 200)
+
+            var showDialog by remember { mutableStateOf(true) }
+
+            if (showDialog) {
+                AlertDialog(
+                    onDismissRequest = {
+                        // Close the dialog when onDismissRequest is called
+                        showDialog = false
+                    },
+                    title = { Text(text = "QR Code") },
+                    text = {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Image(
+                                painter = rememberAsyncImagePainter(qrCodeBitmap),
+                                contentDescription = null,
+                                modifier = Modifier.size(150.dp)
+                            )
+                        }
+                    },
+                    buttons = {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(8.dp),
+                            horizontalArrangement = Arrangement.End
+                        ) {
+                            TextButton(onClick = {
+                                // Close the dialog when the button is clicked
+                                showDialog = false
+                            }) {
+                                Text("Close")
+                            }
+                        }
+                    }
+                )
+            }
+        }
+
+        // Funzione di esempio per generare un QR code con ZXing
+        fun generateQRCodeBitmap(data: String, size: Int): Bitmap {
+            val writer = QRCodeWriter()
+            val bitMatrix = writer.encode(data, BarcodeFormat.QR_CODE, size, size)
+            val width = bitMatrix.width
+            val height = bitMatrix.height
+            val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+
+            for (x in 0 until width) {
+                for (y in 0 until height) {
+                    bitmap.setPixel(x, y, if (bitMatrix[x, y]) Color.Black.toArgb() else Color.White.toArgb())
+                }
+            }
+
+            return bitmap
         }
 
         @Composable

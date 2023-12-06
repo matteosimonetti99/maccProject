@@ -1,0 +1,19 @@
+Tommaso:
+
+- PythonAnywhere
+-- Crea API /getqr(id invito) -> sha256(id invito + password db)
+-- Crea API /checkqr(sha256(id invito + password db) -> True/False
+-- Crea API /acceptInvite(id invito) -> Nothing
+[OPTIONAL]
+--- /createqr prende un'invito e:
+---- Cambia lo status in accepted
+
+- Nella pagina i miei inviti e in quella dei dettagli il pulsante in caso di invito accettato deve chiamarsi "get qr"
+-- Al click viene fatta una chiamata al db /getqr con l'id dell'invito
+--- Il risultato della chiamata viene renderizzato come qr code a schermo
+
+- Crea pulsante "scan qr" su pagina principale.
+-- Al click si apre la fotocamera e fa scannerizzare l'immagine
+--- Quando il qr viene riconosciuto viene mandata una richiesta all'API /checkqr con in input l'hash ottenuto
+--- Se l'api dà risposta affermativa allora viene mandato un segnale che elimina l'invito sul database
+--- Altrimenti viene dato un messaggio di errore

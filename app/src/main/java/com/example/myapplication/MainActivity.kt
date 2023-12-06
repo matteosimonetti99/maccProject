@@ -79,6 +79,7 @@ import com.example.myapplication.Backend.InviteDetailsBackend
 import com.example.myapplication.Backend.InvitesBackend
 import com.example.myapplication.Backend.LoginBackend
 import com.example.myapplication.Backend.RegistrationBackend
+import com.example.myapplication.Components.Companion.StatusButton
 import com.example.myapplication.Components.Companion.eventCard
 import com.example.myapplication.Components.Companion.inviteCard
 import com.example.myapplication.DataHolders.InformationHolder
@@ -99,7 +100,6 @@ import java.time.LocalTime
 import java.time.ZoneId
 import java.util.Calendar
 import java.util.Date
-import java.util.Locale
 
 
 class MainActivity : ComponentActivity() {
@@ -1321,7 +1321,7 @@ fun eventDetail(navController: NavHostController, id: Int) {
                 )
             }
 
-            invite?.let { StatusButton(invite!!.status) }
+            invite?.let {StatusButton(invite!!) }
 
 //            if (invite == null) {
 //                Button(
@@ -1338,25 +1338,6 @@ fun eventDetail(navController: NavHostController, id: Int) {
     }
 }
 
-@Composable
-fun StatusButton(status: String) {
-    Button(
-        onClick = { /* Handle button click if needed */ },
-        modifier = Modifier
-            .padding(8.dp)
-            .background(getButtonColor(status), shape = RoundedCornerShape(4.dp))
-    ) {
-        Text(text = status, color = Color.White)
-    }
-}
-
-private fun getButtonColor(status: String): Color {
-    return when (status.lowercase(Locale.getDefault())) {
-        "accepted" -> Color.Green
-        "pending" -> Color.Yellow
-        else -> Color.Gray
-    }
-}
 
 //MANAGER COMPOSABLES
 
