@@ -1,3 +1,6 @@
+package com.example.myapplication.Backend
+
+import Event
 import android.util.Log
 import okhttp3.*
 import org.json.JSONArray
@@ -58,7 +61,7 @@ object EventsBackend {
                 encoded_image = eventObject.optString("encoded_image")
             )
 
-            Log.d("EventsBackend", "event: $event")
+            Log.d("com.example.myapplication.Backend.EventsBackend", "event: $event")
 
             events.add(event)
         }

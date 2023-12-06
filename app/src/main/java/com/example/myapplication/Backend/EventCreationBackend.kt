@@ -1,6 +1,7 @@
-package com.example.myapplication
+package com.example.myapplication.Backend
 
 import android.util.Log
+import com.example.myapplication.DataHolders.InformationHolder
 import okhttp3.*
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.RequestBody.Companion.toRequestBody

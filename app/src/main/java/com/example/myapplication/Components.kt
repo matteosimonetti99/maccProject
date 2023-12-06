@@ -1,7 +1,6 @@
 package com.example.myapplication
 
 import Event
-import kotlin.Result
 import Invite
 import InviteDetailsBackend
 import android.util.Log
@@ -12,6 +11,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.absoluteOffset
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -19,6 +19,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Button
 import androidx.compose.material.Card
 import androidx.compose.material.MaterialTheme
+import androidx.compose.material.Snackbar
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -35,6 +36,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.myapplication.DataHolders.InformationHolder
 import java.util.Locale
 
 class Components {
@@ -133,9 +135,11 @@ class Components {
                     ) { result ->
                         val fetchedInvite = result.getOrThrow()
                         invite = fetchedInvite
+//                        Log.d("fetchInvite", "Fetched the invite in my invites page")
+
                     }
                 } catch (e: Exception) {
-                    Log.d("mytag", "Failed fetching the invite")
+                    Log.d("mytag", "Failed fetching the invite in my invites page")
                 }
             }
 
@@ -241,5 +245,26 @@ class Components {
                 else -> Color.Gray
             }
         }
+
+        @Composable
+        fun ErrorSnackbar(
+            errorMessage: String?,
+            modifier: Modifier = Modifier
+        ) {
+            Snackbar(
+                modifier = modifier
+                    .absoluteOffset(y = -16.dp) // Adjust the offset as needed
+                    .fillMaxWidth(),
+                action = {
+                    // Add an action if needed
+                },
+                backgroundColor = Utility.bootstrapRed, // Bootstrap danger color
+                elevation = 8.dp,
+                contentColor = Color.White // Text color
+            ) {
+                Text(errorMessage ?: "Default Error Message", color = Color.White)
+            }
+        }
+
     }
 }

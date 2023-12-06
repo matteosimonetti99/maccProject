@@ -1,4 +1,4 @@
-package com.example.myapplication
+package com.example.myapplication.DataHolders
 
 object InformationHolder {
     var token: String = ""

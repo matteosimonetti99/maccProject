@@ -12,7 +12,6 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.app.DatePickerDialog
 import android.app.TimePickerDialog
-import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
@@ -67,7 +66,6 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
-import androidx.core.content.ContextCompat
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -93,6 +91,16 @@ import java.time.LocalTime
 import java.time.ZoneId
 import java.util.Calendar
 import java.util.Date
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.Dialog
+import androidx.core.content.ContextCompat
+import coil.compose.rememberAsyncImagePainter
+import com.example.myapplication.Backend.EventCreationBackend
+import com.example.myapplication.Backend.RegistrationBackend
+import coil.compose.rememberImagePainter
+import com.example.myapplication.DataHolders.InformationHolder
+import com.example.myapplication.DataHolders.PositionHolder
+import java.util.Locale
 
 
 class MainActivity : ComponentActivity() {
@@ -152,7 +160,6 @@ class MainActivity : ComponentActivity() {
                             )
                         ) { backStackEntry ->
                             // Retrieve the token from the arguments
-                            val token = backStackEntry.arguments?.getString("token") ?: ""
                             val id = backStackEntry.arguments?.getInt("id") ?: 0
 
                             eventDetail(navController, id)
@@ -241,6 +248,10 @@ class MainActivity : ComponentActivity() {
                     }
 
 
+
+
+
+
                     //MANAGER BOTTOMBAR
                     else if (showBottomNavigation=="manager")
                         BottomNavigation(
@@ -317,12 +328,13 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun ComposeMap(navController: NavHostController, activity: MainActivity) {
 
-    var currentPosition by remember { mutableStateOf(LatLng(1.0,1.0)) }
+    var currentPosition by remember { mutableStateOf(PositionHolder.lastPostion) }
     var events by remember { mutableStateOf<List<Event>>(emptyList()) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var token = InformationHolder.token
 
 
+    //val currentPosition = LatLng(loca)
     // Fetch events data from the backend using the provided token
     LaunchedEffect(token) {
         // Make a network request to fetch events data
@@ -457,8 +469,8 @@ fun LoginPage(navController: NavHostController) {
 
                         Button(
                             onClick = {
-                                InformationHolder.token = "47358c79536a33cc29477bc094cf79fed4ec6ac242b37e88c34b906679c307b2"
-                                InformationHolder.userID = 3
+                                InformationHolder.token = "fd37cea76abf6f9113720c945b4d6e8f1981d9b0f221c05dd65e066a6192ea13"
+                                InformationHolder.userID = 2
                                 navController.navigate("homeDestination")
                             },
                             modifier = Modifier.fillMaxWidth(),
@@ -485,7 +497,7 @@ fun LoginPage(navController: NavHostController) {
 
 
                         if (errorMessage != null) {
-                            Utility.ErrorSnackbar(errorMessage = errorMessage)
+                            Components.ErrorSnackbar(errorMessage = errorMessage)
                             Spacer(modifier = Modifier.height(16.dp))
                         }
 
@@ -698,7 +710,7 @@ fun myInvitesPage(navController: NavHostController) {
 
             // Display error message as a Snackbar
             errorMessage?.let {
-                Utility.ErrorSnackbar(errorMessage = errorMessage)
+                Components.ErrorSnackbar(errorMessage = errorMessage)
                 Spacer(modifier = Modifier.height(16.dp))
             }
 
@@ -928,7 +940,7 @@ fun HomePage(navController: NavHostController) {
     // Define mutable state variable to hold events data
     var events by remember { mutableStateOf<List<Event>>(emptyList()) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
-    var token = InformationHolder.token
+    val token = InformationHolder.token
     var fetched by remember { mutableStateOf(false) }
 
 
@@ -977,15 +989,16 @@ fun HomePage(navController: NavHostController) {
 
             // Display error message as a Snackbar
             errorMessage?.let {
-                Utility.ErrorSnackbar(errorMessage = errorMessage)
+                Components.ErrorSnackbar(errorMessage = errorMessage)
                 Spacer(modifier = Modifier.height(16.dp))
             }
 
             // Display events in a list
             if (events.isNotEmpty()) {
-                Column {
-                    events.forEach { event ->
-                        var id = event.id
+                LazyColumn() {
+                    items(events) { event ->
+                        val id = event.id
+                        Log.d("myeventi", id.toString())
                         eventCard(
                             event = event,
                             onClick = { navController.navigate("eventDetail/$id") }
@@ -1054,7 +1067,7 @@ fun ImageUploadButton(onImageSelected: (Uri) -> Unit) {
         // Display selected image
         if (imageUri != null) {
             Image(
-                painter = rememberImagePainter(imageUri),
+                painter = rememberAsyncImagePainter(imageUri),
                 contentDescription = null,
                 modifier = Modifier
                     .fillMaxWidth()
@@ -1075,27 +1088,6 @@ fun ImageUploadButton(onImageSelected: (Uri) -> Unit) {
         }
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 @Composable
 fun RegisterPage(navController: NavHostController) {
@@ -1132,7 +1124,7 @@ fun RegisterPage(navController: NavHostController) {
             ) {
                 // Display error message as a Snackbar
                 errorMessage?.let {
-                    Utility.ErrorSnackbar(errorMessage = errorMessage)
+                    Components.ErrorSnackbar(errorMessage = errorMessage)
                     Spacer(modifier = Modifier.height(16.dp))
                 }
 
@@ -1242,6 +1234,9 @@ fun eventDetail(navController: NavHostController, id: Int) {
     var event by remember { mutableStateOf(Event(0, "", 0.0, 0.0, "", "", "", null)) }
     val coroutineScope = rememberCoroutineScope()
     var errorMessage by remember { mutableStateOf<String?>(null) }
+    var invite by remember { mutableStateOf<Invite?>(null) }
+
+    Log.d("inviteDetailDebug", "fetcho l'evento $id")
 
 
     // Fetch events data from the backend using the provided token
@@ -1255,6 +1250,25 @@ fun eventDetail(navController: NavHostController, id: Int) {
                 errorMessage = "Failed to fetch event details: ${error.localizedMessage}"
             }
         }
+
+        try {
+            InviteDetailsBackend.fetchInvite(
+                token = InformationHolder.token,
+                userID = InformationHolder.userID,
+                eventID = id
+            ) { result ->
+                val fetchedInvite = result.getOrThrow()
+                invite = fetchedInvite
+                Log.d("fetchInvite", "Fetched the invite in details page")
+
+            }
+        } catch (e: Exception) {
+            Log.d("fetchInvite", "Failed fetching the invite in details page")
+        }
+    }
+
+    LaunchedEffect(Unit) {
+
     }
 
 
@@ -1308,21 +1322,40 @@ fun eventDetail(navController: NavHostController, id: Int) {
                 )
             }
 
-            Button(onClick = {
-                coroutineScope.launch {
-                    //sendApiRequest() TODO: inserire entry in db per richiesta invito
-                }
-                navController.navigate("homeDestination")
-            },
-                colors = ButtonDefaults.buttonColors(backgroundColor = Utility.bootstrapBlue) // Change the background color to red
-            ) {
-                Text(
-                    text = "Request an invite",
-                    style = MaterialTheme.typography.h6,
-                    color = Color.White
-                )
-            }
+            invite?.let { StatusButton(invite!!.status) }
+
+//            if (invite == null) {
+//                Button(
+//                    onClick = { /* Handle button click if needed */ },
+//                    modifier = Modifier
+//                        .padding(8.dp)
+//                        .background(color = Color.Transparent, shape = RoundedCornerShape(4.dp))
+//                ) {
+//                    Text(text = "Request Invite", color = Color.White)
+//                }
+//            }
+
         }
+    }
+}
+
+@Composable
+fun StatusButton(status: String) {
+    Button(
+        onClick = { /* Handle button click if needed */ },
+        modifier = Modifier
+            .padding(8.dp)
+            .background(getButtonColor(status), shape = RoundedCornerShape(4.dp))
+    ) {
+        Text(text = status, color = Color.White)
+    }
+}
+
+private fun getButtonColor(status: String): Color {
+    return when (status.lowercase(Locale.getDefault())) {
+        "accepted" -> Color.Green
+        "pending" -> Color.Yellow
+        else -> Color.Gray
     }
 }
 
@@ -1383,20 +1416,22 @@ fun HomePageManager(navController: NavHostController) {
 
             // Display error message as a Snackbar
             errorMessage?.let {
-                Utility.ErrorSnackbar(errorMessage = errorMessage)
+                Components.ErrorSnackbar(errorMessage = errorMessage)
                 Spacer(modifier = Modifier.height(16.dp))
             }
 
             // Display events in a list
             if (events.isNotEmpty()) {
-                Column {
-                    events.forEach { event ->
-                        var id = event.id
-                        eventCard(
-                            event = event,
-                            onClick = { navController.navigate("eventDetail/$id") }
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
+                LazyColumn() {
+                    items(events) {
+                        events.forEach { event ->
+                            var id = event.id
+                            eventCard(
+                                event = event,
+                                onClick = { navController.navigate("eventDetail/$id") }
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                        }
                     }
                 }
             } else if (fetched==true) {

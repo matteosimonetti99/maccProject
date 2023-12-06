@@ -1,3 +1,5 @@
+package com.example.myapplication.Backend
+
 import android.util.Log
 import okhttp3.*
 import okhttp3.MediaType.Companion.toMediaType
@@ -5,19 +7,21 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONObject
 import java.io.IOException
 
-object LoginBackend {
+object RegistrationBackend {
 
-    private const val BASE_LOGIN_URL = "https://maccproject.pythonanywhere.com/login"
+    private const val BASE_REGISTER_URL = "https://maccproject.pythonanywhere.com/register"
 
-    // Funzione per effettuare il login e ottenere un token
-    fun login(username: String, password: String, onResult: (String?, Int?, String?) -> Unit) {
+    // Funzione per effettuare registrazione e ottenere un token
+    fun register(username: String, name: String, password: String, onResult: (String?, Int?) -> Unit) {
 
         val trimmedUsername = username.trim()
         val trimmedPassword = password.trim()
+        val trimmedName = name.trim()
 
         val client = OkHttpClient()
         val json = JSONObject()
         json.put("username", trimmedUsername)
+        json.put("name", trimmedName)
         json.put("password", trimmedPassword)
 
         Log.d("mytag", "Connessione creata")
@@ -26,7 +30,7 @@ object LoginBackend {
         val requestBody = json.toString().toRequestBody(mediaType)
 
         val request = Request.Builder()
-            .url(BASE_LOGIN_URL)
+            .url(BASE_REGISTER_URL)
             .post(requestBody)
             .build()
 
@@ -35,7 +39,9 @@ object LoginBackend {
             override fun onFailure(call: Call, e: IOException) {
 
                 Log.d("mytag", "risposta NON ricevuta")
-                onResult(null, null, null)
+
+                // Gestione dell'errore di connessione
+                onResult(null, null)
             }
 
             override fun onResponse(call: Call, response: Response) {
@@ -47,15 +53,14 @@ object LoginBackend {
                 if (response.isSuccessful && responseBody != null) {
                     val jsonResponse = JSONObject(responseBody)
                     val token = jsonResponse.optString("token", null)
-                    val role = jsonResponse.optString("role", null)
-                    val userID = jsonResponse.optInt("user_id", -1)
+                    val userID = jsonResponse.optInt("user_id", -1) // Assuming the key is 'user_id'
 
-                    // Passa il token al chiamante
-                    onResult(token, userID, role)
+                    // Passa il token e user ID al chiamante
+                    onResult(token, userID)
                 } else {
                     // Gestione degli errori dal backend
                     Log.d("mytag", responseBody.toString())
-                    onResult(null, null, null)
+                    onResult(null, null)
                 }
             }
         })
