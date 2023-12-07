@@ -13,6 +13,8 @@ import android.app.TimePickerDialog
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -188,6 +190,17 @@ class MainActivity : ComponentActivity() {
                         }
                         composable("EventCreation") {
                             EventCreation(navController)
+                        }
+                        composable(
+                            "eventDetailManager/{id}",
+                            arguments = listOf(
+                                navArgument("id") { type = NavType.IntType }
+                            )
+                        ) { backStackEntry ->
+                            // Retrieve the token from the arguments
+                            val id = backStackEntry.arguments?.getInt("id") ?: 0
+
+                            eventDetailManager(navController, id)
                         }
                     }
 
@@ -474,7 +487,7 @@ fun LoginPage(navController: NavHostController) {
                         Button(
                             onClick = {
                                 InformationHolder.token = "fd37cea76abf6f9113720c945b4d6e8f1981d9b0f221c05dd65e066a6192ea13"
-                                InformationHolder.userID = 2
+                                InformationHolder.userID = 3
                                 navController.navigate("homeDestination")
                             },
                             modifier = Modifier.fillMaxWidth(),
@@ -926,8 +939,10 @@ fun EventCreation(navController: NavHostController) {
                                     eventName,
                                     description
                                 )
-                                navController.navigate("HomePageManager")
-
+                                Handler(Looper.getMainLooper()).postDelayed({
+                                    // WAIT DI 1 secondo perchè sennò non fa in tempo a renderizzare nuovo evento in home
+                                    navController.navigate("HomePageManager")
+                                }, 1000)
 
                             },
                             modifier = Modifier.fillMaxWidth(),
@@ -1401,7 +1416,7 @@ fun HomePageManager(navController: NavHostController) {
                       Log.d("myeventi", id.toString())
                       eventCard(
                           event = event,
-                          onClick = { navController.navigate("eventDetail/$id") }
+                          onClick = { navController.navigate("eventDetailManager/$id") }
                       )
                       Spacer(modifier = Modifier.height(8.dp))
                   }
@@ -1476,6 +1491,82 @@ fun HomePageManager(navController: NavHostController) {
         ) {
             Log.d("MyCamera", "Permissions acquired")
             BarcodeScannerAppObject.BarcodeScannerApp(LocalContext.current)
+        }
+    }
+}
+
+@Composable
+fun eventDetailManager(navController: NavHostController, id: Int) {
+    var token = InformationHolder.token
+    var event by remember { mutableStateOf(Event(0, "", 0.0, 0.0, "", "", "", null)) }
+    val coroutineScope = rememberCoroutineScope()
+    var errorMessage by remember { mutableStateOf<String?>(null) }
+
+    Log.d("inviteDetailDebug", "fetcho l'evento $id")
+
+
+    // Fetch events data from the backend using the provided token
+    LaunchedEffect(token) {
+        // Make a network request to fetch event details
+        EventDetailsBackend.fetchEventDetails(token, id) { result ->
+            result.onSuccess { eventData ->
+                event = eventData
+            }
+            result.onFailure { error ->
+                errorMessage = "Failed to fetch event details: ${error.localizedMessage}"
+            }
+        }
+    }
+
+    // Utilize a Surface to contain the content of the home page
+    Surface(
+        modifier = Modifier.fillMaxSize(),
+        color = Utility.bootstrapDark // A darker shade of blue-gray
+    ) {
+        // Utilize Column to organize the content in a column
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+
+            // Utilize TopAppBar for a stylized top bar
+            TopAppBar(
+                title = {
+                    Text(
+                        text = "Event name",
+                        style = MaterialTheme.typography.h6,
+                        color = Color.White
+                    )
+                },
+                backgroundColor = Utility.bootstrapSecondary // A darker shade of blue-gray
+            )
+
+            // Add spacing
+            Spacer(modifier = Modifier.height(16.dp))
+
+
+            if (event.encoded_image != null && event.encoded_image != "") {
+
+                Text(text = event.name, style = MaterialTheme.typography.h5)
+
+                val image = Utility.base64ToBitmap(event.encoded_image)
+
+                Image(
+                    bitmap = image.asImageBitmap(),
+                    contentDescription = "contentDescription"
+                )
+                Text(text = event.description ?: "", style = MaterialTheme.typography.body1)
+                //todo: pulsante deve avere testo in base a stato invito
+            } else {
+                Text(
+                    text = "Loading details",
+                    style = MaterialTheme.typography.body1,
+                    color = Color.White
+                )
+            }
         }
     }
 }
