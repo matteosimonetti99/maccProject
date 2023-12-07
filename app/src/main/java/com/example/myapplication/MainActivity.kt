@@ -607,6 +607,7 @@ fun myInvitesPage(navController: NavHostController) {
     var token = InformationHolder.token
     var userID = InformationHolder.userID
     var fetched by remember { mutableStateOf(false) }
+    var inLoop by remember { mutableStateOf(false) }
 
 
     // Create a MutableStateFlow to accumulate events over time
@@ -618,10 +619,10 @@ fun myInvitesPage(navController: NavHostController) {
         InvitesBackend.fetchInvites(token, userID) { result ->
             result.onSuccess { invitesData ->
                 invites = invitesData
-                fetched=true
 
 
                 for (invite in invites) {
+                    inLoop=true
                     EventDetailsBackend.fetchEventDetails(
                         token,
                         invite.eventID
@@ -629,6 +630,8 @@ fun myInvitesPage(navController: NavHostController) {
                         eventResult.onSuccess { eventDetails ->
                             // Update the MutableStateFlow with the current state
                             eventsFlow.value = eventsFlow.value + eventDetails
+                            fetched=true
+
                         }
                         eventResult.onFailure { error ->
                             errorMessage =
@@ -636,6 +639,7 @@ fun myInvitesPage(navController: NavHostController) {
                         }
                     }
                 }
+                if (!inLoop) fetched=true
 
                 Log.d("invitesDebug", eventsFlow.value.toString())
             }
@@ -922,6 +926,7 @@ fun EventCreation(navController: NavHostController) {
                                     eventName,
                                     description
                                 )
+                                navController.navigate("HomePageManager")
 
 
                             },
@@ -1374,7 +1379,7 @@ fun HomePageManager(navController: NavHostController) {
             TopAppBar(
                 title = {
                     Text(
-                        text = "Manager Home Page, da fare, per ora copiata da user",
+                        text = "Manager Home Page",
                         style = MaterialTheme.typography.h6,
                         color = Color.White
                     )
