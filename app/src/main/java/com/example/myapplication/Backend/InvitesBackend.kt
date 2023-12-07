@@ -1,8 +1,15 @@
 package com.example.myapplication.Backend
 
 import android.util.Log
-import okhttp3.*
+import com.example.myapplication.DataHolders.InformationHolder
+import okhttp3.Call
+import okhttp3.Callback
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.Response
 import org.json.JSONArray
+import org.json.JSONException
+import org.json.JSONObject
 import java.io.IOException
 
 object InvitesBackend {
@@ -64,5 +71,85 @@ object InvitesBackend {
         }
 
         return invites
+    }
+
+    // Function to fetch invite hash from the Flask server
+    fun fetchInviteHashFromAPI(inviteID: String, onResult: (Result<String>) -> Unit) {
+
+        val client = OkHttpClient()
+
+        val request = Request.Builder()
+            .url("$BASE_URL/getqr/$inviteID")
+            .header("Authorization", InformationHolder.token)
+            .get()
+            .build()
+
+        client.newCall(request).enqueue(object : Callback {
+
+            override fun onFailure(call: Call, e: IOException) {
+                // Handle connection failure
+                onResult(Result.failure(e))
+            }
+
+            override fun onResponse(call: Call, response: Response) {
+                val responseBody = response.body?.string()
+                Log.d("QRcode", "Response body: $responseBody")
+
+                if (response.isSuccessful && responseBody != null) {
+                    try {
+                        val jsonObject = JSONObject(responseBody)
+                        val qrCode = jsonObject.getString("qr_code")
+                        Log.d("QRcode", "QR Code: $qrCode")
+                        onResult(Result.success(qrCode))
+                    } catch (e: JSONException) {
+                        Log.e("QRcode", "Failed to parse JSON response", e)
+                        onResult(Result.failure(e))
+                    }
+                } else {
+                    // Handle errors from the Flask server
+                    Log.e("QRcode", "Unsuccessful response: ${response.code}")
+                    onResult(Result.failure(IOException("Failed to fetch invite hash")))
+                }
+            }
+        })
+    }
+
+    fun checkQRcode(inviteID: Int, qrCode: String, onResult: (Result<Boolean>) -> Unit) {
+        val client = OkHttpClient()
+
+        val request = Request.Builder()
+            .url("$BASE_URL/checkqr/$inviteID/$qrCode")
+            .header("Authorization", InformationHolder.token)
+            .get()
+            .build()
+
+        client.newCall(request).enqueue(object : Callback {
+
+            override fun onFailure(call: Call, e: IOException) {
+                // Handle connection failure
+                onResult(Result.failure(e))
+            }
+
+            override fun onResponse(call: Call, response: Response) {
+                val responseBody = response.body?.string()
+                Log.d("checkQRCode", "Response body: $responseBody")
+
+                if (response.isSuccessful && responseBody != null) {
+                    try {
+                        val jsonObject = JSONObject(responseBody)
+                        val isCorrect = jsonObject.getBoolean("result")
+                        Log.d("checkQRCode", "isCorrect: $isCorrect")
+                        onResult(Result.success(isCorrect))
+                    } catch (e: JSONException) {
+                        Log.e("checkQRCode", "Failed to parse JSON response", e)
+                        onResult(Result.failure(e))
+                    }
+                } else {
+                    // Handle errors from the Flask server
+                    Log.e("checkQRCode", "Unsuccessful response: ${response.code}")
+                    onResult(Result.failure(IOException("Failed to check invite hash")))
+                }
+            }
+        })
     }
 }

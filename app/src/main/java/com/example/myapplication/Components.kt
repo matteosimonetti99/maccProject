@@ -41,6 +41,7 @@ import androidx.compose.ui.unit.sp
 import coil.compose.rememberAsyncImagePainter
 import com.example.myapplication.Backend.Invite
 import com.example.myapplication.Backend.InviteDetailsBackend
+import com.example.myapplication.Backend.InvitesBackend.fetchInviteHashFromAPI
 import com.example.myapplication.DataHolders.InformationHolder
 import com.google.zxing.BarcodeFormat
 import com.google.zxing.qrcode.QRCodeWriter
@@ -240,12 +241,68 @@ class Components {
         @Composable
         fun StatusButton(invite: Invite) {
             var showQRCode by remember { mutableStateOf(false) }
+            var qrCodeBitmap by remember { mutableStateOf<Bitmap?>(null) }
 
             val buttonColor = getButtonColor(invite.status)
 
             if (showQRCode) {
-                // Display QR code
-                generateAndShowQRCode(invite.inviteID)
+
+                LaunchedEffect(invite.inviteID) {
+                    try {
+                        // Use the generateQRCodeBitmap function with the onResult callback
+                        generateQRCodeBitmap(invite.inviteID.toString(), size = 200) { result ->
+                            if (result.isSuccess) {
+                                // Update the qrCodeBitmap state with the fetched bitmap
+                                qrCodeBitmap = result.getOrThrow()
+                            } else {
+                                // Handle the failure, log the error, or perform other actions
+                                Log.e("QRcode", "Error fetching QR code: ${result.exceptionOrNull()?.message}", result.exceptionOrNull())
+                            }
+                        }
+                    } catch (e: Exception) {
+                        // Handle exceptions outside of the callback
+                        Log.e("QRcode", "Error fetching QR code: ${e.message}", e)
+                    }
+                }
+
+                if (showQRCode) {
+                    AlertDialog(
+                        onDismissRequest = {
+                            // Close the dialog when onDismissRequest is called
+                            showQRCode = false
+                        },
+                        title = { Text(text = "QR Code") },
+                        text = {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(16.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Image(
+                                    painter = rememberAsyncImagePainter(qrCodeBitmap),
+                                    contentDescription = null,
+                                    modifier = Modifier.size(150.dp)
+                                )
+                            }
+                        },
+                        buttons = {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(8.dp),
+                                horizontalArrangement = Arrangement.End
+                            ) {
+                                TextButton(onClick = {
+                                    // Close the dialog when the button is clicked
+                                    showQRCode = false
+                                }) {
+                                    Text("Close")
+                                }
+                            }
+                        }
+                    )
+                }
             }
 
             // Display button
@@ -260,7 +317,13 @@ class Components {
                     .padding(8.dp)
                     .background(buttonColor, shape = RoundedCornerShape(4.dp))
             ) {
-                Text(text = invite.status, color = Color.White)
+                if (invite.status == "accepted") {
+                    Text(text = "get the QR code", color = Color.White)
+
+                }
+                else {
+                    Text(text = invite.status, color = Color.White)
+                }
             }
         }
 
@@ -272,68 +335,41 @@ class Components {
             }
         }
 
-        @Composable
-        fun generateAndShowQRCode(inviteID: Int) {
-            val qrCodeBitmap: Bitmap = generateQRCodeBitmap(inviteID.toString(), size = 200)
 
-            var showDialog by remember { mutableStateOf(true) }
+        // Function to generate a QR code bitmap using ZXing
+        fun generateQRCodeBitmap(inviteID: String, size: Int, onResult: (Result<Bitmap>) -> Unit) {
 
-            if (showDialog) {
-                AlertDialog(
-                    onDismissRequest = {
-                        // Close the dialog when onDismissRequest is called
-                        showDialog = false
-                    },
-                    title = { Text(text = "QR Code") },
-                    text = {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(16.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Image(
-                                painter = rememberAsyncImagePainter(qrCodeBitmap),
-                                contentDescription = null,
-                                modifier = Modifier.size(150.dp)
-                            )
-                        }
-                    },
-                    buttons = {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(8.dp),
-                            horizontalArrangement = Arrangement.End
-                        ) {
-                            TextButton(onClick = {
-                                // Close the dialog when the button is clicked
-                                showDialog = false
-                            }) {
-                                Text("Close")
+            // Fetch the SHA-256 hash of the invite from the Flask API
+            fetchInviteHashFromAPI(inviteID) { hashResult ->
+                if (hashResult.isSuccess) {
+                    try {
+                        val inviteHash = hashResult.getOrThrow()
+
+                        // Generate QR code based on the retrieved SHA-256 hash
+                        val writer = QRCodeWriter()
+                        val bitMatrix = writer.encode(inviteHash, BarcodeFormat.QR_CODE, size, size)
+                        val width = bitMatrix.width
+                        val height = bitMatrix.height
+                        val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+
+                        for (x in 0 until width) {
+                            for (y in 0 until height) {
+                                bitmap.setPixel(x, y, if (bitMatrix[x, y]) Color.Black.toArgb() else Color.White.toArgb())
                             }
                         }
+
+                        onResult(Result.success(bitmap))
+                    } catch (e: Exception) {
+                        // Handle exceptions as needed
+                        onResult(Result.failure(e))
                     }
-                )
-            }
-        }
-
-        // Funzione di esempio per generare un QR code con ZXing
-        fun generateQRCodeBitmap(data: String, size: Int): Bitmap {
-            val writer = QRCodeWriter()
-            val bitMatrix = writer.encode(data, BarcodeFormat.QR_CODE, size, size)
-            val width = bitMatrix.width
-            val height = bitMatrix.height
-            val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
-
-            for (x in 0 until width) {
-                for (y in 0 until height) {
-                    bitmap.setPixel(x, y, if (bitMatrix[x, y]) Color.Black.toArgb() else Color.White.toArgb())
+                } else {
+                    // Propagate the failure from fetchInviteHashFromAPI
+                    onResult(Result.failure(hashResult.exceptionOrNull() ?: Exception("Failed to fetch invite hash")))
                 }
             }
-
-            return bitmap
         }
+
 
         @Composable
         fun ErrorSnackbar(

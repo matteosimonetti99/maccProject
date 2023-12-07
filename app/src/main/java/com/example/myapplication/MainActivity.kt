@@ -2,10 +2,12 @@
 package com.example.myapplication
 
 // Other necessary imports
+import BarcodeScannerAppObject
 import Event
 import EventDetailsBackend
 import android.Manifest
 import android.annotation.SuppressLint
+import android.app.Activity
 import android.app.DatePickerDialog
 import android.app.TimePickerDialog
 import android.content.pm.PackageManager
@@ -35,6 +37,7 @@ import androidx.compose.material.Button
 import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.Card
 import androidx.compose.material.Icon
+import androidx.compose.material.IconButton
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
@@ -47,6 +50,7 @@ import androidx.compose.material.icons.filled.Event
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Mail
 import androidx.compose.material.icons.filled.Place
+import androidx.compose.material.icons.filled.QrCodeScanner
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -64,6 +68,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -1266,11 +1271,6 @@ fun eventDetail(navController: NavHostController, id: Int) {
         }
     }
 
-    LaunchedEffect(Unit) {
-
-    }
-
-
     // Utilize a Surface to contain the content of the home page
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -1323,17 +1323,6 @@ fun eventDetail(navController: NavHostController, id: Int) {
 
             invite?.let {StatusButton(invite!!) }
 
-//            if (invite == null) {
-//                Button(
-//                    onClick = { /* Handle button click if needed */ },
-//                    modifier = Modifier
-//                        .padding(8.dp)
-//                        .background(color = Color.Transparent, shape = RoundedCornerShape(4.dp))
-//                ) {
-//                    Text(text = "Request com.example.myapplication.Backend.Invite", color = Color.White)
-//                }
-//            }
-
         }
     }
 }
@@ -1349,6 +1338,8 @@ fun HomePageManager(navController: NavHostController) {
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var token = InformationHolder.token
     var fetched by remember { mutableStateOf(false) }
+    var showCamera by remember { mutableStateOf(false) }
+    var qrCodeValue by remember { mutableStateOf<String?>(null) }
 
 
 
@@ -1391,9 +1382,6 @@ fun HomePageManager(navController: NavHostController) {
                 backgroundColor = Utility.bootstrapSecondary // A darker shade of blue-gray
             )
 
-            // Add spacing
-            Spacer(modifier = Modifier.height(16.dp))
-
             // Display error message as a Snackbar
             errorMessage?.let {
                 Components.ErrorSnackbar(errorMessage = errorMessage)
@@ -1412,7 +1400,7 @@ fun HomePageManager(navController: NavHostController) {
                       )
                       Spacer(modifier = Modifier.height(8.dp))
                   }
-              }                                                                                                             
+              }
 
             } else if (fetched==true) {
                 Text(
@@ -1428,6 +1416,65 @@ fun HomePageManager(navController: NavHostController) {
                 )
             }
         }
+
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp)
+        ) {
+            // QR code button
+            IconButton(
+                onClick = {
+                    var qr_code = "5297fd949ca3f9c3b98d4e40a01812caa508c247e3cf9e57fabb79b0dcf08397"
+                    var invite_id = 4
+
+                    showCamera = true
+                },
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(8.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.QrCodeScanner,
+                    contentDescription = null,
+                    tint = Color.White
+                )
+            }
+        }
+    }
+
+    if (showCamera) {
+
+        Log.d("MyCamera", "received message to open camera")
+
+        if (ContextCompat.checkSelfPermission(
+                LocalContext.current,
+                Manifest.permission.CAMERA
+            ) != PackageManager.PERMISSION_GRANTED
+        )
+        {
+
+            Log.d("MyCamera", "Need to acquire permissions")
+            // Request the CAMERA permission
+            val REQUEST_CAMERA_PERMISSION_CODE = 1001
+            ActivityCompat.requestPermissions(
+                LocalContext.current as Activity,
+                arrayOf(Manifest.permission.CAMERA),
+                REQUEST_CAMERA_PERMISSION_CODE
+            )
+        }
+
+        if (ContextCompat.checkSelfPermission(
+                LocalContext.current,
+                Manifest.permission.CAMERA
+            ) == PackageManager.PERMISSION_GRANTED
+        ) {
+            Log.d("MyCamera", "Permissions acquired")
+            BarcodeScannerAppObject.BarcodeScannerApp(LocalContext.current)
+        }
     }
 }
+
+
+
 
