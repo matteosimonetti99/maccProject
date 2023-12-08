@@ -142,7 +142,9 @@ class Components {
                         eventID = event.id
                     ) { result ->
                         val fetchedInvite = result.getOrThrow()
-                        invite = fetchedInvite
+                        if (fetchedInvite.inviteID != -1) {
+                            invite = fetchedInvite
+                        }
 //                        Log.d("fetchInvite", "Fetched the invite in my invites page")
 
                     }
@@ -203,6 +205,7 @@ class Components {
                                         style = MaterialTheme.typography.caption,
                                         color = Color.Black,
                                     )
+
                                 }
                             }
                         }
@@ -235,6 +238,23 @@ class Components {
                 }
             }
 
+
+        }
+
+        @Composable
+        fun requestInviteButton()  {
+            // Display button
+            Button(
+                onClick = {
+                    // Handle button click
+                },
+                modifier = Modifier
+                    .padding(8.dp)
+                    .background(color = Color.Cyan, shape = RoundedCornerShape(4.dp))
+            )
+            {
+                Text(text = "request invite")
+            }
 
         }
 

@@ -1244,6 +1244,8 @@ fun eventDetail(navController: NavHostController, id: Int) {
     val coroutineScope = rememberCoroutineScope()
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var invite by remember { mutableStateOf<Invite?>(null) }
+    var inviteHasBeenFetched by remember { mutableStateOf(false) }
+
 
     Log.d("inviteDetailDebug", "fetcho l'evento $id")
 
@@ -1267,7 +1269,10 @@ fun eventDetail(navController: NavHostController, id: Int) {
                 eventID = id
             ) { result ->
                 val fetchedInvite = result.getOrThrow()
-                invite = fetchedInvite
+                if (fetchedInvite.inviteID != -1) {
+                    invite = fetchedInvite
+                }
+                inviteHasBeenFetched = true
                 Log.d("fetchInvite", "Fetched the invite in details page")
 
             }
@@ -1326,7 +1331,22 @@ fun eventDetail(navController: NavHostController, id: Int) {
                 )
             }
 
-            invite?.let {StatusButton(invite!!) }
+            if (invite != null) {
+                Log.d("buttondDebug", "invite è diverso da null, faccio comparire bottone")
+                StatusButton(invite!!)
+            }
+
+            if (invite == null) {
+
+                Log.d("buttondDebug", "invite è uguale da null, aspetto che venga fetchato l'invito")
+
+
+                if (inviteHasBeenFetched) {
+                    Log.d("buttondDebug", "l'invito è stato fetchato, spawno request invite")
+
+                    Components.requestInviteButton()
+                }
+            }
 
         }
     }
