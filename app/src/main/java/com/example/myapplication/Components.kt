@@ -246,7 +246,7 @@ class Components {
             // Display button
             Button(
                 onClick = {
-                    // Handle button click
+                    //todo: requestInviteButton
                 },
                 modifier = Modifier
                     .padding(8.dp)
