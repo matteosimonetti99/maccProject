@@ -26,33 +26,43 @@ import java.util.concurrent.Executors
 // Composable function for the Barcode Scanner App
 object BarcodeScannerAppObject {
 
+    // Executor service for camera operations
     private lateinit var cameraExecutor: ExecutorService
+    // Application context
     private lateinit var context: Context
-    private const val REQUEST_CODE_PERMISSIONS = 10
+    // Array of required camera permissions
     private val REQUIRED_PERMISSIONS = arrayOf(Manifest.permission.CAMERA)
 
+    // Composable function for the Barcode Scanner App
     @Composable
     fun BarcodeScannerApp(context: Context) {
+        // State variables for camera preview, QR code detection, and detected QR code value
         var previewView by remember { mutableStateOf<PreviewView?>(null) }
         var qrCodeDetected by remember { mutableStateOf(false) }
         var detectedQRCodeValue by remember { mutableStateOf<String?>(null) }
 
+        // Initialize context and executor
         this.context = context
         cameraExecutor = Executors.newSingleThreadExecutor()
 
+        // Launched effect to handle camera initialization
         LaunchedEffect(previewView) {
             Log.d("MyCamera", "LaunchedEffect called.")
+            // Get the camera provider instance
             val cameraProviderFuture = ProcessCameraProvider.getInstance(context)
 
             cameraProviderFuture.addListener({
                 val cameraProvider: ProcessCameraProvider = cameraProviderFuture.get()
 
+                // Configure the camera preview
                 val preview = Preview.Builder().build().also {
                     it.setSurfaceProvider(previewView!!.surfaceProvider)
                 }
 
+                // Configure the image analysis for QR code detection
                 val imageAnalysis = ImageAnalysis.Builder().build().also {
                     it.setAnalyzer(cameraExecutor) { imageProxy ->
+                        // Use ML Kit to process the image and detect QR codes
                         val scanner = BarcodeScanning.getClient()
                         val inputImage =
                             InputImage.fromMediaImage(
@@ -63,6 +73,7 @@ object BarcodeScannerAppObject {
                         scanner.process(inputImage)
                             .addOnSuccessListener { barcode ->
                                 if (barcode.isNotEmpty() && barcode[0].valueType == Barcode.TYPE_TEXT) {
+                                    // If a QR code is detected, handle the result
                                     Log.d(
                                         "MyCamera",
                                         "QR Code Detected: ${barcode[0].displayValue}"
@@ -70,16 +81,19 @@ object BarcodeScannerAppObject {
 
                                     detectedQRCodeValue = barcode[0].displayValue
 
+                                    // Check the QR code with the backend
+                                    //TODO: PER MATTEO: Ho hardcodato l'inviteid numero 4, perché avevo quel qr.
+                                    //TODO: PER MATTEO: Tu dovrai prenderlo dalla pagina dell'evento su cui viene messo il pulsante per il qr
                                     InvitesBackend.checkQRcode(4, detectedQRCodeValue!!) { result ->
                                         result.onSuccess { result ->
-
                                             Log.d("checkQRcode", "$result")
 
+                                            // If the QR code is valid, set the flag
                                             if (result == true) {
                                                 qrCodeDetected = true
                                             }
 
-                                            //todo: Aggiungi qui che l'invito viene rimosso dal db
+                                            //todo: Add code here to remove the invitation from the database
 
                                         }
                                         result.onFailure { error ->
@@ -96,12 +110,14 @@ object BarcodeScannerAppObject {
                                 e.printStackTrace()
                             }
                             .addOnCompleteListener {
+                                // Close the image proxy when processing is complete
                                 imageProxy.close()
                             }
                     }
                 }
 
                 try {
+                    // Unbind existing camera instances and bind to the lifecycle
                     cameraProvider.unbindAll()
                     cameraProvider.bindToLifecycle(
                         context as androidx.lifecycle.LifecycleOwner,
@@ -116,11 +132,13 @@ object BarcodeScannerAppObject {
             }, ContextCompat.getMainExecutor(context))
         }
 
+        // Compose the UI
         Surface(
             modifier = Modifier.fillMaxSize(),
             color = MaterialTheme.colorScheme.background
         ) {
             if (!qrCodeDetected) {
+                // If QR code is not detected, show camera preview
                 AndroidView(
                     modifier = Modifier.fillMaxSize().background(Color.Black),
                     factory = { context ->
@@ -133,12 +151,12 @@ object BarcodeScannerAppObject {
                     }
                 )
             } else {
-
+                // If QR code is detected, show relevant UI
                 Text("QR Code Detected: $detectedQRCodeValue")
 
-                Text("Benvenuto!")
+                Text("Welcome!")
 
-                //TODO:Aggiungi pulsante per tornare alla home
+                //TODO: Add a button here to return to the home screen
             }
         }
     }
