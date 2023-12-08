@@ -1610,9 +1610,9 @@ fun eventDetailManager(navController: NavHostController, id: Int) {
 }
 
 @Composable
-fun joinRequests(navController: NavHostController) {
+fun joinRequests(navController: NavHostController, eventId: Int) {
     var token = InformationHolder.token
-    var joinRequests by remember { mutableStateOf<List<User>?>(null) }
+    var joinRequests by remember { mutableStateOf<List<String>?>(null) }
     val coroutineScope = rememberCoroutineScope()
 
     Log.d("JoinRequestsDebug", "Fetching join requests")
@@ -1620,7 +1620,7 @@ fun joinRequests(navController: NavHostController) {
     // Fetch join requests from the backend
     LaunchedEffect(token) {
         // Make a network request to fetch join requests
-        JoinRequestsBackend.fetchJoinRequests(token) { result ->
+        JoinRequestsBackend.fetchJoinRequests(token, eventId) { result ->
             result.onSuccess { eventData ->
                 joinRequests = eventData
             }
@@ -1649,7 +1649,7 @@ fun joinRequests(navController: NavHostController) {
 }
 
 @Composable
-fun InviteUserForm(eventId: Int, navController: NavHostController) {
+fun InviteUserForm(navController: NavHostController, eventId: Int) {
     val coroutineScope = rememberCoroutineScope()
 
     val email by remember { mutableStateOf("") }
