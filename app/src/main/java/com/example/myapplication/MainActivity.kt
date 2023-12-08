@@ -202,6 +202,28 @@ class MainActivity : ComponentActivity() {
 
                             eventDetailManager(navController, id)
                         }
+                        composable(
+                            "joinRequests/{id}",
+                            arguments = listOf(
+                                navArgument("id") { type = NavType.IntType }
+                            )
+                        ) { backStackEntry ->
+                            // Retrieve the token from the arguments
+                            val id = backStackEntry.arguments?.getInt("id") ?: 0
+
+                            joinRequests(navController, id)
+                        }
+                        composable(
+                            "InviteUserForm/{id}",
+                            arguments = listOf(
+                                navArgument("id") { type = NavType.IntType }
+                            )
+                        ) { backStackEntry ->
+                            // Retrieve the token from the arguments
+                            val id = backStackEntry.arguments?.getInt("id") ?: 0
+
+                            InviteUserForm(navController, id)
+                        }
                     }
 
 
@@ -1332,7 +1354,23 @@ fun eventDetail(navController: NavHostController, id: Int) {
                     contentDescription = "contentDescription"
                 )
                 Text(text = event.description ?: "", style = MaterialTheme.typography.body1)
-                //todo: pulsante deve avere testo in base a stato invito
+                Button(
+                    onClick = {
+                        // Navigate to the joining requests page
+                        navController.navigate("joinRequests/${navController}/${event.id}")
+                    }
+                ) {
+                    Text(text = "Joining requests")
+                }
+
+                // Button for inviting users
+                Button(
+                    onClick = {
+                        navController.navigate("InviteUserForm/${navController}/${event.id}")
+                    }
+                ) {
+                    Text(text = "Invite users")
+                }
             } else {
                 Text(
                     text = "Loading details",
@@ -1570,6 +1608,94 @@ fun eventDetailManager(navController: NavHostController, id: Int) {
         }
     }
 }
+
+@Composable
+fun joinRequests(navController: NavHostController) {
+    var token = InformationHolder.token
+    var joinRequests by remember { mutableStateOf<List<User>?>(null) }
+    val coroutineScope = rememberCoroutineScope()
+
+    Log.d("JoinRequestsDebug", "Fetching join requests")
+
+    // Fetch join requests from the backend
+    LaunchedEffect(token) {
+        // Make a network request to fetch join requests
+        JoinRequestsBackend.fetchJoinRequests(token) { result ->
+            result.onSuccess { eventData ->
+                joinRequests = eventData
+            }
+            result.onFailure { error ->
+                // Handle error in fetching join requests
+                Log.d("JoinRequestsDebug", "Failed to fetch join requests: ${error.localizedMessage}")
+            }
+        }
+    }
+
+    // Display the list of join requests
+    Column(
+        modifier = Modifier.fillMaxSize(),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        if (joinRequests != null) {
+            joinRequests.forEach { user ->
+                Text("User: ${user.name}")
+                Spacer(modifier = Modifier.height(8.dp))
+            }
+        } else {
+            Text("Loading join requests...")
+        }
+    }
+}
+
+@Composable
+fun InviteUserForm(eventId: Int, navController: NavHostController) {
+    val coroutineScope = rememberCoroutineScope()
+
+    val email by remember { mutableStateOf("") }
+
+    // Form elements
+    val emailInput = TextField(
+        label = { Text("Enter email address") },
+        value = email,
+        onValueChange = { email = it }
+    )
+
+    // Submit button
+    Button(
+        onClick = {
+            // Validate the email address
+            if (validateEmail(email)) {
+                // Send invitation request to the backend
+                coroutineScope.launch {
+                    InviteUserBackend.inviteUser(
+                        token = InformationHolder.token ?: "",
+                        email = email,
+                        eventId = eventId
+                    ) { result ->
+                        result.onSuccess {
+                            // Handle successful invitation
+                            Log.d("InviteUserForm", "Invitation sent successfully")
+
+                            // Navigate back to the event details page
+                            navController.popBackStack()
+                        }
+                        result.onFailure { error ->
+                            // Handle error in sending invitation
+                            Log.d("InviteUserForm", "Error sending invitation: ${error.localizedMessage}")
+                        }
+                    }
+                }
+            } else {
+                // Show error message if email is invalid
+                Log.d("InviteUserForm", "Invalid email address")
+            }
+        }
+    ) {
+        Text("Invite")
+    }
+}
+
 
 
 
