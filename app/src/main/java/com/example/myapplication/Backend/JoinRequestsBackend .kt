@@ -36,11 +36,7 @@ object JoinRequestsBackend {
                 // Convert the JSONArray to a List<String>
                 val joinRequests: MutableList<String> = mutableListOf()
                 for (i in 0 until joinRequestsArray.length()) {
-                    // Extract the email from the current object
-                    val jsonObject = joinRequestsArray.getJSONObject(i)
-                    val email = jsonObject.get("email").toString()
-
-                    // Add the email to the list
+                    val email = joinRequestsArray.getString(i)
                     joinRequests.add(email)
                 }
 

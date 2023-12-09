@@ -47,7 +47,9 @@ import androidx.compose.material.TextField
 import androidx.compose.material.TopAppBar
 import androidx.compose.material.Typography
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Event
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Mail
@@ -1329,6 +1331,12 @@ fun eventDetail(navController: NavHostController, id: Int) {
 
             // Utilize TopAppBar for a stylized top bar
             TopAppBar(
+                navigationIcon = {
+                    // Back button
+                    IconButton(onClick = { navController.popBackStack() }) {
+                        Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                    }
+                },
                 title = {
                     Text(
                         text = "Event name",
@@ -1338,6 +1346,7 @@ fun eventDetail(navController: NavHostController, id: Int) {
                 },
                 backgroundColor = Utility.bootstrapSecondary // A darker shade of blue-gray
             )
+
 
             // Add spacing
             Spacer(modifier = Modifier.height(16.dp))
@@ -1389,7 +1398,6 @@ fun eventDetail(navController: NavHostController, id: Int) {
 //MANAGER COMPOSABLES
 
 @Composable
-//TODO: HomePageManager
 fun HomePageManager(navController: NavHostController) {
     // Define mutable state variable to hold events data
     var events by remember { mutableStateOf<List<Event>>(emptyList()) }
@@ -1539,6 +1547,8 @@ fun eventDetailManager(navController: NavHostController, id: Int) {
     var event by remember { mutableStateOf(Event(0, "", 0.0, 0.0, "", "", "", null)) }
     val coroutineScope = rememberCoroutineScope()
     var errorMessage by remember { mutableStateOf<String?>(null) }
+    val AppBarHeight = 56.dp
+
 
     Log.d("inviteDetailDebug", "fetcho l'evento $id")
 
@@ -1571,16 +1581,8 @@ fun eventDetailManager(navController: NavHostController, id: Int) {
         ) {
 
             // Utilize TopAppBar for a stylized top bar
-            TopAppBar(
-                title = {
-                    Text(
-                        text = "Event name",
-                        style = MaterialTheme.typography.h6,
-                        color = Color.White
-                    )
-                },
-                backgroundColor = Utility.bootstrapSecondary // A darker shade of blue-gray
-            )
+
+
 
             // Add spacing
             Spacer(modifier = Modifier.height(16.dp))
@@ -1597,7 +1599,25 @@ fun eventDetailManager(navController: NavHostController, id: Int) {
                     contentDescription = "contentDescription"
                 )
                 Text(text = event.description ?: "", style = MaterialTheme.typography.body1)
-                //todo: pulsante deve avere testo in base a stato invito
+
+                // Button for joining requests
+                Button(
+                    onClick = {
+                        // Navigate to the joining requests page
+                        navController.navigate("joinRequests/${event.id}")
+                    }
+                ) {
+                    Text(text = "Joining requests")
+                }
+
+                // Button for inviting users
+                Button(
+                    onClick = {
+                        navController.navigate("InviteUserForm/${event.id}")
+                    }
+                ) {
+                    Text(text = "Invite users")
+                }
             } else {
                 Text(
                     text = "Loading details",
@@ -1607,6 +1627,25 @@ fun eventDetailManager(navController: NavHostController, id: Int) {
             }
         }
     }
+    TopAppBar(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(AppBarHeight),
+        navigationIcon = {
+            // Back button
+            IconButton(onClick = { navController.popBackStack() }) {
+                Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+            }
+        },
+        title = {
+            Text(
+                text = "Event name",
+                style = MaterialTheme.typography.h6,
+                color = Color.White
+            )
+        },
+        backgroundColor = Utility.bootstrapSecondary // A darker shade of blue-gray
+    )
 }
 
 @Composable
@@ -1620,39 +1659,70 @@ fun joinRequests(navController: NavHostController, eventId: Int) {
     // Fetch join requests from the backend
     LaunchedEffect(token) {
         // Make a network request to fetch join requests
-        JoinRequestsBackend.fetchJoinRequests(token, eventId) { result ->
-            result.onSuccess { eventData ->
-                joinRequests = eventData
-            }
-            result.onFailure { error ->
+        JoinRequestsBackend.fetchJoinRequests(token, eventId,
+            onSuccess = { joinRequestsData ->
+                // Update the joinRequests state
+                joinRequests = joinRequestsData
+            },
+            onFailure = { error ->
                 // Handle error in fetching join requests
-                Log.d("JoinRequestsDebug", "Failed to fetch join requests: ${error.localizedMessage}")
+                Log.d("JoinRequestsDebug", "Failed to fetch join requests")
             }
-        }
+        )
     }
 
     // Display the list of join requests
-    Column(
-        modifier = Modifier.fillMaxSize(),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Utility.bootstrapDark), // Set the background color
     ) {
-        if (joinRequests != null) {
-            joinRequests.forEach { user ->
-                Text("User: ${user.name}")
-                Spacer(modifier = Modifier.height(8.dp))
+        // Column with content
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(top = AppBarHeight), // Adjust padding to make room for the TopAppBar
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            // Content
+            if (joinRequests != null) {
+                joinRequests!!.forEach { email ->
+                    Text("Email: $email", color = Color.White) // Set text color
+                    Spacer(modifier = Modifier.height(8.dp))
+                }
+            } else {
+                Text("Loading join requests...", color = Color.White) // Set text color
             }
-        } else {
-            Text("Loading join requests...")
         }
+
+        // TopAppBar with back button
+        TopAppBar(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(AppBarHeight),
+            navigationIcon = {
+                // Back button
+                IconButton(onClick = { navController.popBackStack() }) {
+                    Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                }
+            },
+            title = { Text("Join Requests", color = Color.White) }, // Change as needed
+            backgroundColor = Utility.bootstrapSecondary // Set the background color
+        )
     }
 }
+
+// Define the height of the app bar
+val AppBarHeight = 56.dp
+
+
 
 @Composable
 fun InviteUserForm(navController: NavHostController, eventId: Int) {
     val coroutineScope = rememberCoroutineScope()
 
-    val email by remember { mutableStateOf("") }
+    var email by remember { mutableStateOf("") }
 
     // Form elements
     val emailInput = TextField(
@@ -1665,26 +1735,19 @@ fun InviteUserForm(navController: NavHostController, eventId: Int) {
     Button(
         onClick = {
             // Validate the email address
-            if (validateEmail(email)) {
+            if (Utility.validateEmail(email)) {
                 // Send invitation request to the backend
                 coroutineScope.launch {
-                    InviteUserBackend.inviteUser(
-                        token = InformationHolder.token ?: "",
-                        email = email,
-                        eventId = eventId
-                    ) { result ->
-                        result.onSuccess {
-                            // Handle successful invitation
-                            Log.d("InviteUserForm", "Invitation sent successfully")
-
-                            // Navigate back to the event details page
-                            navController.popBackStack()
+                    InviteUserBackend.inviteUser(email, eventId,
+                        onSuccess = { confirm ->
+                            // Update the joinRequests state
+                            val asd = confirm
+                        },
+                        onFailure = { error ->
+                            // Handle error in fetching join requests
+                            Log.d("JoinRequestsDebug", "Failed to fetch join requests")
                         }
-                        result.onFailure { error ->
-                            // Handle error in sending invitation
-                            Log.d("InviteUserForm", "Error sending invitation: ${error.localizedMessage}")
-                        }
-                    }
+                    )
                 }
             } else {
                 // Show error message if email is invalid
