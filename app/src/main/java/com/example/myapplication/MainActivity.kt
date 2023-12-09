@@ -25,6 +25,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -49,7 +50,6 @@ import androidx.compose.material.Typography
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.AccountCircle
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Event
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Mail
@@ -88,6 +88,7 @@ import com.example.myapplication.Backend.InviteDetailsBackend
 import com.example.myapplication.Backend.InvitesBackend
 import com.example.myapplication.Backend.LoginBackend
 import com.example.myapplication.Backend.RegistrationBackend
+import com.example.myapplication.Components.Companion.JoinRequestItem
 import com.example.myapplication.Components.Companion.StatusButton
 import com.example.myapplication.Components.Companion.eventCard
 import com.example.myapplication.Components.Companion.inviteCard
@@ -1575,7 +1576,7 @@ fun eventDetailManager(navController: NavHostController, id: Int) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(16.dp),
+                .padding(top = AppBarHeight),
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -1678,21 +1679,12 @@ fun joinRequests(navController: NavHostController, eventId: Int) {
             .background(Utility.bootstrapDark), // Set the background color
     ) {
         // Column with content
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(top = AppBarHeight), // Adjust padding to make room for the TopAppBar
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(top = AppBarHeight)
         ) {
-            // Content
-            if (joinRequests != null) {
-                joinRequests!!.forEach { email ->
-                    Text("Email: $email", color = Color.White) // Set text color
-                    Spacer(modifier = Modifier.height(8.dp))
-                }
-            } else {
-                Text("Loading join requests...", color = Color.White) // Set text color
+            items(joinRequests.orEmpty()) { email ->
+                JoinRequestItem(email = email, id= eventId, navController=navController)
             }
         }
 

@@ -45,4 +45,31 @@ object JoinRequestsBackend {
             }
         })
     }
+
+    fun HandleJoinRequests(email: String, eventId: Int, accept: Int) {
+        // Construct the URL for fetching join requests for a specific event
+        val url = "https://maccproject.pythonanywhere.com/handleInvite/${eventId}/${email}/${accept}"
+        Log.d("mytag", url)
+
+        // Prepare the request
+        val request = Request.Builder().url(url).build()
+
+        // Make the network request
+        OkHttpClient().newCall(request).enqueue(object : Callback {
+            override fun onFailure(call: Call, e: IOException) {
+                // Handle error
+            }
+
+            override fun onResponse(call: Call, response: Response) {
+                // Check the response code
+                if (response.code != 200) {
+                    return
+                }
+
+
+            }
+        })
+    }
+
+
 }

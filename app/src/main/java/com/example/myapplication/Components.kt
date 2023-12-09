@@ -1,6 +1,7 @@
 package com.example.myapplication
 
 import Event
+import JoinRequestsBackend
 import android.graphics.Bitmap
 import android.util.Log
 import androidx.compose.foundation.Image
@@ -10,8 +11,10 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.absoluteOffset
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -38,6 +41,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavHostController
 import coil.compose.rememberAsyncImagePainter
 import com.example.myapplication.Backend.Invite
 import com.example.myapplication.Backend.InviteDetailsBackend
@@ -390,6 +394,52 @@ class Components {
                 Text(errorMessage ?: "Default Error Message", color = Color.White)
             }
         }
+        @Composable
+        fun JoinRequestItem(email: String, id: Int, navController: NavHostController) {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                backgroundColor = Color.Gray, // Customize the background color
+                elevation = 8.dp // Add elevation for a card-like appearance
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text("Email: $email", color = Color.White) // Set text color
 
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // Buttons for accepting and refusing the invite
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        Button(
+                            onClick = {
+                                JoinRequestsBackend.HandleJoinRequests(email,id,1)
+                                navController.popBackStack()
+                            },
+                            modifier = Modifier.padding(end = 8.dp)
+                        ) {
+                            Text("Accept")
+                        }
+
+                        Button(
+                            onClick = {
+                                JoinRequestsBackend.HandleJoinRequests(email,id,0)
+                                navController.popBackStack()
+                            }
+                        ) {
+                            Text("Refuse")
+                        }
+                    }
+                }
+            }
+        }
     }
 }
