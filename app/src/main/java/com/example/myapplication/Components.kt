@@ -395,6 +395,25 @@ class Components {
             }
         }
         @Composable
+        fun SuccessSnackbar(
+            successMessage: String?,
+            modifier: Modifier = Modifier
+        ) {
+            Snackbar(
+                modifier = modifier
+                    .absoluteOffset(y = -16.dp) // Adjust the offset as needed
+                    .fillMaxWidth(),
+                action = {
+                    // Add an action if needed
+                },
+                backgroundColor = Utility.bootstrapGreen, // Bootstrap danger color
+                elevation = 8.dp,
+                contentColor = Color.White // Text color
+            ) {
+                Text(successMessage ?: "Default Success Message", color = Color.White)
+            }
+        }
+        @Composable
         fun JoinRequestItem(email: String, id: Int, navController: NavHostController) {
             Card(
                 modifier = Modifier

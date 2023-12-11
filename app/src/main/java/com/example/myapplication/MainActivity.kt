@@ -342,18 +342,18 @@ class MainActivity : ComponentActivity() {
 
                             // Profile Page
                             BottomNavigationItem(
-                                selected = navController.currentDestination?.route == "ManagerInvites",
+                                selected = navController.currentDestination?.route == "ManagerProfile",
                                 onClick = {
-                                    navController.navigate("ManagerInvites")
+                                    navController.navigate("ManagerProfile")
                                 },
                                 icon = {
                                     Icon(
-                                        imageVector = Icons.Default.Mail,
-                                        contentDescription = "Invites"
+                                        imageVector = Icons.Default.AccountCircle,
+                                        contentDescription = "Profile"
                                     )
                                 },
                                 label = {
-                                    Text(text = "Invites")
+                                    Text(text = "Profile")
                                 }
                             )
                         }
@@ -1701,6 +1701,8 @@ val AppBarHeight = 56.dp
 @Composable
 fun InviteUserForm(navController: NavHostController, eventId: Int) {
     val coroutineScope = rememberCoroutineScope()
+    var showSuccess by remember { mutableStateOf(false) }
+    var showError by remember { mutableStateOf("") }
 
     Scaffold(
         topBar = {
@@ -1735,6 +1737,15 @@ fun InviteUserForm(navController: NavHostController, eventId: Int) {
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             var email by remember { mutableStateOf("") }
+
+            Text(
+                "Here you can invite users using their email.\nYou can't invite other managers",
+                color = Color.White,
+                modifier = Modifier.padding(bottom = 32.dp)
+            )
+            if(showSuccess) Components.SuccessSnackbar(successMessage = "User invited correctly")
+            if(showError.isNotEmpty()) Components.ErrorSnackbar(errorMessage = showError)
+
             val emailInput = TextField(
                 label = { Text("Enter email address") },
                 value = email,
@@ -1753,6 +1764,8 @@ fun InviteUserForm(navController: NavHostController, eventId: Int) {
             // Submit button
             Button(
                 onClick = {
+                    showError=""
+                    showSuccess=false
                     // Validate the email address
                     if (Utility.validateEmail(email)) {
                         // Send invitation request to the backend
@@ -1761,12 +1774,19 @@ fun InviteUserForm(navController: NavHostController, eventId: Int) {
                                 email,
                                 eventId,
                                 onSuccess = { confirm ->
-                                    // Update the joinRequests state
-                                    val asd = confirm
+                                    //user invited successfully
+                                    showSuccess=true
                                 },
                                 onFailure = { error ->
                                     // Handle error in fetching join requests
-                                    Log.d("JoinRequestsDebug", "Failed to fetch join requests")
+                                    if(error=="501"){
+                                        //user not found
+                                        showError="User not found"
+                                    }
+                                    else if (error=="502"){
+                                        //user already invited
+                                        showError="User already invited"
+                                    }
                                 }
                             )
                         }

@@ -8,9 +8,9 @@ import org.json.JSONObject
 
 object InviteUserBackend {
 
-    fun inviteUser(token: String, eventId: Int, onSuccess: (Boolean) -> Unit, onFailure: (String) -> Unit) {
+    fun inviteUser(email: String, eventId: Int, onSuccess: (Boolean) -> Unit, onFailure: (String) -> Unit) {
         // Construct the URL for fetching join requests for a specific event
-        val url = "https://maccproject.pythonanywhere.com/invitesList/${eventId}"
+        val url = "https://maccproject.pythonanywhere.com/inviteUser/${eventId}/${email}"
 
         // Prepare the request
         val request = Request.Builder().url(url).build()
@@ -24,22 +24,14 @@ object InviteUserBackend {
 
             override fun onResponse(call: Call, response: Response) {
                 // Check the response code
-                if (response.code != 200) {
-                    onFailure("Request failed with code ${response.code}")
+                if (response.code == 501) {
+                    onFailure("${response.code}")
                     return
                 }
-
-                // Parse the response body as a JSON array of strings
-                val joinRequestsJson = response.body?.string() ?: ""
-                val joinRequestsArray = JSONArray(joinRequestsJson)
-
-                // Convert the JSONArray to a List<String>
-                val joinRequests: MutableList<String> = mutableListOf()
-                for (i in 0 until joinRequestsArray.length()) {
-                    val email = joinRequestsArray.getString(i)
-                    joinRequests.add(email)
+                if (response.code == 502) {
+                    onFailure("${response.code}")
+                    return
                 }
-
                 // Invoke the success callback
                 onSuccess(true)
             }
