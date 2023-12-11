@@ -26,6 +26,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -42,14 +43,17 @@ import androidx.compose.material.Card
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
 import androidx.compose.material.MaterialTheme
+import androidx.compose.material.Scaffold
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.compose.material.TextField
+import androidx.compose.material.TextFieldDefaults
 import androidx.compose.material.TopAppBar
 import androidx.compose.material.Typography
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Event
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Mail
@@ -1364,23 +1368,6 @@ fun eventDetail(navController: NavHostController, id: Int) {
                     contentDescription = "contentDescription"
                 )
                 Text(text = event.description ?: "", style = MaterialTheme.typography.body1)
-                Button(
-                    onClick = {
-                        // Navigate to the joining requests page
-                        navController.navigate("joinRequests/${navController}/${event.id}")
-                    }
-                ) {
-                    Text(text = "Joining requests")
-                }
-
-                // Button for inviting users
-                Button(
-                    onClick = {
-                        navController.navigate("InviteUserForm/${navController}/${event.id}")
-                    }
-                ) {
-                    Text(text = "Invite users")
-                }
             } else {
                 Text(
                     text = "Loading details",
@@ -1608,7 +1595,7 @@ fun eventDetailManager(navController: NavHostController, id: Int) {
                         navController.navigate("joinRequests/${event.id}")
                     }
                 ) {
-                    Text(text = "Joining requests")
+                    Text(text = "View join requests")
                 }
 
                 // Button for inviting users
@@ -1710,46 +1697,91 @@ val AppBarHeight = 56.dp
 
 
 
+@SuppressLint("UnusedMaterialScaffoldPaddingParameter")
 @Composable
 fun InviteUserForm(navController: NavHostController, eventId: Int) {
     val coroutineScope = rememberCoroutineScope()
 
-    var email by remember { mutableStateOf("") }
-
-    // Form elements
-    val emailInput = TextField(
-        label = { Text("Enter email address") },
-        value = email,
-        onValueChange = { email = it }
-    )
-
-    // Submit button
-    Button(
-        onClick = {
-            // Validate the email address
-            if (Utility.validateEmail(email)) {
-                // Send invitation request to the backend
-                coroutineScope.launch {
-                    InviteUserBackend.inviteUser(email, eventId,
-                        onSuccess = { confirm ->
-                            // Update the joinRequests state
-                            val asd = confirm
-                        },
-                        onFailure = { error ->
-                            // Handle error in fetching join requests
-                            Log.d("JoinRequestsDebug", "Failed to fetch join requests")
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                backgroundColor = Utility.bootstrapSecondary,
+                contentColor = Color.White,
+                title = {
+                    Text("Invite User")
+                },
+                navigationIcon = {
+                    IconButton(
+                        onClick = {
+                            // Handle back button click
+                            navController.navigateUp()
                         }
-                    )
+                    ) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = Color.Black)
+                    }
                 }
-            } else {
-                // Show error message if email is invalid
-                Log.d("InviteUserForm", "Invalid email address")
+            )
+        },
+        modifier = Modifier
+            .fillMaxSize(),
+        backgroundColor = Utility.bootstrapDark,
+
+        ) {
+        Column(
+            modifier = Modifier
+                .padding(16.dp)
+                .fillMaxSize(),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            var email by remember { mutableStateOf("") }
+            val emailInput = TextField(
+                label = { Text("Enter email address") },
+                value = email,
+                onValueChange = { email = it },
+                colors = TextFieldDefaults.textFieldColors(
+                    backgroundColor = Color.White,
+                    cursorColor = Color.Black,
+                    focusedIndicatorColor = Color.Transparent,
+                    unfocusedIndicatorColor = Color.Transparent
+                )
+            )
+
+            // Add spacing between form and button
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Submit button
+            Button(
+                onClick = {
+                    // Validate the email address
+                    if (Utility.validateEmail(email)) {
+                        // Send invitation request to the backend
+                        coroutineScope.launch {
+                            InviteUserBackend.inviteUser(
+                                email,
+                                eventId,
+                                onSuccess = { confirm ->
+                                    // Update the joinRequests state
+                                    val asd = confirm
+                                },
+                                onFailure = { error ->
+                                    // Handle error in fetching join requests
+                                    Log.d("JoinRequestsDebug", "Failed to fetch join requests")
+                                }
+                            )
+                        }
+                    } else {
+                        // Show error message if email is invalid
+                        Log.d("InviteUserForm", "Invalid email address")
+                    }
+                }
+            ) {
+                Text("Invite")
             }
         }
-    ) {
-        Text("Invite")
     }
 }
+
 
 
 
