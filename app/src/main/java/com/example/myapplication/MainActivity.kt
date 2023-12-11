@@ -231,6 +231,9 @@ class MainActivity : ComponentActivity() {
 
                             InviteUserForm(navController, id)
                         }
+                        composable("ManagerProfile") {
+                            ManagerProfile(navController)
+                        }
                     }
 
 
@@ -1383,7 +1386,18 @@ fun eventDetail(navController: NavHostController, id: Int) {
 }
 
 
+
+
+
+
+
+
+
 //MANAGER COMPOSABLES
+
+
+
+
 
 @Composable
 fun HomePageManager(navController: NavHostController) {
@@ -1797,6 +1811,58 @@ fun InviteUserForm(navController: NavHostController, eventId: Int) {
                 }
             ) {
                 Text("Invite")
+            }
+        }
+    }
+}
+
+@Composable
+fun ManagerProfile(navController: NavHostController) {
+    var events by remember { mutableStateOf<List<Event>>(emptyList()) }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
+    var token = InformationHolder.token
+    var fetched by remember { mutableStateOf(false) }
+
+
+    /// Display the UI
+    Surface(
+        modifier = Modifier.fillMaxSize(),
+        color = Utility.bootstrapDark
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+
+            // TopAppBar
+            TopAppBar(
+                title = {
+                    Text(
+                        text = "Profile",
+                        style = MaterialTheme.typography.h6,
+                        color = Color.White
+                    )
+                },
+                backgroundColor = Utility.bootstrapSecondary
+            )
+
+            // Add spacing
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Logout Button
+            Button(
+                onClick = {
+                    InformationHolder.token=""
+                    navController.navigate("loginDestination")
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(50.dp)
+            ) {
+                Text("Logout", color = Color.White)
             }
         }
     }
