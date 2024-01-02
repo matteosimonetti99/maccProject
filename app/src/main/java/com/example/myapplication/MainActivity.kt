@@ -13,6 +13,8 @@ import android.app.TimePickerDialog
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -23,6 +25,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -39,13 +43,17 @@ import androidx.compose.material.Card
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
 import androidx.compose.material.MaterialTheme
+import androidx.compose.material.Scaffold
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.compose.material.TextField
+import androidx.compose.material.TextFieldDefaults
 import androidx.compose.material.TopAppBar
 import androidx.compose.material.Typography
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Event
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Mail
@@ -84,6 +92,7 @@ import com.example.myapplication.Backend.InviteDetailsBackend
 import com.example.myapplication.Backend.InvitesBackend
 import com.example.myapplication.Backend.LoginBackend
 import com.example.myapplication.Backend.RegistrationBackend
+import com.example.myapplication.Components.Companion.JoinRequestItem
 import com.example.myapplication.Components.Companion.StatusButton
 import com.example.myapplication.Components.Companion.eventCard
 import com.example.myapplication.Components.Companion.inviteCard
@@ -188,6 +197,42 @@ class MainActivity : ComponentActivity() {
                         }
                         composable("EventCreation") {
                             EventCreation(navController)
+                        }
+                        composable(
+                            "eventDetailManager/{id}",
+                            arguments = listOf(
+                                navArgument("id") { type = NavType.IntType }
+                            )
+                        ) { backStackEntry ->
+                            // Retrieve the token from the arguments
+                            val id = backStackEntry.arguments?.getInt("id") ?: 0
+
+                            eventDetailManager(navController, id)
+                        }
+                        composable(
+                            "joinRequests/{id}",
+                            arguments = listOf(
+                                navArgument("id") { type = NavType.IntType }
+                            )
+                        ) { backStackEntry ->
+                            // Retrieve the token from the arguments
+                            val id = backStackEntry.arguments?.getInt("id") ?: 0
+
+                            joinRequests(navController, id)
+                        }
+                        composable(
+                            "InviteUserForm/{id}",
+                            arguments = listOf(
+                                navArgument("id") { type = NavType.IntType }
+                            )
+                        ) { backStackEntry ->
+                            // Retrieve the token from the arguments
+                            val id = backStackEntry.arguments?.getInt("id") ?: 0
+
+                            InviteUserForm(navController, id)
+                        }
+                        composable("ManagerProfile") {
+                            ManagerProfile(navController)
                         }
                     }
 
@@ -300,18 +345,18 @@ class MainActivity : ComponentActivity() {
 
                             // Profile Page
                             BottomNavigationItem(
-                                selected = navController.currentDestination?.route == "ManagerInvites",
+                                selected = navController.currentDestination?.route == "ManagerProfile",
                                 onClick = {
-                                    navController.navigate("ManagerInvites")
+                                    navController.navigate("ManagerProfile")
                                 },
                                 icon = {
                                     Icon(
-                                        imageVector = Icons.Default.Mail,
-                                        contentDescription = "Invites"
+                                        imageVector = Icons.Default.AccountCircle,
+                                        contentDescription = "Profile"
                                     )
                                 },
                                 label = {
-                                    Text(text = "Invites")
+                                    Text(text = "Profile")
                                 }
                             )
                         }
@@ -474,7 +519,7 @@ fun LoginPage(navController: NavHostController) {
                         Button(
                             onClick = {
                                 InformationHolder.token = "fd37cea76abf6f9113720c945b4d6e8f1981d9b0f221c05dd65e066a6192ea13"
-                                InformationHolder.userID = 2
+                                InformationHolder.userID = 3
                                 navController.navigate("homeDestination")
                             },
                             modifier = Modifier.fillMaxWidth(),
@@ -926,8 +971,10 @@ fun EventCreation(navController: NavHostController) {
                                     eventName,
                                     description
                                 )
-                                navController.navigate("HomePageManager")
-
+                                Handler(Looper.getMainLooper()).postDelayed({
+                                    // WAIT DI 1 secondo perchè sennò non fa in tempo a renderizzare nuovo evento in home
+                                    navController.navigate("HomePageManager")
+                                }, 1000)
 
                             },
                             modifier = Modifier.fillMaxWidth(),
@@ -1297,6 +1344,12 @@ fun eventDetail(navController: NavHostController, id: Int) {
 
             // Utilize TopAppBar for a stylized top bar
             TopAppBar(
+                navigationIcon = {
+                    // Back button
+                    IconButton(onClick = { navController.popBackStack() }) {
+                        Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                    }
+                },
                 title = {
                     Text(
                         text = "Event name",
@@ -1306,6 +1359,7 @@ fun eventDetail(navController: NavHostController, id: Int) {
                 },
                 backgroundColor = Utility.bootstrapSecondary // A darker shade of blue-gray
             )
+
 
             // Add spacing
             Spacer(modifier = Modifier.height(16.dp))
@@ -1322,7 +1376,6 @@ fun eventDetail(navController: NavHostController, id: Int) {
                     contentDescription = "contentDescription"
                 )
                 Text(text = event.description ?: "", style = MaterialTheme.typography.body1)
-                //todo: pulsante deve avere testo in base a stato invito
             } else {
                 Text(
                     text = "Loading details",
@@ -1353,10 +1406,20 @@ fun eventDetail(navController: NavHostController, id: Int) {
 }
 
 
+
+
+
+
+
+
+
 //MANAGER COMPOSABLES
 
+
+
+
+
 @Composable
-//TODO: HomePageManager
 fun HomePageManager(navController: NavHostController) {
     // Define mutable state variable to hold events data
     var events by remember { mutableStateOf<List<Event>>(emptyList()) }
@@ -1421,7 +1484,7 @@ fun HomePageManager(navController: NavHostController) {
                       Log.d("myeventi", id.toString())
                       eventCard(
                           event = event,
-                          onClick = { navController.navigate("eventDetail/$id") }
+                          onClick = { navController.navigate("eventDetailManager/$id") }
                       )
                       Spacer(modifier = Modifier.height(8.dp))
                   }
@@ -1499,6 +1562,333 @@ fun HomePageManager(navController: NavHostController) {
         }
     }
 }
+
+@Composable
+fun eventDetailManager(navController: NavHostController, id: Int) {
+    var token = InformationHolder.token
+    var event by remember { mutableStateOf(Event(0, "", 0.0, 0.0, "", "", "", null)) }
+    val coroutineScope = rememberCoroutineScope()
+    var errorMessage by remember { mutableStateOf<String?>(null) }
+    val AppBarHeight = 56.dp
+
+
+    Log.d("inviteDetailDebug", "fetcho l'evento $id")
+
+
+    // Fetch events data from the backend using the provided token
+    LaunchedEffect(token) {
+        // Make a network request to fetch event details
+        EventDetailsBackend.fetchEventDetails(token, id) { result ->
+            result.onSuccess { eventData ->
+                event = eventData
+            }
+            result.onFailure { error ->
+                errorMessage = "Failed to fetch event details: ${error.localizedMessage}"
+            }
+        }
+    }
+
+    // Utilize a Surface to contain the content of the home page
+    Surface(
+        modifier = Modifier.fillMaxSize(),
+        color = Utility.bootstrapDark // A darker shade of blue-gray
+    ) {
+        // Utilize Column to organize the content in a column
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(top = AppBarHeight),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+
+            // Utilize TopAppBar for a stylized top bar
+
+
+
+            // Add spacing
+            Spacer(modifier = Modifier.height(16.dp))
+
+
+            if (event.encoded_image != null && event.encoded_image != "") {
+
+                Text(text = event.name, style = MaterialTheme.typography.h5)
+
+                val image = Utility.base64ToBitmap(event.encoded_image)
+
+                Image(
+                    bitmap = image.asImageBitmap(),
+                    contentDescription = "contentDescription"
+                )
+                Text(text = event.description ?: "", style = MaterialTheme.typography.body1)
+
+                // Button for joining requests
+                Button(
+                    onClick = {
+                        // Navigate to the joining requests page
+                        navController.navigate("joinRequests/${event.id}")
+                    }
+                ) {
+                    Text(text = "View join requests")
+                }
+
+                // Button for inviting users
+                Button(
+                    onClick = {
+                        navController.navigate("InviteUserForm/${event.id}")
+                    }
+                ) {
+                    Text(text = "Invite users")
+                }
+            } else {
+                Text(
+                    text = "Loading details",
+                    style = MaterialTheme.typography.body1,
+                    color = Color.White
+                )
+            }
+        }
+    }
+    TopAppBar(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(AppBarHeight),
+        navigationIcon = {
+            // Back button
+            IconButton(onClick = { navController.popBackStack() }) {
+                Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+            }
+        },
+        title = {
+            Text(
+                text = "Event name",
+                style = MaterialTheme.typography.h6,
+                color = Color.White
+            )
+        },
+        backgroundColor = Utility.bootstrapSecondary // A darker shade of blue-gray
+    )
+}
+
+@Composable
+fun joinRequests(navController: NavHostController, eventId: Int) {
+    var token = InformationHolder.token
+    var joinRequests by remember { mutableStateOf<List<String>?>(null) }
+    val coroutineScope = rememberCoroutineScope()
+
+    Log.d("JoinRequestsDebug", "Fetching join requests")
+
+    // Fetch join requests from the backend
+    LaunchedEffect(token) {
+        // Make a network request to fetch join requests
+        JoinRequestsBackend.fetchJoinRequests(token, eventId,
+            onSuccess = { joinRequestsData ->
+                // Update the joinRequests state
+                joinRequests = joinRequestsData
+            },
+            onFailure = { error ->
+                // Handle error in fetching join requests
+                Log.d("JoinRequestsDebug", "Failed to fetch join requests")
+            }
+        )
+    }
+
+    // Display the list of join requests
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Utility.bootstrapDark), // Set the background color
+    ) {
+        // Column with content
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(top = AppBarHeight)
+        ) {
+            items(joinRequests.orEmpty()) { email ->
+                JoinRequestItem(email = email, id= eventId, navController=navController)
+            }
+        }
+
+        // TopAppBar with back button
+        TopAppBar(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(AppBarHeight),
+            navigationIcon = {
+                // Back button
+                IconButton(onClick = { navController.popBackStack() }) {
+                    Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                }
+            },
+            title = { Text("Join Requests", color = Color.White) }, // Change as needed
+            backgroundColor = Utility.bootstrapSecondary // Set the background color
+        )
+    }
+}
+
+// Define the height of the app bar
+val AppBarHeight = 56.dp
+
+
+
+@SuppressLint("UnusedMaterialScaffoldPaddingParameter")
+@Composable
+fun InviteUserForm(navController: NavHostController, eventId: Int) {
+    val coroutineScope = rememberCoroutineScope()
+    var showSuccess by remember { mutableStateOf(false) }
+    var showError by remember { mutableStateOf("") }
+
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                backgroundColor = Utility.bootstrapSecondary,
+                contentColor = Color.White,
+                title = {
+                    Text("Invite User")
+                },
+                navigationIcon = {
+                    IconButton(
+                        onClick = {
+                            // Handle back button click
+                            navController.navigateUp()
+                        }
+                    ) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = Color.Black)
+                    }
+                }
+            )
+        },
+        modifier = Modifier
+            .fillMaxSize(),
+        backgroundColor = Utility.bootstrapDark,
+
+        ) {
+        Column(
+            modifier = Modifier
+                .padding(16.dp)
+                .fillMaxSize(),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            var email by remember { mutableStateOf("") }
+
+            Text(
+                "Here you can invite users using their email.\nYou can't invite other managers",
+                color = Color.White,
+                modifier = Modifier.padding(bottom = 32.dp)
+            )
+            if(showSuccess) Components.SuccessSnackbar(successMessage = "User invited correctly")
+            if(showError.isNotEmpty()) Components.ErrorSnackbar(errorMessage = showError)
+
+            val emailInput = TextField(
+                label = { Text("Enter email address") },
+                value = email,
+                onValueChange = { email = it },
+                colors = TextFieldDefaults.textFieldColors(
+                    backgroundColor = Color.White,
+                    cursorColor = Color.Black,
+                    focusedIndicatorColor = Color.Transparent,
+                    unfocusedIndicatorColor = Color.Transparent
+                )
+            )
+
+            // Add spacing between form and button
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Submit button
+            Button(
+                onClick = {
+                    showError=""
+                    showSuccess=false
+                    // Validate the email address
+                    if (Utility.validateEmail(email)) {
+                        // Send invitation request to the backend
+                        coroutineScope.launch {
+                            InviteUserBackend.inviteUser(
+                                email,
+                                eventId,
+                                onSuccess = { confirm ->
+                                    //user invited successfully
+                                    showSuccess=true
+                                },
+                                onFailure = { error ->
+                                    // Handle error in fetching join requests
+                                    if(error=="501"){
+                                        //user not found
+                                        showError="User not found"
+                                    }
+                                    else if (error=="502"){
+                                        //user already invited
+                                        showError="User already invited"
+                                    }
+                                }
+                            )
+                        }
+                    } else {
+                        // Show error message if email is invalid
+                        Log.d("InviteUserForm", "Invalid email address")
+                    }
+                }
+            ) {
+                Text("Invite")
+            }
+        }
+    }
+}
+
+@Composable
+fun ManagerProfile(navController: NavHostController) {
+    var events by remember { mutableStateOf<List<Event>>(emptyList()) }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
+    var token = InformationHolder.token
+    var fetched by remember { mutableStateOf(false) }
+
+
+    /// Display the UI
+    Surface(
+        modifier = Modifier.fillMaxSize(),
+        color = Utility.bootstrapDark
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+
+            // TopAppBar
+            TopAppBar(
+                title = {
+                    Text(
+                        text = "Profile",
+                        style = MaterialTheme.typography.h6,
+                        color = Color.White
+                    )
+                },
+                backgroundColor = Utility.bootstrapSecondary
+            )
+
+            // Add spacing
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Logout Button
+            Button(
+                onClick = {
+                    InformationHolder.token=""
+                    navController.navigate("loginDestination")
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(50.dp)
+            ) {
+                Text("Logout", color = Color.White)
+            }
+        }
+    }
+}
+
+
 
 
 

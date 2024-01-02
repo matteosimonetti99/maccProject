@@ -6,6 +6,7 @@ import okhttp3.*
 import org.json.JSONArray
 import java.io.IOException
 
+
 object EventsBackend {
 
     private const val BASE_URL = "https://maccproject.pythonanywhere.com"

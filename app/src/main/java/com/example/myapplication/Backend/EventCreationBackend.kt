@@ -49,7 +49,11 @@ object EventCreationBackend {
             }
 
             override fun onResponse(call: Call, response: Response) {
-                // Do nothing or add any necessary clean-up logic
+                val statusCode = response.code
+                val isSuccess = response.isSuccessful
+                val responseBody = response.body?.string() ?: ""
+
+                Log.d("mytag", "Response: Status Code $statusCode, Success: $isSuccess, Body: $responseBody")
             }
         })
     }
