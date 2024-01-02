@@ -1,8 +1,15 @@
 package com.example.myapplication.Backend
 
 import Event
+
+import android.location.Location
 import android.util.Log
-import okhttp3.*
+import com.example.myapplication.PositionHolder
+import okhttp3.Call
+import okhttp3.Callback
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.Response
 import org.json.JSONArray
 import java.io.IOException
 
@@ -51,15 +58,26 @@ object EventsBackend {
 
         for (i in 0 until jsonArray.length()) {
             val eventObject = jsonArray.optJSONObject(i)
+            //distance computation
+            val latitude = eventObject.optDouble("latitude")
+            val longitude = eventObject.optDouble("longitude")
+
+            val res= FloatArray(1);
+            Location.distanceBetween(latitude, longitude, PositionHolder.lastPostion.latitude, PositionHolder.lastPostion.longitude, res)
+
+            val distanceInMeters = res[0]
+
+
             val event = Event(
                 id = eventObject.optInt("id"),
                 name = eventObject.optString("name"),
-                latitude = eventObject.optDouble("latitude"),
-                longitude = eventObject.optDouble("longitude"),
+                latitude = latitude,
+                longitude = longitude,
                 date = eventObject.optString("datetime"),
                 organizerName = eventObject.optString("organizerName"),
                 description = eventObject.optString("description"),
-                encoded_image = eventObject.optString("encoded_image")
+                encoded_image = eventObject.optString("encoded_image"),
+                distance = distanceInMeters,
             )
 
             Log.d("com.example.myapplication.Backend.EventsBackend", "event: $event")
