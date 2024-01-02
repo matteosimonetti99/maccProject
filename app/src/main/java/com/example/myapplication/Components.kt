@@ -1,7 +1,6 @@
 package com.example.myapplication
 
 import Event
-import kotlin.Result
 import Invite
 import InviteDetailsBackend
 import android.util.Log
@@ -17,7 +16,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Button
-import androidx.compose.material.Card
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
@@ -35,6 +33,8 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import java.util.Locale
 
 class Components {
@@ -43,13 +43,11 @@ class Components {
 
         @Composable
         fun eventCard(event: Event, onClick: () -> Unit) {
-            Card(
+            Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clickable { onClick() }
                     .padding(8.dp),
-                elevation = 8.dp,
-                backgroundColor = Utility.bootstrapInfo // A lighter shade of blue-gray
             ) {
                 // Use Row to create a two-column layout
                 Row(
@@ -88,11 +86,37 @@ class Components {
                                         .padding(4.dp),
                                     contentAlignment = Alignment.CenterStart
                                 ) {
-                                    Text(
-                                        text = event.date,
-                                        style = MaterialTheme.typography.caption,
-                                        color = Color.Black,
-                                    )
+                                    Column(
+                                        verticalArrangement = Arrangement.Center,
+                                        horizontalAlignment = Alignment.CenterHorizontally
+                                    ){
+                                        val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss", Locale.ENGLISH)
+                                        val date = LocalDateTime.parse(event.date, formatter)
+
+                                        val monthAbbreviation = date.month.getDisplayName(
+                                            java.time.format.TextStyle.SHORT,
+                                            Locale.ENGLISH
+                                        )
+
+                                        Text(
+
+                                            text = monthAbbreviation,
+                                            style = MaterialTheme.typography.h5.copy(
+                                                fontWeight = FontWeight.Bold,
+                                                fontSize = 15.sp
+                                            ),
+                                            color = Color.Black,
+
+                                        )
+                                        Text(
+                                            text = date.dayOfMonth.toString(),
+                                            style = MaterialTheme.typography.h5.copy(
+                                                fontWeight = FontWeight.Bold,
+                                                fontSize = 15.sp
+                                            ),
+                                            color = Color.Black,
+                                        )
+                                    }
                                 }
                             }
                         }
@@ -110,10 +134,37 @@ class Components {
                         Text(
                             text = event.name,
                             style = MaterialTheme.typography.h5.copy(
-                                fontWeight = FontWeight.Bold,
+                                fontWeight = FontWeight.Normal,
                                 fontSize = 20.sp
                             ),
-                            color = Color.White
+                            color = Color.Black
+                        )
+                        //event desc
+                        Text(
+                            text = "by ${event.organizerName}",
+                            style = MaterialTheme.typography.h5.copy(
+                                fontWeight = FontWeight.Normal,
+                                fontSize = 15.sp
+                            ),
+                            color = Color.Gray
+                        )
+
+                        Text(
+                            text = event.description.toString(),
+                            style = MaterialTheme.typography.h5.copy(
+                                fontWeight = FontWeight.Normal,
+                                fontSize = 15.sp
+                            ),
+                            color = Color.Black
+                        )
+                        val km = event.distance?.div(1000f)
+                        Text(
+                            text = "$km km away",
+                            style = MaterialTheme.typography.h5.copy(
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 15.sp
+                            ),
+                            color = Color.Black
                         )
                     }
                 }
@@ -141,13 +192,11 @@ class Components {
 
             Log.d("inviteTag", invite.toString())
 
-            Card(
+            Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clickable { onClick() }
                     .padding(8.dp),
-                elevation = 8.dp,
-                backgroundColor = Utility.bootstrapInfo // A lighter shade of blue-gray
             ) {
                 // Use Row to create a two-column layout
                 Row(
@@ -186,11 +235,41 @@ class Components {
                                         .padding(4.dp),
                                     contentAlignment = Alignment.CenterStart
                                 ) {
-                                    Text(
-                                        text = event.date,
-                                        style = MaterialTheme.typography.caption,
-                                        color = Color.Black,
-                                    )
+                                    Column(
+                                        verticalArrangement = Arrangement.Center,
+                                        horizontalAlignment = Alignment.CenterHorizontally
+                                    ){
+                                        Log.d("ae", event.date)
+                                        //event date e null!!, non so perchè
+                                        /*
+                                        val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss", Locale.ENGLISH)
+                                        val date = LocalDateTime.parse(event.date, formatter)
+
+                                        val monthAbbreviation = date.month.getDisplayName(
+                                            java.time.format.TextStyle.SHORT,
+                                            Locale.ENGLISH
+                                        )
+
+                                        Text(
+
+                                            text = monthAbbreviation,
+                                            style = MaterialTheme.typography.h5.copy(
+                                                fontWeight = FontWeight.Bold,
+                                                fontSize = 15.sp
+                                            ),
+                                            color = Color.Black,
+
+                                            )
+                                        Text(
+                                            text = date.dayOfMonth.toString(),
+                                            style = MaterialTheme.typography.h5.copy(
+                                                fontWeight = FontWeight.Bold,
+                                                fontSize = 15.sp
+                                            ),
+                                            color = Color.Black,
+                                        )
+*/
+                                    }
                                 }
                             }
                         }
@@ -208,6 +287,33 @@ class Components {
                         Text(
                             text = event.name,
                             style = MaterialTheme.typography.h5.copy(
+                                fontWeight = FontWeight.Normal,
+                                fontSize = 20.sp
+                            ),
+                            color = Color.Black
+                        )
+                        //event desc
+                        Text(
+                            text = event.description.toString(),
+                            style = MaterialTheme.typography.h5.copy(
+                                fontWeight = FontWeight.Normal,
+                                fontSize = 15.sp
+                            ),
+                            color = Color.Black
+                        )
+                        val km = event.distance?.div(1000f)
+                        Text(
+                            text = "$km km away",
+                            style = MaterialTheme.typography.h5.copy(
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 15.sp
+                            ),
+                            color = Color.Black
+                        )
+
+                        Text(
+                            text = event.name,
+                            style = MaterialTheme.typography.h5.copy(
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 20.sp
                             ),
@@ -220,6 +326,7 @@ class Components {
                     }
                 }
             }
+
         }
 
         @Composable

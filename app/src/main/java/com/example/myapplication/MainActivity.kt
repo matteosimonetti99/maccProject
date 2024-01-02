@@ -2,6 +2,7 @@
 package com.example.myapplication
 
 // Other necessary imports
+
 import Event
 import EventDetailsBackend
 import EventsBackend
@@ -9,39 +10,31 @@ import Invite
 import InvitesBackend
 import LoginBackend
 import android.annotation.SuppressLint
-import android.app.Activity
-import android.icu.text.SimpleDateFormat
-import android.net.Uri
-import android.Manifest
 import android.app.DatePickerDialog
 import android.app.TimePickerDialog
-import android.content.Context
-import android.content.pm.PackageManager
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
+import android.net.Uri
 import android.os.Bundle
-import android.provider.MediaStore
-import android.text.format.DateUtils.formatDateTime
-import android.util.Base64
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.selection.SelectionContainer
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.BottomNavigation
 import androidx.compose.material.BottomNavigationItem
 import androidx.compose.material.Button
@@ -49,12 +42,10 @@ import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.Card
 import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
-import androidx.compose.material.OutlinedTextField
-import androidx.compose.material.Snackbar
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.compose.material.TextField
-import androidx.compose.material.TopAppBar
+import androidx.compose.material.TextFieldDefaults
 import androidx.compose.material.Typography
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
@@ -62,7 +53,7 @@ import androidx.compose.material.icons.filled.Event
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Mail
 import androidx.compose.material.icons.filled.Place
-import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Divider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -76,21 +67,23 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.core.app.ActivityCompat
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import coil.compose.rememberImagePainter
+import com.example.jetpackcomposedemo.R
 import com.example.myapplication.Components.Companion.eventCard
 import com.example.myapplication.Components.Companion.inviteCard
-import com.google.android.gms.cast.framework.media.ImagePicker
-import com.google.android.gms.location.LocationRequest
-import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.GoogleMap
@@ -102,22 +95,14 @@ import com.google.maps.android.compose.rememberCameraPositionState
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.intl.Locale
-import androidx.compose.ui.window.Dialog
-import com.google.accompanist.systemuicontroller.rememberSystemUiController
-import coil.compose.rememberImagePainter
-import com.example.myapplication.PositionHolder
-import java.io.ByteArrayOutputStream
-import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+import java.time.format.TextStyle
 import java.util.Calendar
 import java.util.Date
-import android.content.ContentResolver
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.core.content.ContentProviderCompat.requireContext
+import java.util.Locale
 
 
 class MainActivity : ComponentActivity() {
@@ -449,154 +434,165 @@ fun LoginPage(navController: NavHostController) {
         typography = Typography(),
         content = {
             // Create a Box with a custom background color
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(Utility.bootstrapLight) // Custom background color
-            ) {
-                // Create a Card with elevation and rounded corners
-                Card(
-                    modifier = Modifier
-                        .padding(16.dp)
-                        .fillMaxWidth()
-                        .padding(16.dp)
-                        .clip(RoundedCornerShape(16.dp)),
-                    elevation = 8.dp,
-                    backgroundColor = Color.White
-                ) {
-                    // Create a Column layout for the content
-                    Column(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(16.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center
-                    ) {
+            Column( modifier = Modifier
+                .fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally)
+            {
 
-                        //DA RIMUOVERE
-
-                        Button(
-                            onClick = {
-                                InformationHolder.token = "47358c79536a33cc29477bc094cf79fed4ec6ac242b37e88c34b906679c307b2"
-                                InformationHolder.userID = 3
-                                navController.navigate("homeDestination")
-                            },
-                            modifier = Modifier.fillMaxWidth(),
-                            colors = ButtonDefaults.buttonColors(backgroundColor = Utility.bootstrapBlue) // Custom primary color
-                        ) {
-                            Text("SKIP login")
-                        }
-
-                        Button(
-                            onClick = {
-                                InformationHolder.token = "1cb0395ab04ba4d3a7e61dfe57126a11996f0fea30683b8a30693c7d40d6a977"
-                                InformationHolder.userID = 1
-                                navController.navigate("HomePageManager")
-                            },
-                            modifier = Modifier.fillMaxWidth(),
-                            colors = ButtonDefaults.buttonColors(backgroundColor = Utility.bootstrapBlue) // Custom primary color
-                        ) {
-                            Text("SKIP login admin")
-                        }
-
-                        //DA RIMUOVERE SOPRA
-
-
-
-
-                        if (errorMessage != null) {
-                            Utility.ErrorSnackbar(errorMessage = errorMessage)
-                            Spacer(modifier = Modifier.height(16.dp))
-                        }
-
-                        // Display a "Login" title with custom typography
-                        Text(
-                            text = "Login",
-                            style = MaterialTheme.typography.h4,
-                            modifier = Modifier.padding(bottom = 16.dp)
-                        )
-
-                        // Create an input field for the username with a label
-                        TextField(
-                            value = username,
-                            onValueChange = { username = it },
-                            label = { Text("Username") },
+                Box(modifier = Modifier
+                    .fillMaxWidth()
+                    .background(Color(249, 239, 229))
+                    .fillMaxHeight())
+                {
+                    Column (modifier = Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally){
+                        Image(painter = painterResource(id = R.drawable.map), contentDescription = "ae")
+                        Text(fontSize = 30.sp, fontWeight = FontWeight.Bold, color = Color.Black,text = "Eventi æ")
+                        Card(
                             modifier = Modifier
+                                .padding(0.dp, 10.dp, 0.dp, 0.dp)
                                 .fillMaxWidth()
-                                .padding(bottom = 16.dp)
-                        )
+                                .clip(RoundedCornerShape(16.dp, 16.dp, 0.dp, 0.dp)),
+                            elevation = 8.dp,
+                            backgroundColor = Color.White
+                        ) {
+                            // Create a Column layout for the content
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .padding(16.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.Center
+                            ) {
 
-                        // Create an input field for the password with a label and password visual transformation
-                        TextField(
-                            value = password,
-                            onValueChange = { password = it },
-                            label = { Text("Password") },
-                            visualTransformation = PasswordVisualTransformation(),
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(bottom = 16.dp)
-                        )
+                                //DA RIMUOVERE
 
-                        // Create a "Login" button with a custom primary color
-                        Button(
-                            onClick = {
-                                errorMessage = null
-                                LoginBackend.login(username, password) { token, userID, role ->
-                                    if (token != null) {
-                                        savedToken = token
-                                        if (userID != null) {
-                                            savedID = userID
-                                        }
-
-                                        // Navigate to the home destination with the obtained token
-                                        // Use the MainScope to navigate on the main thread
-                                        MainScope().launch {
-                                            // Navigate to the home destination with the obtained token
-                                            InformationHolder.token = token
-                                            if (userID != null) {
-                                                InformationHolder.userID = userID
-                                            }
-                                            if (role=="user") navController.navigate("homeDestination")
-                                            else if (role=="manager") navController.navigate("HomePageManager")
-                                        }
-                                    } else {
-                                        Log.d("mytag", "NON ho il token!")
-                                        errorMessage =
-                                            "Login failed. Please check your credentials."
-                                    }
+                                Button(
+                                    onClick = {
+                                        InformationHolder.token =
+                                            "47358c79536a33cc29477bc094cf79fed4ec6ac242b37e88c34b906679c307b2"
+                                        InformationHolder.userID = 3
+                                        navController.navigate("homeDestination")
+                                    },
+                                    modifier = Modifier.fillMaxWidth(),
+                                    colors = ButtonDefaults.buttonColors(backgroundColor = MaterialTheme.colors.secondary) // Custom primary color
+                                ) {
+                                    Text("SKIP login")
                                 }
-                            },
-                            modifier = Modifier.fillMaxWidth(),
-                            colors = ButtonDefaults.buttonColors(backgroundColor = Utility.bootstrapBlue) // Custom primary color
-                        ) {
-                            Text(
-                                text = "Login",
-                                color = Color.White // Set the text color to white
-                            )
-                        }
 
-                        Spacer(modifier = Modifier.height(64.dp))
+                                Button(
+                                    onClick = {
+                                        InformationHolder.token =
+                                            "1cb0395ab04ba4d3a7e61dfe57126a11996f0fea30683b8a30693c7d40d6a977"
+                                        InformationHolder.userID = 1
+                                        navController.navigate("HomePageManager")
+                                    },
+                                    modifier = Modifier.fillMaxWidth(),
+                                    colors = ButtonDefaults.buttonColors(backgroundColor = Utility.bootstrapBlue) // Custom primary color
+                                ) {
+                                    Text("SKIP Login admin")
+                                }
 
-                        Text(
-                            text = "Are you new here?",
-                            modifier = Modifier.padding(top = 16.dp)
-                        )
+                                //DA RIMUOVERE SOPRA
 
-                        // Create a "Register" button
-                        Button(
-                            onClick = {
-                                navController.navigate("registerDestination")
-                            },
-                            modifier = Modifier.fillMaxWidth(),
-                            colors = ButtonDefaults.buttonColors(backgroundColor = Utility.bootstrapSecondary) // Custom color for registration button
-                        ) {
-                            Text(
-                                text = "Register",
-                                color = Color.White // Set the text color to white
-                            )
+
+                                if (errorMessage != null) {
+                                    Utility.ErrorSnackbar(errorMessage = errorMessage)
+                                    Spacer(modifier = Modifier.height(16.dp))
+                                }
+
+                                // Display a "Login" title with custom typography
+                                Text(
+                                    text = "Login",
+                                    style = MaterialTheme.typography.h4,
+                                    modifier = Modifier.padding(bottom = 16.dp)
+                                )
+
+                                // Create an input field for the username with a label
+                                TextField(
+                                    value = username,
+                                    onValueChange = { username = it },
+                                    label = { Text("Username") },
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(bottom = 16.dp)
+                                )
+
+                                // Create an input field for the password with a label and password visual transformation
+                                TextField(
+                                    value = password,
+                                    onValueChange = { password = it },
+                                    label = { Text("Password") },
+                                    visualTransformation = PasswordVisualTransformation(),
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(bottom = 16.dp)
+                                )
+
+                                // Create a "Login" button with a custom primary color
+                                Button(
+                                    onClick = {
+                                        errorMessage = null
+                                        LoginBackend.login(username, password) { token, userID, role ->
+                                            if (token != null) {
+                                                savedToken = token
+                                                if (userID != null) {
+                                                    savedID = userID
+                                                }
+
+                                                // Navigate to the home destination with the obtained token
+                                                // Use the MainScope to navigate on the main thread
+                                                MainScope().launch {
+                                                    // Navigate to the home destination with the obtained token
+                                                    InformationHolder.token = token
+                                                    if (userID != null) {
+                                                        InformationHolder.userID = userID
+                                                    }
+                                                    if (role == "user") navController.navigate("homeDestination")
+                                                    else if (role == "manager") navController.navigate("HomePageManager")
+                                                }
+                                            } else {
+                                                Log.d("mytag", "NON ho il token!")
+                                                errorMessage =
+                                                    "Login failed. Please check your credentials."
+                                            }
+                                        }
+                                    },
+                                    modifier = Modifier.fillMaxWidth(),
+                                    colors = ButtonDefaults.buttonColors(backgroundColor = MaterialTheme.colors.secondary) // Custom primary color
+                                ) {
+                                    Text(
+                                        text = "Login",
+                                        color = Color.White // Set the text color to white
+                                    )
+                                }
+
+                                Spacer(modifier = Modifier.height(64.dp))
+
+                                Text(
+                                    text = "Are you new here?",
+                                    modifier = Modifier.padding(top = 16.dp)
+                                )
+
+                                // Create a "Register" button
+                                Button(
+                                    onClick = {
+                                        navController.navigate("registerDestination")
+                                    },
+                                    modifier = Modifier.fillMaxWidth(),
+                                    colors = ButtonDefaults.buttonColors(backgroundColor = Utility.bootstrapSecondary) // Custom color for registration button
+                                ) {
+                                    Text(
+                                        text = "Register",
+                                        color = Color.White // Set the text color to white
+                                    )
+                                }
+                            }
                         }
                     }
+
                 }
+
+                // Create a Card with elevation and rounded corners
+
             }
         }
     )
@@ -658,95 +654,70 @@ fun myInvitesPage(navController: NavHostController) {
     }
 
     /// Display the UI
-    Surface(
-        modifier = Modifier.fillMaxSize(),
-        color = Utility.bootstrapDark
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp)
+            .verticalScroll(rememberScrollState()),
+        verticalArrangement = Arrangement.Top,
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Column(
+
+        // Logout Button
+        Button(
+            onClick = {
+                InformationHolder.token=""
+                navController.navigate("loginDestination")
+            },
             modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
+                .fillMaxWidth()
+                .height(50.dp)
         ) {
+            Text("Logout", color = Color.White)
+        }
 
-            // TopAppBar
-            TopAppBar(
-                title = {
-                    Text(
-                        text = "Profile",
-                        style = MaterialTheme.typography.h6,
-                        color = Color.White
-                    )
-                },
-                backgroundColor = Utility.bootstrapSecondary
-            )
+        // Add spacing
+        Spacer(modifier = Modifier.height(16.dp))
 
-            // Add spacing
+        // Display error message as a Snackbar
+        errorMessage?.let {
+            Utility.ErrorSnackbar(errorMessage = errorMessage)
             Spacer(modifier = Modifier.height(16.dp))
+        }
 
-            // Logout Button
-            Button(
-                onClick = {
-                    InformationHolder.token=""
-                    navController.navigate("loginDestination")
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(50.dp)
-            ) {
-                Text("Logout", color = Color.White)
-            }
-
-            // Add spacing
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // TopAppBar
-            TopAppBar(
-                title = {
-                    Text(
-                        text = "My events",
-                        style = MaterialTheme.typography.h6,
-                        color = Color.White
-                    )
-                },
-                backgroundColor = Utility.bootstrapSecondary
-            )
-
-            // Add spacing
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Display error message as a Snackbar
-            errorMessage?.let {
-                Utility.ErrorSnackbar(errorMessage = errorMessage)
-                Spacer(modifier = Modifier.height(16.dp))
-            }
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(10.dp),
+            horizontalArrangement = Arrangement.Start
+        ) {
+            Text(fontSize = 20.sp, color = Color.Gray, text = "PENDING INVITES")
+        }
 
             // Display events in a list
-            if (events.isNotEmpty()) {
-                Column {
-                    events.forEach { event ->
-                        var id = event.id
-                        inviteCard(
-                            event = event,
-                            onClick = { navController.navigate("eventDetail/$id") }
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                    }
+        if (events.isNotEmpty()) {
+            Column {
+                events.forEach { event ->
+                    var id = event.id
+                    inviteCard(
+                        event = event,
+                        onClick = { navController.navigate("eventDetail/$id") }
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
                 }
-            } else if (fetched==true) {
-                Text(
-                    text = "No events available.",
-                    style = MaterialTheme.typography.body1,
-                    color = Color.White
-                )
-            } else {
-                Text(
-                    text = "Loading...",
-                    style = MaterialTheme.typography.body1,
-                    color = Color.White
-                )
             }
+        } else if (fetched==true) {
+            Text(
+                text = "No events available.",
+                style = MaterialTheme.typography.body1,
+                color = Color.White
+            )
+        } else {
+            Text(
+                text = "Loading...",
+                style = MaterialTheme.typography.body1,
+                color = Color.White
+            )
         }
     }
 }
@@ -790,7 +761,7 @@ fun EventCreation(navController: NavHostController) {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.Gray) // A darker shade of blue-gray
+            .background(Color.White) // A darker shade of blue-gray
     ) {
         LazyColumn(
             modifier = Modifier
@@ -799,150 +770,213 @@ fun EventCreation(navController: NavHostController) {
         ) {
             // Create a Card with elevation and rounded corners
             item {
-                // Create a Card with elevation and rounded corners
-                Card(
+                // Create a Column layout for the content
+                Column(
                     modifier = Modifier
-                        .padding(16.dp)
-                        .fillMaxWidth()
-                        .padding(16.dp)
-                        .clip(RoundedCornerShape(16.dp)),
-                    elevation = 8.dp,
-                    backgroundColor = Color.White
+                        .fillMaxSize(),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
                 ) {
-                    // Create a Column layout for the content
-                    Column(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(16.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center
+                    // Display error message
+
+                    // Display an "Event Creation" title with custom typography
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(0.dp),
+                        horizontalArrangement = Arrangement.Start
                     ) {
-                        // Display error message
+                        Text(fontSize = 30.sp, modifier = Modifier.padding(0.dp),fontWeight = FontWeight.Bold, color = Color.Black,text = "Create Event")
+                    }
 
+                    Spacer (Modifier.height(30.dp))
 
-                        // Display an "Event Creation" title with custom typography
-                        Text(
-                            text = "Event Creation",
-                            style = MaterialTheme.typography.h4,
-                            modifier = Modifier.padding(bottom = 16.dp)
+                    Card {
+                        Column (
+                            modifier = Modifier.padding(15.dp),
+                            verticalArrangement = Arrangement.Center
                         )
-
-                        // Create input fields for event creation details
-                        TextField(
-                            value = eventName,
-                            onValueChange = { eventName = it },
-                            label = { Text("Event Name") },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(bottom = 16.dp)
-                        )
-
-                        TextField(
-                            value = description,
-                            onValueChange = { description = it },
-                            label = { Text("Description (optional)") },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(bottom = 16.dp)
-                        )
-                        if (showDatePicker) {
-                            DatePickerDialog(
-                                selectedDate = datetime,
-                                onDateChange = { newDate ->
-                                    datetime = newDate
-                                    showDatePicker = false
-                                    dateready = true
-                                    Log.d("mytag", "${datetime}")
-                                },
-                                onDismissRequest = { showDatePicker = false }
-                            )
-                        }
-                        Button(onClick = { showDatePicker = true }) {
-                            Text("Select Date")
-                        }
-                        if (dateready) Text("${datetime.toLocalDate()}")
-
-
-                        if (showTimePicker) {
-                            val context = LocalContext.current
-                            val calendar = Calendar.getInstance().apply {
-                                set(Calendar.HOUR_OF_DAY, datetime2.hour)
-                                set(Calendar.MINUTE, datetime2.minute)
+                        {
+                            Row(
+                                horizontalArrangement = Arrangement.Start
+                            ) {
+                                Text(fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Color.Black,text = "Event Date")
                             }
-                            TimePickerDialog(
-                                context,
-                                { _, hour, minute ->
-                                    datetime2 = LocalDateTime.of(
-                                        datetime2.toLocalDate(),
-                                        LocalTime.of(hour, minute)
+
+                            Spacer(modifier = Modifier.height(16.dp))
+
+
+                            Row(
+                                modifier = Modifier
+                                    .background(Color(238, 118, 57))
+                                    .clip(RoundedCornerShape(20.dp))
+                                    .fillMaxWidth(),
+                            ) {
+                                Row(
+                                    horizontalArrangement = Arrangement.Center,
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier.padding(10.dp)
+                                ) {
+                                    Text(
+                                        fontSize = 18.sp,
+                                        modifier = Modifier.fillMaxWidth(.8f).fillMaxHeight(),
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color.White,
+                                        text = "${datetime.toLocalDate().dayOfMonth} ${datetime.toLocalDate().month.getDisplayName(
+                                            TextStyle.FULL,
+                                            Locale.ENGLISH
+                                        )} ${datetime.toLocalDate().year}"
                                     )
-                                    showTimePicker = false
-                                    dateready2 = true
-                                    Log.d("mytag", "${datetime2}")
-                                },
-                                calendar.get(Calendar.HOUR_OF_DAY),
-                                calendar.get(Calendar.MINUTE),
-                                true
-                            ).show()
+                                    if (showDatePicker) {
+                                        DatePickerDialog(
+                                            selectedDate = datetime,
+                                            onDateChange = { newDate ->
+                                                datetime = newDate
+                                                showDatePicker = false
+                                                dateready = true
+                                                Log.d("mytag", "${datetime}")
+                                            },
+                                            onDismissRequest = { showDatePicker = false }
+                                        )
+                                    }
+                                    Button(
+                                        modifier = Modifier.background(Color.Black),
+                                        onClick = { showDatePicker = true }
+                                    )
+                                    {
+                                        Image(painter = painterResource(id = R.drawable.calendar), contentDescription = "ae")
+                                    }
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(10.dp))
+
+                            Box(
+                                modifier = Modifier
+                                    .background(Color(238, 118, 57))
+                                    .clip(RoundedCornerShape(20.dp))
+                                    .fillMaxWidth(),
+                            ) {
+                                Row(
+                                    horizontalArrangement = Arrangement.Center,
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier.padding(10.dp)
+                                ) {
+                                    Text(
+                                        fontSize = 18.sp,
+                                        modifier = Modifier.fillMaxWidth(.8f).fillMaxHeight(),
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color.White,
+                                        text = "${datetime2.hour}:${datetime2.minute}"
+                                    )
+
+                                    if (showTimePicker) {
+                                        val context = LocalContext.current
+                                        val calendar = Calendar.getInstance().apply {
+                                            set(Calendar.HOUR_OF_DAY, datetime2.hour)
+                                            set(Calendar.MINUTE, datetime2.minute)
+                                        }
+                                        TimePickerDialog(
+                                            context,
+                                            { _, hour, minute ->
+                                                datetime2 = LocalDateTime.of(
+                                                    datetime2.toLocalDate(),
+                                                    LocalTime.of(hour, minute)
+                                                )
+                                                showTimePicker = false
+                                                dateready2 = true
+                                                Log.d("mytag", "${datetime2}")
+                                            },
+                                            calendar.get(Calendar.HOUR_OF_DAY),
+                                            calendar.get(Calendar.MINUTE),
+                                            true
+                                        ).show()
+                                    }
+                                    Button(modifier = Modifier.background(Color(193,90,23)),onClick = { showTimePicker = true }) {
+                                        Image(painter = painterResource(R.drawable.clock), contentDescription = "ae")
+                                    }
+                                }
+                            }
+
                         }
-                        Button(onClick = { showTimePicker = true }) {
-                            Text("Select Time")
-                        }
-                        if (dateready2) Text("${datetime2.toLocalTime()}")
+
+                    }
+
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+                    // Create input fields for event creation details
+                    TextField(
+                        value = eventName,
+                        onValueChange = { eventName = it },
+                        label = { Text("Event Name") },
+                        modifier = Modifier
+                            .fillMaxWidth(),
+                        colors = TextFieldDefaults.textFieldColors(backgroundColor = Color(244,245,250)),
+                    )
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    TextField(
+                        value = description,
+                        onValueChange = { description = it },
+                        label = { Text("Description (optional)") },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(150.dp),
+                        colors = TextFieldDefaults.textFieldColors(backgroundColor = Color(244,245,250)),
+                    )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // Add a way to upload a picture
+                    ImageUploadButton(onImageSelected = { uri ->
+                        pictureUri = uri
+                        //todo: scegli formato immagine standard
+                    })
 
 
-                        // Add a way to upload a picture
-                        ImageUploadButton(onImageSelected = { uri ->
-                            pictureUri = uri
-                            //todo: scegli formato immagine standard
-                        })
+                    val contentResolver = LocalContext.current.contentResolver
 
 
-                        val contentResolver = LocalContext.current.contentResolver
+                    // Create an "Create Event" button with a custom color
+                    Button(
+                        onClick = {
+                            errorMessage = null
 
 
-                        // Create an "Create Event" button with a custom color
-                        Button(
-                            onClick = {
-                                errorMessage = null
-
-
-                                val datetimeReal = LocalDateTime.of(
-                                    datetime.toLocalDate(),
-                                    datetime2.toLocalTime()
-                                ).toString().replace('T', ' ')
-                                val base64Image =
-                                    Utility.convertImageUriToBase64(contentResolver, pictureUri)
-                                        .toString()
-                                val position: LatLng = PositionHolder.lastPostion
-                                val latitude: Double = position.latitude
-                                val longitude: Double = position.longitude
-                                //eventName e description
-                                EventCreationBackend.register(
-                                    datetimeReal,
-                                    base64Image,
-                                    latitude,
-                                    longitude,
-                                    eventName,
-                                    description
-                                )
-
-
-                            },
-                            modifier = Modifier.fillMaxWidth(),
-                            colors = ButtonDefaults.buttonColors(backgroundColor = Color.Blue) // Custom color for the button
-                        ) {
-                            Text(
-                                text = "Create event",
-                                color = Color.White // Set the text color to white
+                            val datetimeReal = LocalDateTime.of(
+                                datetime.toLocalDate(),
+                                datetime2.toLocalTime()
+                            ).toString().replace('T', ' ')
+                            val base64Image =
+                                Utility.convertImageUriToBase64(contentResolver, pictureUri)
+                                    .toString()
+                            val position: LatLng = PositionHolder.lastPostion
+                            val latitude: Double = position.latitude
+                            val longitude: Double = position.longitude
+                            //eventName e description
+                            EventCreationBackend.register(
+                                datetimeReal,
+                                base64Image,
+                                latitude,
+                                longitude,
+                                eventName,
+                                description
                             )
-                        }
+
+
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.buttonColors(backgroundColor = Color.Blue) // Custom color for the button
+                    ) {
+                        Text(
+                            text = "Create event",
+                            color = Color.White // Set the text color to white
+                        )
                     }
                 }
             }
         }
     }
-}
 @Composable
 fun HomePage(navController: NavHostController) {
     // Define mutable state variable to hold events data
@@ -950,8 +984,7 @@ fun HomePage(navController: NavHostController) {
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var token = InformationHolder.token
     var fetched by remember { mutableStateOf(false) }
-
-
+    var ActiveSearchFilter by remember { mutableStateOf("") }
 
     // Fetch events data from the backend using the provided token
     LaunchedEffect(token) {
@@ -959,6 +992,8 @@ fun HomePage(navController: NavHostController) {
         EventsBackend.fetchEvents(token) { result ->
             result.onSuccess { eventsData ->
                 events = eventsData
+
+                events = events.sortedBy { e -> e.distance  }
                 fetched=true
             }
             result.onFailure { error ->
@@ -968,68 +1003,137 @@ fun HomePage(navController: NavHostController) {
     }
 
     // Utilize a Surface to contain the content of the home page
-    Surface(
-        modifier = Modifier.fillMaxSize(),
-        color = Utility.bootstrapDark // A darker shade of blue-gray
+    Column(
+        modifier = Modifier.fillMaxSize()
+            .padding(8.dp, 0.dp ,8.dp , 0.dp),
     ) {
-        // Utilize Column to organize the content in a column
+        // TOP SCREEN
+
         Column(
             modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
+                .fillMaxWidth()
+                .fillMaxHeight(.4f)
+                .clip(RoundedCornerShape(0.dp, 0.dp, 16.dp, 16.dp))
+                .background(Color(249, 239, 229)),
+            verticalArrangement = Arrangement.Top,
+        )
+        {
+            //TOP BAR
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(15.dp),
+                horizontalArrangement = Arrangement.Center
+
+            ) {
+                Text(fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Color.Black,text = "EventiFro")
+            }
+
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .fillMaxHeight(.5f)
+                    .padding(20.dp),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.Start
+            ){
+                Text(fontSize = 18.sp, fontWeight = FontWeight.Normal, color = Color.Gray,text = "Hey NameHere,")
+                Text(fontSize = 22.sp, fontWeight = FontWeight.Bold, color = Color.Black,text = "Find amazing events near you")
+            }
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(15.dp),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
+            ){
+
+                TextField(
+                    value = ActiveSearchFilter,
+                    onValueChange = { ActiveSearchFilter = it },
+                    label = { Text("Search for an event!") },
+                    maxLines = 1,
+                    colors = TextFieldDefaults.textFieldColors(backgroundColor = Color.White),
+                    modifier = Modifier
+                        .fillMaxSize()
+                )
+            }
+        }
+
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .fillMaxHeight()
         ) {
-            // Utilize TopAppBar for a stylized top bar
-            TopAppBar(
-                title = {
-                    Text(
-                        text = "Home Page",
-                        style = MaterialTheme.typography.h6,
-                        color = Color.White
-                    )
-                },
-                backgroundColor = Utility.bootstrapSecondary // A darker shade of blue-gray
-            )
-
-            // Add spacing
-            Spacer(modifier = Modifier.height(16.dp))
-
             // Display error message as a Snackbar
             errorMessage?.let {
                 Utility.ErrorSnackbar(errorMessage = errorMessage)
                 Spacer(modifier = Modifier.height(16.dp))
             }
 
-            // Display events in a list
-            if (events.isNotEmpty()) {
-                Column {
-                    events.forEach { event ->
-                        var id = event.id
-                        eventCard(
-                            event = event,
-                            onClick = { navController.navigate("eventDetail/$id") }
+            Column(
+
+            ) {
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(10.dp),
+                    horizontalArrangement = Arrangement.Start
+                ) {
+                    Text(fontSize = 20.sp, color = Color.Gray,text = "NEAREST EVENTS")
+                }
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .fillMaxHeight(.9f)
+                        .padding(10.dp, 0.dp, 10.dp, 0.dp)
+                        .verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.Top,
+                    horizontalAlignment = Alignment.Start
+                ) {
+                    // Display events in a list
+                    if (events.isNotEmpty()) {
+                        events.forEach { event ->
+                            if(!ActiveSearchFilter.isBlank()) {
+                                if(event.name.contains(Regex(ActiveSearchFilter, RegexOption.IGNORE_CASE))){
+                                    var id = event.id
+                                    eventCard(
+                                        event = event,
+                                        onClick = { navController.navigate("eventDetail/$id") }
+                                    )
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                }
+                            } else {
+
+                                var id = event.id
+                                eventCard(
+                                    event = event,
+                                    onClick = { navController.navigate("eventDetail/$id") }
+                                )
+                                Spacer(modifier = Modifier.height(8.dp))
+                            }
+                        }
+                    } else if (fetched) {
+
+                        Text(
+                            text = "No events available.",
+                            style = MaterialTheme.typography.body1,
+                            color = Color.White
                         )
-                        Spacer(modifier = Modifier.height(8.dp))
+                    } else {
+                        Text(
+                            text = "Loading...",
+                            style = MaterialTheme.typography.body1,
+                            color = Color.White
+                        )
+
                     }
                 }
-            } else if (fetched==true) {
-                Text(
-                    text = "No events available.",
-                    style = MaterialTheme.typography.body1,
-                    color = Color.White
-                )
-            } else {
-                Text(
-                    text = "Loading...",
-                    style = MaterialTheme.typography.body1,
-                    color = Color.White
-                )
             }
         }
     }
 }
-
 
 @Composable
 fun DatePickerDialog(selectedDate: LocalDateTime, onDateChange: (LocalDateTime) -> Unit, onDismissRequest: () -> Unit) {
@@ -1133,118 +1237,108 @@ fun RegisterPage(navController: NavHostController) {
             .background(Utility.bootstrapLight) // Custom background color
     ) {
         // Create a Card with elevation and rounded corners
-        Card(
-            modifier = Modifier
-                .padding(16.dp)
-                .fillMaxWidth()
-                .padding(16.dp)
-                .clip(RoundedCornerShape(16.dp)),
-            elevation = 8.dp,
-            backgroundColor = Color.White
-        ) {
             // Create a Column layout for the content
-            Column(
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            // Display error message as a Snackbar
+            errorMessage?.let {
+                Utility.ErrorSnackbar(errorMessage = errorMessage)
+                Spacer(modifier = Modifier.height(16.dp))
+            }
+
+            // Display a "Register" title with custom typography
+            Text(
+                text = "Register",
+                style = MaterialTheme.typography.h4,
+                modifier = Modifier.padding(bottom = 16.dp)
+            )
+
+            // Create input fields for registration details
+            TextField(
+                value = email,
+                onValueChange = { email = it },
+                label = { Text("Email") },
                 modifier = Modifier
-                    .fillMaxSize()
-                    .padding(16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
-            ) {
-                // Display error message as a Snackbar
-                errorMessage?.let {
-                    Utility.ErrorSnackbar(errorMessage = errorMessage)
-                    Spacer(modifier = Modifier.height(16.dp))
-                }
+                    .fillMaxWidth()
+                    .padding(bottom = 16.dp)
+            )
 
-                // Display a "Register" title with custom typography
-                Text(
-                    text = "Register",
-                    style = MaterialTheme.typography.h4,
-                    modifier = Modifier.padding(bottom = 16.dp)
-                )
+            TextField(
+                value = name,
+                onValueChange = { name = it },
+                label = { Text("Name") },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 16.dp)
+            )
 
-                // Create input fields for registration details
-                TextField(
-                    value = email,
-                    onValueChange = { email = it },
-                    label = { Text("Email") },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 16.dp)
-                )
+            TextField(
+                value = password,
+                onValueChange = { password = it },
+                label = { Text("Password") },
+                visualTransformation = PasswordVisualTransformation(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 16.dp)
+            )
 
-                TextField(
-                    value = name,
-                    onValueChange = { name = it },
-                    label = { Text("Name") },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 16.dp)
-                )
+            TextField(
+                value = confirmPassword,
+                onValueChange = { confirmPassword = it },
+                label = { Text("Confirm Password") },
+                visualTransformation = PasswordVisualTransformation(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 16.dp)
+            )
 
-                TextField(
-                    value = password,
-                    onValueChange = { password = it },
-                    label = { Text("Password") },
-                    visualTransformation = PasswordVisualTransformation(),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 16.dp)
-                )
-
-                TextField(
-                    value = confirmPassword,
-                    onValueChange = { confirmPassword = it },
-                    label = { Text("Confirm Password") },
-                    visualTransformation = PasswordVisualTransformation(),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 16.dp)
-                )
-
-                // Create a "Register" button with a custom color
-                Button(
-                    onClick = {
-                        errorMessage = null
-                        if (password == confirmPassword) {
-                            // Call the registration logic (replace with your actual registration logic)
-                            RegistrationBackend.register(email, name, password) { token, userID ->
-                                if (token != null) {
-                                    // Navigate to the home destination after successful registration
-                                    MainScope().launch {
-                                        InformationHolder.token = token
-                                        if (userID != null) {
-                                            InformationHolder.userID = userID
-                                        }
-                                        navController.navigate("homeDestination")
+            // Create a "Register" button with a custom color
+            Button(
+                onClick = {
+                    errorMessage = null
+                    if (password == confirmPassword) {
+                        // Call the registration logic (replace with your actual registration logic)
+                        RegistrationBackend.register(email, name, password) { token, userID ->
+                            if (token != null) {
+                                // Navigate to the home destination after successful registration
+                                MainScope().launch {
+                                    InformationHolder.token = token
+                                    if (userID != null) {
+                                        InformationHolder.userID = userID
                                     }
-                                } else {
-                                    errorMessage = "Have you inserted a valid email? If you are already registered go back to login"
+                                    navController.navigate("homeDestination")
                                 }
+                            } else {
+                                errorMessage = "Have you inserted a valid email? If you are already registered go back to login"
                             }
-                        } else {
-                            errorMessage = "Passwords do not match."
                         }
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.buttonColors(backgroundColor = Utility.bootstrapBlue) // Custom color for the button
-                ) {
-                    Text("Register")
-                }
-                Spacer(modifier = Modifier.height(64.dp))
+                    } else {
+                        errorMessage = "Passwords do not match."
+                    }
+                },
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.buttonColors(backgroundColor = Utility.bootstrapBlue) // Custom color for the button
+            ) {
+                Text("Register")
+            }
+            Spacer(modifier = Modifier.height(64.dp))
 
-                Button(
-                    onClick = {
-                        // Navigate back to the login page
-                        navController.popBackStack("loginDestination", inclusive = false)
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 16.dp),
-                    colors = ButtonDefaults.buttonColors(backgroundColor = Utility.bootstrapSecondary)
-                ) {
-                    Text("Back to Login")
-                }
+            Button(
+                onClick = {
+                    // Navigate back to the login page
+                    navController.popBackStack("loginDestination", inclusive = false)
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 16.dp),
+                colors = ButtonDefaults.buttonColors(backgroundColor = Utility.bootstrapSecondary)
+            ) {
+                Text("Back to Login")
             }
         }
     }
@@ -1259,7 +1353,7 @@ fun RegisterPage(navController: NavHostController) {
 @Composable
 fun eventDetail(navController: NavHostController, id: Int) {
     var token = InformationHolder.token
-    var event by remember { mutableStateOf(Event(0, "", 0.0, 0.0, "", "", "", null)) }
+    var event by remember { mutableStateOf(Event(0, "", 0.0, 0.0, "", "", "", null, 0f)) }
     val coroutineScope = rememberCoroutineScope()
     var errorMessage by remember { mutableStateOf<String?>(null) }
 
@@ -1270,6 +1364,7 @@ fun eventDetail(navController: NavHostController, id: Int) {
         EventDetailsBackend.fetchEventDetails(token, id) { result ->
             result.onSuccess { eventData ->
                 event = eventData
+                Log.d("mytag", event.toString())
             }
             result.onFailure { error ->
                 errorMessage = "Failed to fetch event details: ${error.localizedMessage}"
@@ -1277,71 +1372,126 @@ fun eventDetail(navController: NavHostController, id: Int) {
         }
     }
 
-
-    // Utilize a Surface to contain the content of the home page
-    Surface(
-        modifier = Modifier.fillMaxSize(),
-        color = Utility.bootstrapDark // A darker shade of blue-gray
+    // Utilize Column to organize the content in a column
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .fillMaxHeight(.9f)
+            .padding(20.dp)
+            .verticalScroll(rememberScrollState()),
+        verticalArrangement = Arrangement.Top,
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Utilize Column to organize the content in a column
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
 
-            // Utilize TopAppBar for a stylized top bar
-            TopAppBar(
-                title = {
-                    Text(
-                        text = "Event name",
-                        style = MaterialTheme.typography.h6,
-                        color = Color.White
-                    )
-                },
-                backgroundColor = Utility.bootstrapSecondary // A darker shade of blue-gray
-            )
-
-            // Add spacing
-            Spacer(modifier = Modifier.height(16.dp))
-
-
-            if (event.encoded_image != null && event.encoded_image != "") {
-
-                Text(text = event.name, style = MaterialTheme.typography.h5)
-
-                val image = Utility.base64ToBitmap(event.encoded_image)
-
+        if (event.encoded_image != null && event.encoded_image != "") {
+            val image = Utility.base64ToBitmap(event.encoded_image)
+            Column(
+                modifier = Modifier.clip(RoundedCornerShape(10.dp)),
+            ) {
                 Image(
                     bitmap = image.asImageBitmap(),
                     contentDescription = "contentDescription"
                 )
-                Text(text = event.description ?: "", style = MaterialTheme.typography.body1)
-                //todo: pulsante deve avere testo in base a stato invito
-            } else {
-                Text(
-                    text = "Loading details",
-                    style = MaterialTheme.typography.body1,
-                    color = Color.White
-                )
             }
+            //todo: pulsante deve avere testo in base a stato invito
+        } else {
+            Text(
+                text = "Loading details",
+                style = MaterialTheme.typography.body1,
+                color = Color.White
+            )
+        }
 
-            Button(onClick = {
-                coroutineScope.launch {
-                    //sendApiRequest() TODO: inserire entry in db per richiesta invito
-                }
-                navController.navigate("homeDestination")
-            },
-                colors = ButtonDefaults.buttonColors(backgroundColor = Utility.bootstrapBlue) // Change the background color to red
-            ) {
-                Text(
-                    text = "Request an invite",
-                    style = MaterialTheme.typography.h6,
-                    color = Color.White
-                )
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(0.dp, 5.dp, 0.dp, 5.dp),
+            horizontalArrangement = Arrangement.Start
+
+        ) {
+            Text(text = event.name, fontWeight = FontWeight.Bold, fontSize = 30.sp)
+        }
+        if (!event.date.isNullOrBlank()){
+
+            val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss", Locale.ENGLISH)
+            val date = LocalDateTime.parse(event.date, formatter)
+
+            val monthAbbreviation = date.month.getDisplayName(
+                java.time.format.TextStyle.SHORT,
+                Locale.ENGLISH
+            )
+
+            val dayAbbreviation = date.dayOfWeek.getDisplayName(
+                java.time.format.TextStyle.SHORT,
+                Locale.ENGLISH
+            )
+
+            Text(
+                text = "$dayAbbreviation, ${date.dayOfMonth.toString()} $monthAbbreviation ${date.year.toString()} at  ${date.hour.toString()}:${date.minute.toString()}",
+                style = MaterialTheme.typography.h5.copy(
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 15.sp
+                ),
+                color = Color.Black,
+            )
+        }
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(0.dp, 5.dp, 0.dp, 5.dp),
+            horizontalArrangement = Arrangement.Start
+
+        ) {
+            Text(text = " by ${event.organizerName}",modifier = Modifier.padding(0.dp), fontSize = 20.sp, color = Color.Gray)
+        }
+
+        //distance in km
+        val dis = event.distance?.div(1000)
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(0.dp, 5.dp, 0.dp, 5.dp),
+            horizontalArrangement = Arrangement.Start
+
+        ) {
+            Text(text = "Distant $dis km", modifier = Modifier.padding(0.dp), fontWeight = FontWeight.Bold,fontSize = 20.sp)
+
+        }
+
+        Divider(color = Color.Black, thickness = 1.dp, modifier = Modifier.padding(1.dp))
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(0.dp, 5.dp, 0.dp, 5.dp),
+            horizontalArrangement = Arrangement.Start
+
+        ) {
+            Text(text = "EVENT INFO",modifier = Modifier.padding(0.dp), fontSize = 20.sp, color = Color.Gray)
+        }
+        Column (
+        )
+
+        {
+            Text(text = event.description ?: "No info specified by the author.", fontSize = 15.sp)
+        }
+
+        Divider(color = Color.Black, thickness = 1.dp, modifier = Modifier.padding(1.dp))
+
+        Button(onClick = {
+            coroutineScope.launch {
+                //sendApiRequest() TODO: inserire entry in db per richiesta invito
             }
+            navController.navigate("homeDestination")
+        },
+            colors = ButtonDefaults.buttonColors(backgroundColor = Utility.bootstrapBlue) // Change the background color to red
+        ) {
+            Text(
+                text = "Request an invite",
+                style = MaterialTheme.typography.h6,
+                color = Color.White
+            )
         }
     }
 }
@@ -1376,30 +1526,18 @@ fun HomePageManager(navController: NavHostController) {
     // Utilize a Surface to contain the content of the home page
     Surface(
         modifier = Modifier.fillMaxSize(),
-        color = Utility.bootstrapDark // A darker shade of blue-gray
+        color = Color.White // A darker shade of blue-gray
     ) {
         // Utilize Column to organize the content in a column
         Column(
             modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp),
+                .fillMaxWidth()
+                .fillMaxHeight(.9f)
+                .padding(16.dp)
+                .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Utilize TopAppBar for a stylized top bar
-            TopAppBar(
-                title = {
-                    Text(
-                        text = "Manager Home Page, da fare, per ora copiata da user",
-                        style = MaterialTheme.typography.h6,
-                        color = Color.White
-                    )
-                },
-                backgroundColor = Utility.bootstrapSecondary // A darker shade of blue-gray
-            )
-
-            // Add spacing
-            Spacer(modifier = Modifier.height(16.dp))
 
             // Display error message as a Snackbar
             errorMessage?.let {

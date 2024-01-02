@@ -1,4 +1,7 @@
+
+import android.location.Location
 import android.util.Log
+import com.example.myapplication.PositionHolder
 import okhttp3.Call
 import okhttp3.Callback
 import okhttp3.OkHttpClient
@@ -6,7 +9,6 @@ import okhttp3.Request
 import okhttp3.Response
 import org.json.JSONObject
 import java.io.IOException
-import java.time.LocalDateTime
 
 data class Event(
     val id: Int,
@@ -16,7 +18,8 @@ data class Event(
     val date: String,
     val organizerName: String,
     val encoded_image: String,
-    val description: String?
+    val description: String?,
+    val distance: Float?
 )
 
 object EventDetailsBackend {
@@ -61,15 +64,24 @@ object EventDetailsBackend {
     private fun parseEvent(response: String, idEvento: Int): Event {
         val eventObject = JSONObject(response)
 
+        val latitude = eventObject.optDouble("latitude")
+        val longitude = eventObject.optDouble("longitude")
+
+        val res= FloatArray(1);
+        Location.distanceBetween(latitude, longitude, PositionHolder.lastPostion.latitude, PositionHolder.lastPostion.longitude, res)
+
+        val distanceInMeters = res[0]
+
         return Event(
             id = idEvento,
             name = eventObject.optString("name"),
             latitude = eventObject.optDouble("latitude"),  // Assuming latitude is a double value
             longitude = eventObject.optDouble("longitude"),
-            date = eventObject.optString("date"),
-            organizerName = eventObject.optString("organizerName"),
+            date = eventObject.optString("datetime"),
+            organizerName = eventObject.optString("organizer_name"),
             encoded_image = eventObject.optString("encoded_image"),
-            description = eventObject.optString("description", null) // Assuming description can be null
+            description = eventObject.optString("description", null), // Assuming description can be null
+            distance = distanceInMeters
         )
     }
 }
