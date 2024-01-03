@@ -535,6 +535,7 @@ fun LoginPage(navController: NavHostController) {
                                         InformationHolder.token =
                                             "47358c79536a33cc29477bc094cf79fed4ec6ac242b37e88c34b906679c307b2"
                                         InformationHolder.userID = 3
+                                        InformationHolder.user_name = "Giovanni Farina"
                                         navController.navigate("homeDestination")
                                     },
                                     modifier = Modifier.fillMaxWidth(),
@@ -548,6 +549,7 @@ fun LoginPage(navController: NavHostController) {
                                         InformationHolder.token =
                                             "1cb0395ab04ba4d3a7e61dfe57126a11996f0fea30683b8a30693c7d40d6a977"
                                         InformationHolder.userID = 1
+                                        InformationHolder.user_name = "Giovanni Farina manager"
                                         navController.navigate("HomePageManager")
                                     },
                                     modifier = Modifier.fillMaxWidth(),
@@ -596,7 +598,7 @@ fun LoginPage(navController: NavHostController) {
                                 Button(
                                     onClick = {
                                         errorMessage = null
-                                        LoginBackend.login(username, password) { token, userID, role ->
+                                        LoginBackend.login(username, password) { token, userID, role, user_name ->
                                             if (token != null) {
                                                 savedToken = token
                                                 if (userID != null) {
@@ -610,6 +612,10 @@ fun LoginPage(navController: NavHostController) {
                                                     InformationHolder.token = token
                                                     if (userID != null) {
                                                         InformationHolder.userID = userID
+                                                    }
+                                                    if (user_name != null) {
+                                                        InformationHolder.user_name = user_name
+                                                        Log.d("tempaccio", "$user_name")
                                                     }
                                                     if (role == "user") navController.navigate("homeDestination")
                                                     else if (role == "manager") navController.navigate("HomePageManager")
@@ -1055,6 +1061,8 @@ fun EventCreation(navController: NavHostController) {
             }
         }
     }
+
+
 @Composable
 fun HomePage(navController: NavHostController) {
     // Define mutable state variable to hold events data
@@ -1118,7 +1126,7 @@ fun HomePage(navController: NavHostController) {
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.Start
             ){
-                Text(fontSize = 18.sp, fontWeight = FontWeight.Normal, color = Color.Gray,text = "Hey NameHere,")
+                Text(fontSize = 18.sp, fontWeight = FontWeight.Normal, color = Color.Gray,text = "Hi ${InformationHolder.user_name}")
                 Text(fontSize = 22.sp, fontWeight = FontWeight.Bold, color = Color.Black,text = "Find amazing events near you")
             }
             Column(
@@ -1656,7 +1664,7 @@ fun HomePageManager(navController: NavHostController) {
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.Start
             ){
-                Text(fontSize = 18.sp, fontWeight = FontWeight.Normal, color = Color.Gray,text = "Hey NameHere,")
+                Text(fontSize = 18.sp, fontWeight = FontWeight.Normal, color = Color.Gray,text = "Hi ${InformationHolder.user_name}")
                 Text(fontSize = 22.sp, fontWeight = FontWeight.Bold, color = Color.Black,text = "Here you find all your events")
             }
 

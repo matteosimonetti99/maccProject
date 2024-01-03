@@ -156,6 +156,7 @@ class Components {
                             color = Color.Black
                         )
                         //event desc
+                        Log.d("temporaneo", event.toString())
                         Text(
                             text = "by ${event.organizerName}",
                             style = MaterialTheme.typography.h5.copy(
@@ -173,7 +174,7 @@ class Components {
                             ),
                             color = Color.Black
                         )
-                        val km = event.distance?.div(1000f)
+                        val km = event.distance?.div(1000f)?.toUInt()
                         Text(
                             text = "$km km away",
                             style = MaterialTheme.typography.h5.copy(

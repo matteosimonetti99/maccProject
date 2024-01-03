@@ -74,13 +74,13 @@ object EventsBackend {
                 latitude = latitude,
                 longitude = longitude,
                 date = eventObject.optString("datetime"),
-                organizerName = eventObject.optString("organizerName"),
+                organizerName = eventObject.optString("organizer_name"),
                 description = eventObject.optString("description"),
                 encoded_image = eventObject.optString("encoded_image"),
                 distance = distanceInMeters,
             )
 
-            Log.d("com.example.myapplication.Backend.EventsBackend", "event: $event")
+            Log.d("buggettone", "event: $event")
 
             events.add(event)
         }
