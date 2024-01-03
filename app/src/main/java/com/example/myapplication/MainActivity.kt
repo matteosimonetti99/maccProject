@@ -2,10 +2,12 @@
 package com.example.myapplication
 
 // Other necessary imports
-import BarcodeScannerAppObject
 
+import BarcodeScannerAppObject
 import Event
 import EventDetailsBackend
+import InviteUserBackend
+import JoinRequestsBackend
 import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Activity
@@ -14,8 +16,6 @@ import android.app.TimePickerDialog
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -44,6 +44,7 @@ import androidx.compose.material.BottomNavigationItem
 import androidx.compose.material.Button
 import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.Card
+import androidx.compose.material.Divider
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
 import androidx.compose.material.MaterialTheme
@@ -55,15 +56,12 @@ import androidx.compose.material.TextFieldDefaults
 import androidx.compose.material.TopAppBar
 import androidx.compose.material.Typography
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Event
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Mail
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.QrCodeScanner
-import androidx.compose.material3.Divider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -82,10 +80,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -93,6 +91,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import coil.compose.rememberAsyncImagePainter
+import com.example.jetpackcomposedemo.R
 import com.example.myapplication.Backend.EventCreationBackend
 import com.example.myapplication.Backend.EventsBackend
 import com.example.myapplication.Backend.Invite
@@ -101,13 +100,10 @@ import com.example.myapplication.Backend.InvitesBackend
 import com.example.myapplication.Backend.LoginBackend
 import com.example.myapplication.Backend.RegistrationBackend
 import com.example.myapplication.Components.Companion.JoinRequestItem
-import com.example.myapplication.Components.Companion.StatusButton
 import com.example.myapplication.Components.Companion.eventCard
 import com.example.myapplication.Components.Companion.inviteCard
 import com.example.myapplication.DataHolders.InformationHolder
 import com.example.myapplication.DataHolders.PositionHolder
-import coil.compose.rememberImagePainter
-import com.example.jetpackcomposedemo.R
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.GoogleMap
@@ -838,7 +834,8 @@ fun EventCreation(navController: NavHostController) {
     ) {
         LazyColumn(
             modifier = Modifier
-                .fillMaxSize()
+                .fillMaxWidth()
+                .fillMaxHeight(.95f)
                 .padding(16.dp)
         ) {
             // Create a Card with elevation and rounded corners
@@ -854,7 +851,9 @@ fun EventCreation(navController: NavHostController) {
 
                     // Display an "Event Creation" title with custom typography
                     Row(
-                        modifier = Modifier.fillMaxWidth().padding(0.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(0.dp),
                         horizontalArrangement = Arrangement.Start
                     ) {
                         Text(fontSize = 30.sp, modifier = Modifier.padding(0.dp),fontWeight = FontWeight.Bold, color = Color.Black,text = "Create Event")
@@ -879,18 +878,21 @@ fun EventCreation(navController: NavHostController) {
 
                             Row(
                                 modifier = Modifier
-                                    .background(Color(238, 118, 57))
-                                    .clip(RoundedCornerShape(20.dp))
+                                    .clip(RoundedCornerShape(16.dp))
                                     .fillMaxWidth(),
                             ) {
                                 Row(
+                                    modifier = Modifier
+                                        .background(Color(238, 118, 57))
+                                        .padding(10.dp),
                                     horizontalArrangement = Arrangement.Center,
                                     verticalAlignment = Alignment.CenterVertically,
-                                    modifier = Modifier.padding(10.dp)
                                 ) {
                                     Text(
                                         fontSize = 18.sp,
-                                        modifier = Modifier.fillMaxWidth(.8f).fillMaxHeight(),
+                                        modifier = Modifier
+                                            .fillMaxWidth(.8f)
+                                            .fillMaxHeight(),
                                         fontWeight = FontWeight.Bold,
                                         color = Color.White,
                                         text = "${datetime.toLocalDate().dayOfMonth} ${datetime.toLocalDate().month.getDisplayName(
@@ -911,7 +913,7 @@ fun EventCreation(navController: NavHostController) {
                                         )
                                     }
                                     Button(
-                                        modifier = Modifier.background(Color.Black),
+                                        colors = ButtonDefaults.buttonColors(backgroundColor = Color(193,90,23)),
                                         onClick = { showDatePicker = true }
                                     )
                                     {
@@ -922,20 +924,23 @@ fun EventCreation(navController: NavHostController) {
 
                             Spacer(modifier = Modifier.height(10.dp))
 
-                            Box(
+                            Row(
                                 modifier = Modifier
-                                    .background(Color(238, 118, 57))
-                                    .clip(RoundedCornerShape(20.dp))
+                                    .clip(RoundedCornerShape(16.dp))
                                     .fillMaxWidth(),
                             ) {
                                 Row(
+                                    modifier = Modifier
+                                        .background(Color(238, 118, 57))
+                                        .padding(10.dp),
                                     horizontalArrangement = Arrangement.Center,
                                     verticalAlignment = Alignment.CenterVertically,
-                                    modifier = Modifier.padding(10.dp)
                                 ) {
                                     Text(
                                         fontSize = 18.sp,
-                                        modifier = Modifier.fillMaxWidth(.8f).fillMaxHeight(),
+                                        modifier = Modifier
+                                            .fillMaxWidth(.8f)
+                                            .fillMaxHeight(),
                                         fontWeight = FontWeight.Bold,
                                         color = Color.White,
                                         text = "${datetime2.hour}:${datetime2.minute}"
@@ -963,7 +968,7 @@ fun EventCreation(navController: NavHostController) {
                                             true
                                         ).show()
                                     }
-                                    Button(modifier = Modifier.background(Color(193,90,23)),onClick = { showTimePicker = true }) {
+                                    Button(colors = ButtonDefaults.buttonColors(backgroundColor = Color(193,90,23)),onClick = { showTimePicker = true }) {
                                         Image(painter = painterResource(R.drawable.clock), contentDescription = "ae")
                                     }
                                 }
@@ -1077,8 +1082,9 @@ fun HomePage(navController: NavHostController) {
 
     // Utilize a Surface to contain the content of the home page
     Column(
-        modifier = Modifier.fillMaxSize()
-            .padding(8.dp, 0.dp ,8.dp , 0.dp),
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(8.dp, 0.dp, 8.dp, 0.dp),
     ) {
         // TOP SCREEN
 
@@ -1101,6 +1107,8 @@ fun HomePage(navController: NavHostController) {
             ) {
                 Text(fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Color.Black,text = "EventiFro")
             }
+
+
 
             Column(
                 modifier = Modifier
@@ -1447,49 +1455,16 @@ fun eventDetail(navController: NavHostController, id: Int) {
         }
     }
 
-    // Utilize a Surface to contain the content of the home page
-    Surface(
-        modifier = Modifier.fillMaxSize(),
-        color = Utility.bootstrapDark // A darker shade of blue-gray
+    // Utilize Column to organize the content in a column
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .fillMaxHeight(.9f)
+            .padding(20.dp)
+            .verticalScroll(rememberScrollState()),
+        verticalArrangement = Arrangement.Top,
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Utilize Column to organize the content in a column
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-
-            // Utilize TopAppBar for a stylized top bar
-            TopAppBar(
-                navigationIcon = {
-                    // Back button
-                    IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
-                    }
-                },
-                title = {
-                    Text(
-                        text = "Event name",
-                        style = MaterialTheme.typography.h6,
-                        color = Color.White
-                    )
-                },
-                backgroundColor = Utility.bootstrapSecondary // A darker shade of blue-gray
-            )
-
-
-            // Add spacing
-            Spacer(modifier = Modifier.height(16.dp))
-
-
-            if (event.encoded_image != null && event.encoded_image != "") {
-
-                Text(text = event.name, style = MaterialTheme.typography.h5)
-
-                val image = Utility.base64ToBitmap(event.encoded_image)
-            }
 
         if (event.encoded_image != null && event.encoded_image != "") {
             val image = Utility.base64ToBitmap(event.encoded_image)
@@ -1500,7 +1475,6 @@ fun eventDetail(navController: NavHostController, id: Int) {
                     bitmap = image.asImageBitmap(),
                     contentDescription = "contentDescription"
                 )
-                Text(text = event.description ?: "", style = MaterialTheme.typography.body1)
             }
             //todo: pulsante deve avere testo in base a stato invito
         } else {
@@ -1511,41 +1485,110 @@ fun eventDetail(navController: NavHostController, id: Int) {
             )
         }
 
-            if (invite != null) {
-                Log.d("buttondDebug", "invite è diverso da null, faccio comparire bottone")
-                StatusButton(invite!!)
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(0.dp, 5.dp, 0.dp, 5.dp),
+            horizontalArrangement = Arrangement.Start
+
+        ) {
+            Text(text = event.name, fontWeight = FontWeight.Bold, fontSize = 30.sp)
+        }
+        if (!event.date.isNullOrBlank()){
+
+            val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss", Locale.ENGLISH)
+            val date = LocalDateTime.parse(event.date, formatter)
+
+            val monthAbbreviation = date.month.getDisplayName(
+                java.time.format.TextStyle.SHORT,
+                Locale.ENGLISH
+            )
+
+            val dayAbbreviation = date.dayOfWeek.getDisplayName(
+                java.time.format.TextStyle.SHORT,
+                Locale.ENGLISH
+            )
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(0.dp, 5.dp, 0.dp, 5.dp),
+                horizontalArrangement = Arrangement.Start
+
+            ) {
+                Text(
+                    text = "$dayAbbreviation, ${date.dayOfMonth.toString()} $monthAbbreviation ${date.year.toString()} at  ${date.hour.toString()}:${date.minute.toString()}",
+                    style = MaterialTheme.typography.h5.copy(
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 15.sp
+                    ),
+                    color = Color.Black,
+                )
             }
+        }
 
-            if (invite == null) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(0.dp, 5.dp, 0.dp, 5.dp),
+            horizontalArrangement = Arrangement.Start
 
-                Log.d("buttondDebug", "invite è uguale da null, aspetto che venga fetchato l'invito")
+        ) {
+            Text(text = " by ${event.organizerName}",modifier = Modifier.padding(0.dp), fontSize = 20.sp, color = Color.Gray)
+        }
 
+        //distance in km
+        val dis = event.distance?.div(1000)
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(0.dp, 5.dp, 0.dp, 5.dp),
+            horizontalArrangement = Arrangement.Start
 
-                if (inviteHasBeenFetched) {
-                    Log.d("buttondDebug", "l'invito è stato fetchato, spawno request invite")
+        ) {
+            Text(text = "Distant $dis km", modifier = Modifier.padding(0.dp), fontWeight = FontWeight.Bold,fontSize = 20.sp)
 
-                    Components.requestInviteButton()
-                }
+        }
+
+        Divider(color = Color.Black, thickness = 1.dp, modifier = Modifier.padding(1.dp))
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(0.dp, 5.dp, 0.dp, 5.dp),
+            horizontalArrangement = Arrangement.Start
+
+        ) {
+            Text(text = "EVENT INFO",modifier = Modifier.padding(0.dp), fontSize = 20.sp, color = Color.Gray)
+        }
+        Column (
+        )
+
+        {
+            Text(text = event.description ?: "No info specified by the author.", fontSize = 15.sp)
+        }
+
+        Divider(color = Color.Black, thickness = 1.dp, modifier = Modifier.padding(1.dp))
+
+        Button(onClick = {
+            coroutineScope.launch {
+                //sendApiRequest() TODO: inserire entry in db per richiesta invito
             }
-
+            navController.navigate("homeDestination")
+        },
+            colors = ButtonDefaults.buttonColors(backgroundColor = Utility.bootstrapBlue) // Change the background color to red
+        ) {
+            Text(
+                text = "Request an invite",
+                style = MaterialTheme.typography.h6,
+                color = Color.White
+            )
         }
     }
 }
 
 
-
-
-
-
-
-
-
-
 //MANAGER COMPOSABLES
-
-
-
-
 
 @Composable
 fun HomePageManager(navController: NavHostController) {
@@ -1556,8 +1599,7 @@ fun HomePageManager(navController: NavHostController) {
     var fetched by remember { mutableStateOf(false) }
     var showCamera by remember { mutableStateOf(false) }
     var qrCodeValue by remember { mutableStateOf<String?>(null) }
-
-
+    var ActiveSearchFilter by remember { mutableStateOf("") }
 
     // Fetch events data from the backend using the provided token
     LaunchedEffect(token) {
@@ -1574,91 +1616,173 @@ fun HomePageManager(navController: NavHostController) {
     }
 
     // Utilize a Surface to contain the content of the home page
-    Surface(
-        modifier = Modifier.fillMaxSize(),
-        color = Color.White // A darker shade of blue-gray
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(8.dp, 0.dp, 8.dp, 0.dp)
+            .background(Color.White)
     ) {
         // Utilize Column to organize the content in a column
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .fillMaxHeight(.9f)
-                .padding(16.dp)
-                .verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
+                .fillMaxHeight(.4f)
+                .clip(RoundedCornerShape(0.dp, 0.dp, 16.dp, 16.dp))
+                .background(Color(249, 239, 229)),
+            verticalArrangement = Arrangement.Top,
         ) {
             // Utilize TopAppBar for a stylized top bar
-            TopAppBar(
-                title = {
-                    Text(
-                        text = "Manager Home Page",
-                        style = MaterialTheme.typography.h6,
-                        color = Color.White
-                    )
-                },
-                backgroundColor = Utility.bootstrapSecondary // A darker shade of blue-gray
-            )
-
             // Display error message as a Snackbar
             errorMessage?.let {
                 Components.ErrorSnackbar(errorMessage = errorMessage)
                 Spacer(modifier = Modifier.height(16.dp))
             }
 
-            // Display events in a list
-            if (events.isNotEmpty()) {
-              LazyColumn() {
-                  items(events) { event ->
-                      val id = event.id
-                      Log.d("myeventi", id.toString())
-                      eventCard(
-                          event = event,
-                          onClick = { navController.navigate("eventDetailManager/$id") }
-                      )
-                      Spacer(modifier = Modifier.height(8.dp))
-                  }
-              }
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(15.dp),
+                horizontalArrangement = Arrangement.Center
 
-            } else if (fetched==true) {
-                Text(
-                    text = "No events available.",
-                    style = MaterialTheme.typography.body1,
-                    color = Color.White
-                )
-            } else {
-                Text(
-                    text = "Loading...",
-                    style = MaterialTheme.typography.body1,
-                    color = Color.White
+            ) {
+                Text(fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Color.Black,text = "EventiFro")
+            }
+
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .fillMaxHeight(.5f)
+                    .padding(20.dp),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.Start
+            ){
+                Text(fontSize = 18.sp, fontWeight = FontWeight.Normal, color = Color.Gray,text = "Hey NameHere,")
+                Text(fontSize = 22.sp, fontWeight = FontWeight.Bold, color = Color.Black,text = "Here you find all your events")
+            }
+
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(15.dp),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
+            ){
+
+                TextField(
+                    value = ActiveSearchFilter,
+                    onValueChange = { ActiveSearchFilter = it },
+                    label = { Text("Search for an event!") },
+                    maxLines = 1,
+                    colors = TextFieldDefaults.textFieldColors(backgroundColor = Color.White),
+                    modifier = Modifier
+                        .fillMaxSize()
                 )
             }
         }
 
         Box(
             modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp)
+                .fillMaxWidth()
+                .fillMaxHeight()
         ) {
-            // QR code button
-            IconButton(
-                onClick = {
-                    var qr_code = "5297fd949ca3f9c3b98d4e40a01812caa508c247e3cf9e57fabb79b0dcf08397"
-                    var invite_id = 4
-
-                    showCamera = true
-                },
-                modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .padding(8.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.QrCodeScanner,
-                    contentDescription = null,
-                    tint = Color.White
-                )
+            // Display error message as a Snackbar
+            errorMessage?.let {
+                Components.ErrorSnackbar(errorMessage = errorMessage)
+                Spacer(modifier = Modifier.height(16.dp))
             }
-        }
+
+            Column(
+
+            ) {
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(10.dp),
+                    horizontalArrangement = Arrangement.Start
+                ) {
+                    Text(fontSize = 20.sp, color = Color.Gray, text = "NEAREST EVENTS")
+                }
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .fillMaxHeight(.9f)
+                        .padding(10.dp, 0.dp, 10.dp, 0.dp)
+                        .verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.Top,
+                    horizontalAlignment = Alignment.Start
+                ) {
+
+                    // Display events in a list
+                    if (events.isNotEmpty()) {
+                        events.forEach { event ->
+                            if (!ActiveSearchFilter.isBlank()) {
+                                if (event.name.contains(
+                                        Regex(
+                                            ActiveSearchFilter,
+                                            RegexOption.IGNORE_CASE
+                                        )
+                                    )
+                                ) {
+                                    var id = event.id
+                                    eventCard(
+                                        event = event,
+                                        onClick = { navController.navigate("eventDetail/$id") }
+                                    )
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                }
+                            } else {
+
+                                var id = event.id
+                                eventCard(
+                                    event = event,
+                                    onClick = { navController.navigate("eventDetail/$id") }
+                                )
+                                Spacer(modifier = Modifier.height(8.dp))
+                            }
+                        }
+
+                    } else if (fetched) {
+                        Text(
+                            text = "No events available.",
+                            style = MaterialTheme.typography.body1,
+                            color = Color.White
+                        )
+                    } else {
+                        Text(
+                            text = "Loading...",
+                            style = MaterialTheme.typography.body1,
+                            color = Color.White
+                        )
+                    }
+                }
+
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(16.dp)
+                ) {
+                    // QR code button
+                    IconButton(
+                        onClick = {
+                            var qr_code =
+                                "5297fd949ca3f9c3b98d4e40a01812caa508c247e3cf9e57fabb79b0dcf08397"
+                            var invite_id = 4
+
+                            showCamera = true
+                        },
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                            .padding(8.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.QrCodeScanner,
+                            contentDescription = null,
+                            tint = Color.White
+                        )
+                    }
+                }
+            }
     }
 
     if (showCamera) {
@@ -1691,6 +1815,7 @@ fun HomePageManager(navController: NavHostController) {
             BarcodeScannerAppObject.BarcodeScannerApp(LocalContext.current)
         }
     }
+    }
 }
 
 @Composable
@@ -1718,86 +1843,138 @@ fun eventDetailManager(navController: NavHostController, id: Int) {
         }
     }
 
-    // Utilize a Surface to contain the content of the home page
-    Surface(
-        modifier = Modifier.fillMaxSize(),
-        color = Utility.bootstrapDark // A darker shade of blue-gray
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .fillMaxHeight(.9f)
+            .padding(20.dp)
+            .verticalScroll(rememberScrollState()),
+        verticalArrangement = Arrangement.Top,
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Utilize Column to organize the content in a column
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(top = AppBarHeight),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
 
-            // Utilize TopAppBar for a stylized top bar
-
-
-
-            // Add spacing
-            Spacer(modifier = Modifier.height(16.dp))
-
-
-            if (event.encoded_image != null && event.encoded_image != "") {
-
-                Text(text = event.name, style = MaterialTheme.typography.h5)
-
-                val image = Utility.base64ToBitmap(event.encoded_image)
-
+        if (event.encoded_image != null && event.encoded_image != "") {
+            val image = Utility.base64ToBitmap(event.encoded_image)
+            Column(
+                modifier = Modifier.clip(RoundedCornerShape(10.dp)),
+            ) {
                 Image(
                     bitmap = image.asImageBitmap(),
                     contentDescription = "contentDescription"
                 )
-                Text(text = event.description ?: "", style = MaterialTheme.typography.body1)
+            }
+            //todo: pulsante deve avere testo in base a stato invito
+        } else {
+            Text(
+                text = "Loading details",
+                style = MaterialTheme.typography.body1,
+                color = Color.White
+            )
+        }
 
-                // Button for joining requests
-                Button(
-                    onClick = {
-                        // Navigate to the joining requests page
-                        navController.navigate("joinRequests/${event.id}")
-                    }
-                ) {
-                    Text(text = "View join requests")
-                }
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(0.dp, 5.dp, 0.dp, 5.dp),
+            horizontalArrangement = Arrangement.Start
 
-                // Button for inviting users
-                Button(
-                    onClick = {
-                        navController.navigate("InviteUserForm/${event.id}")
-                    }
-                ) {
-                    Text(text = "Invite users")
-                }
-            } else {
+        ) {
+            Text(text = event.name, fontWeight = FontWeight.Bold, fontSize = 30.sp)
+        }
+        if (!event.date.isNullOrBlank()){
+
+            val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss", Locale.ENGLISH)
+            val date = LocalDateTime.parse(event.date, formatter)
+
+            val monthAbbreviation = date.month.getDisplayName(
+                java.time.format.TextStyle.SHORT,
+                Locale.ENGLISH
+            )
+
+            val dayAbbreviation = date.dayOfWeek.getDisplayName(
+                java.time.format.TextStyle.SHORT,
+                Locale.ENGLISH
+            )
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(0.dp, 5.dp, 0.dp, 5.dp),
+                horizontalArrangement = Arrangement.Start
+
+            ) {
                 Text(
-                    text = "Loading details",
-                    style = MaterialTheme.typography.body1,
-                    color = Color.White
+                    text = "$dayAbbreviation, ${date.dayOfMonth.toString()} $monthAbbreviation ${date.year.toString()} at  ${date.hour.toString()}:${date.minute.toString()}",
+                    style = MaterialTheme.typography.h5.copy(
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 15.sp
+                    ),
+                    color = Color.Black,
                 )
             }
         }
-    }
-    TopAppBar(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(AppBarHeight),
-        navigationIcon = {
-            // Back button
-            IconButton(onClick = { navController.popBackStack() }) {
-                Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(0.dp, 5.dp, 0.dp, 5.dp),
+            horizontalArrangement = Arrangement.Start
+
+        ) {
+            Text(text = " by ${event.organizerName}",modifier = Modifier.padding(0.dp), fontSize = 20.sp, color = Color.Gray)
+        }
+
+        //distance in km
+        val dis = event.distance?.div(1000)
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(0.dp, 5.dp, 0.dp, 5.dp),
+            horizontalArrangement = Arrangement.Start
+
+        ) {
+            Text(text = "Distant $dis km", modifier = Modifier.padding(0.dp), fontWeight = FontWeight.Bold,fontSize = 20.sp)
+
+        }
+
+        Divider(color = Color.Black, thickness = 1.dp, modifier = Modifier.padding(1.dp))
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(0.dp, 5.dp, 0.dp, 5.dp),
+            horizontalArrangement = Arrangement.Start
+
+        ) {
+            Text(text = "EVENT INFO",modifier = Modifier.padding(0.dp), fontSize = 20.sp, color = Color.Gray)
+        }
+        Column (
+        )
+
+        {
+            Text(text = event.description ?: "No info specified by the author.", fontSize = 15.sp)
+        }
+
+        Divider(color = Color.Black, thickness = 1.dp, modifier = Modifier.padding(1.dp))
+
+        Button(
+            onClick = {
+                // Navigate to the joining requests page
+                navController.navigate("joinRequests/${event.id}")
             }
-        },
-        title = {
-            Text(
-                text = "Event name",
-                style = MaterialTheme.typography.h6,
-                color = Color.White
-            )
-        },
-        backgroundColor = Utility.bootstrapSecondary // A darker shade of blue-gray
-    )
+        ) {
+            Text(text = "View join requests")
+        }
+
+        // Button for inviting users
+        Button(
+            onClick = {
+                navController.navigate("InviteUserForm/${event.id}")
+            }
+        ) {
+            Text(text = "Invite users")
+        }
+    }
 }
 
 @Composable
@@ -1847,7 +2024,7 @@ fun joinRequests(navController: NavHostController, eventId: Int) {
             navigationIcon = {
                 // Back button
                 IconButton(onClick = { navController.popBackStack() }) {
-                    Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                    Icon(imageVector = Icons.Filled.ArrowBack, contentDescription = "Back")
                 }
             },
             title = { Text("Join Requests", color = Color.White) }, // Change as needed
@@ -1883,7 +2060,7 @@ fun InviteUserForm(navController: NavHostController, eventId: Int) {
                             navController.navigateUp()
                         }
                     ) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = Color.Black)
+                        Icon(Icons.Filled.ArrowBack, contentDescription = "Back", tint = Color.Black)
                     }
                 }
             )
