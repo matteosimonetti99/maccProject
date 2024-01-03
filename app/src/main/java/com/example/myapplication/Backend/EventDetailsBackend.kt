@@ -1,7 +1,7 @@
 
 import android.location.Location
 import android.util.Log
-import com.example.myapplication.PositionHolder
+import com.example.myapplication.DataHolders.PositionHolder
 import okhttp3.Call
 import okhttp3.Callback
 import okhttp3.OkHttpClient

@@ -564,7 +564,7 @@ fun LoginPage(navController: NavHostController) {
 
 
                                 if (errorMessage != null) {
-                                    Utility.ErrorSnackbar(errorMessage = errorMessage)
+                                    Components.ErrorSnackbar(errorMessage = errorMessage)
                                     Spacer(modifier = Modifier.height(16.dp))
                                 }
 
@@ -754,7 +754,7 @@ fun myInvitesPage(navController: NavHostController) {
 
         // Display error message as a Snackbar
         errorMessage?.let {
-            Utility.ErrorSnackbar(errorMessage = errorMessage)
+            Components.ErrorSnackbar(errorMessage = errorMessage)
             Spacer(modifier = Modifier.height(16.dp))
         }
 
@@ -1299,7 +1299,7 @@ fun RegisterPage(navController: NavHostController) {
         ) {
             // Display error message as a Snackbar
             errorMessage?.let {
-                Utility.ErrorSnackbar(errorMessage = errorMessage)
+                Components.ErrorSnackbar(errorMessage = errorMessage)
                 Spacer(modifier = Modifier.height(16.dp))
             }
 
@@ -1501,12 +1501,6 @@ fun eventDetail(navController: NavHostController, id: Int) {
                     contentDescription = "contentDescription"
                 )
                 Text(text = event.description ?: "", style = MaterialTheme.typography.body1)
-            } else {
-                Text(
-                    text = "Loading details",
-                    style = MaterialTheme.typography.body1,
-                    color = Color.White
-                )
             }
             //todo: pulsante deve avere testo in base a stato invito
         } else {
@@ -1702,7 +1696,7 @@ fun HomePageManager(navController: NavHostController) {
 @Composable
 fun eventDetailManager(navController: NavHostController, id: Int) {
     var token = InformationHolder.token
-    var event by remember { mutableStateOf(Event(0, "", 0.0, 0.0, "", "", "", null)) }
+    var event by remember { mutableStateOf(Event(0, "", 0.0, 0.0, "", "", "", null, 0.0f)) }
     val coroutineScope = rememberCoroutineScope()
     var errorMessage by remember { mutableStateOf<String?>(null) }
     val AppBarHeight = 56.dp
