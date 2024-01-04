@@ -1,6 +1,0 @@
-Tommaso:
-
-- aggiustare distanza km
-- Segnare inviti come scannerizzati
-
-

@@ -6,6 +6,7 @@ import okhttp3.Call
 import okhttp3.Callback
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.Response
 import org.json.JSONArray
 import org.json.JSONException
@@ -109,6 +110,44 @@ object InvitesBackend {
                     // Handle errors from the Flask server
                     Log.e("QRcode", "Unsuccessful response: ${response.code}")
                     onResult(Result.failure(IOException("Failed to fetch invite hash")))
+                }
+            }
+        })
+    }
+
+    fun markInviteAsUsed(inviteID: Int, onResult: (Result<Boolean>) -> Unit) {
+        val client = OkHttpClient()
+
+        val request = Request.Builder()
+            .url("$BASE_URL/markInviteAsUsed/$inviteID")
+            .header("Authorization", InformationHolder.token)
+            .post("".toRequestBody(null)) // Empty body for POST request
+            .build()
+
+        client.newCall(request).enqueue(object : Callback {
+            override fun onFailure(call: Call, e: IOException) {
+                // Handle connection failure
+                onResult(Result.failure(e))
+            }
+
+            override fun onResponse(call: Call, response: Response) {
+                val responseBody = response.body?.string()
+                Log.d("markInviteAsUsed", "Response body: $responseBody")
+
+                if (response.isSuccessful && responseBody != null) {
+                    try {
+                        val jsonObject = JSONObject(responseBody)
+                        val message = jsonObject.getString("message")
+                        Log.d("markInviteAsUsed", "Message: $message")
+                        onResult(Result.success(true))
+                    } catch (e: JSONException) {
+                        Log.e("markInviteAsUsed", "Failed to parse JSON response", e)
+                        onResult(Result.failure(e))
+                    }
+                } else {
+                    // Handle errors from the Flask server
+                    Log.e("markInviteAsUsed", "Unsuccessful response: ${response.code}")
+                    onResult(Result.failure(IOException("Failed to mark invite as used")))
                 }
             }
         })

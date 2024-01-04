@@ -3,6 +3,7 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.util.Log
 import android.view.View
+import androidx.annotation.OptIn
 import androidx.camera.core.*
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
@@ -91,6 +92,13 @@ object BarcodeScannerAppObject {
                                             // If the QR code is valid, set the flag
                                             if (result == true) {
                                                 qrCodeDetected = true
+
+                                                InvitesBackend.markInviteAsUsed(inviteID = 4) { result ->
+                                                    result.onSuccess { result ->
+                                                        Log.d("markInviteAsUsed", "Invite marked as used succesfully")
+                                                    }
+                                                }
+
                                             }
 
                                             //todo: Add code here to remove the invitation from the database

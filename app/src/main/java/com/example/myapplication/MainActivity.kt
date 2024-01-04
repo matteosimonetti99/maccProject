@@ -1735,7 +1735,7 @@ fun HomePageManager(navController: NavHostController) {
                                     var id = event.id
                                     eventCard(
                                         event = event,
-                                        onClick = { navController.navigate("eventDetail/$id") }
+                                        onClick = { navController.navigate("eventDetailManager/$id") }
                                     )
                                     Spacer(modifier = Modifier.height(8.dp))
                                 }
@@ -1744,7 +1744,7 @@ fun HomePageManager(navController: NavHostController) {
                                 var id = event.id
                                 eventCard(
                                     event = event,
-                                    onClick = { navController.navigate("eventDetail/$id") }
+                                    onClick = { navController.navigate("eventDetailManager/$id") }
                                 )
                                 Spacer(modifier = Modifier.height(8.dp))
                             }
@@ -1835,7 +1835,7 @@ fun eventDetailManager(navController: NavHostController, id: Int) {
     val AppBarHeight = 56.dp
 
 
-    Log.d("inviteDetailDebug", "fetcho l'evento $id")
+    Log.d("inviteDetailDebugManager", "fetcho l'evento $id")
 
 
     // Fetch events data from the backend using the provided token
