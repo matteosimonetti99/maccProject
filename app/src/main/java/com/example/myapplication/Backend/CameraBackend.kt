@@ -1,4 +1,5 @@
 import android.Manifest
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.pm.PackageManager
 import android.util.Log
@@ -25,6 +26,7 @@ import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
 // Composable function for the Barcode Scanner App
+@SuppressLint("StaticFieldLeak")
 object BarcodeScannerAppObject {
 
     // Executor service for camera operations
@@ -35,7 +37,7 @@ object BarcodeScannerAppObject {
     private val REQUIRED_PERMISSIONS = arrayOf(Manifest.permission.CAMERA)
 
     // Composable function for the Barcode Scanner App
-    @Composable
+    @OptIn(ExperimentalGetImage::class) @Composable
     fun BarcodeScannerApp(context: Context) {
         // State variables for camera preview, QR code detection, and detected QR code value
         var previewView by remember { mutableStateOf<PreviewView?>(null) }
@@ -90,19 +92,7 @@ object BarcodeScannerAppObject {
                                             Log.d("checkQRcode", "$result")
 
                                             // If the QR code is valid, set the flag
-                                            if (result == true) {
-                                                qrCodeDetected = true
-
-                                                InvitesBackend.markInviteAsUsed(inviteID = 4) { result ->
-                                                    result.onSuccess { result ->
-                                                        Log.d("markInviteAsUsed", "Invite marked as used succesfully")
-                                                    }
-                                                }
-
-                                            }
-
-                                            //todo: Add code here to remove the invitation from the database
-
+                                            if (result == true) qrCodeDetected = true
                                         }
                                         result.onFailure { error ->
                                             Log.d(

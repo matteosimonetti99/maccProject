@@ -34,9 +34,11 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.BottomNavigation
@@ -61,7 +63,9 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Event
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.PersonAdd
 import androidx.compose.material.icons.filled.Place
+import androidx.compose.material.icons.filled.QrCode
 import androidx.compose.material.icons.filled.QrCodeScanner
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.TextButton
@@ -299,7 +303,7 @@ class MainActivity : ComponentActivity() {
                             },
                             icon = {
                                 Icon(
-                                    imageVector = Icons.Default.AccountCircle,
+                                    imageVector = Icons.Default.PersonAdd,
                                     contentDescription = "My Invites"
                                 )
                             },
@@ -1609,30 +1613,32 @@ fun ConfirmationLogout(onDismiss: () -> Unit, onConfirm: () -> Unit) {
     var openDialog by remember { mutableStateOf(true) }
 
     if (openDialog) {
-        AlertDialog(
-            onDismissRequest = {
-                openDialog = false
-                onDismiss()
-            },
-            title = { Text("Confirmation") },
-            text = { Text("Are you sure you want to logout?") },
-            confirmButton = {
-                TextButton(onClick = {
-                    openDialog = false
-                    onConfirm()
-                }) {
-                    Text("Confirm")
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = {
+        MaterialTheme {
+            AlertDialog(
+                onDismissRequest = {
                     openDialog = false
                     onDismiss()
-                }) {
-                    Text("Cancel")
+                },
+                title = { Text("Confirmation") },
+                text = { Text("Are you sure you want to logout?") },
+                confirmButton = {
+                    TextButton(onClick = {
+                        openDialog = false
+                        onConfirm()
+                    }) {
+                        Text("Confirm")
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = {
+                        openDialog = false
+                        onDismiss()
+                    }) {
+                        Text("Cancel")
+                    }
                 }
-            }
-        )
+            )
+        }
     }
 }
 @Composable
@@ -1642,7 +1648,6 @@ fun HomePageManager(navController: NavHostController) {
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var token = InformationHolder.token
     var fetched by remember { mutableStateOf(false) }
-    var showCamera by remember { mutableStateOf(false) }
     var qrCodeValue by remember { mutableStateOf<String?>(null) }
     var ActiveSearchFilter by remember { mutableStateOf("") }
     var showDialog by remember { mutableStateOf(false) }
@@ -1825,63 +1830,8 @@ fun HomePageManager(navController: NavHostController) {
                     }
                 }
 
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(16.dp)
-                ) {
-                    // QR code button
-                    IconButton(
-                        onClick = {
-                            var qr_code =
-                                "5297fd949ca3f9c3b98d4e40a01812caa508c247e3cf9e57fabb79b0dcf08397"
-                            var invite_id = 4
 
-                            showCamera = true
-                        },
-                        modifier = Modifier
-                            .align(Alignment.TopEnd)
-                            .padding(8.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.QrCodeScanner,
-                            contentDescription = null,
-                            tint = Color.White
-                        )
-                    }
-                }
             }
-    }
-
-    if (showCamera) {
-
-        Log.d("MyCamera", "received message to open camera")
-
-        if (ContextCompat.checkSelfPermission(
-                LocalContext.current,
-                Manifest.permission.CAMERA
-            ) != PackageManager.PERMISSION_GRANTED
-        )
-        {
-
-            Log.d("MyCamera", "Need to acquire permissions")
-            // Request the CAMERA permission
-            val REQUEST_CAMERA_PERMISSION_CODE = 1001
-            ActivityCompat.requestPermissions(
-                LocalContext.current as Activity,
-                arrayOf(Manifest.permission.CAMERA),
-                REQUEST_CAMERA_PERMISSION_CODE
-            )
-        }
-
-        if (ContextCompat.checkSelfPermission(
-                LocalContext.current,
-                Manifest.permission.CAMERA
-            ) == PackageManager.PERMISSION_GRANTED
-        ) {
-            Log.d("MyCamera", "Permissions acquired")
-            BarcodeScannerAppObject.BarcodeScannerApp(LocalContext.current)
-        }
     }
     }
 }
@@ -1893,6 +1843,7 @@ fun eventDetailManager(navController: NavHostController, id: Int) {
     val coroutineScope = rememberCoroutineScope()
     var errorMessage by remember { mutableStateOf<String?>(null) }
     val AppBarHeight = 56.dp
+    var showCamera by remember { mutableStateOf(false) }
 
 
     Log.d("inviteDetailDebugManager", "fetcho l'evento $id")
@@ -1920,6 +1871,31 @@ fun eventDetailManager(navController: NavHostController, id: Int) {
         verticalArrangement = Arrangement.Top,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp)
+        ) {
+            // QR code button
+            IconButton(
+                onClick = {
+                    var qr_code =
+                        "5297fd949ca3f9c3b98d4e40a01812caa508c247e3cf9e57fabb79b0dcf08397"
+                    var invite_id = 4
+
+                    showCamera = true
+                },
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(8.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.QrCodeScanner,
+                    contentDescription = null,
+                    tint = Color.Black
+                )
+            }
+        }
 
         if (event.encoded_image != null && event.encoded_image != "") {
             val image = Utility.base64ToBitmap(event.encoded_image)
@@ -1931,7 +1907,6 @@ fun eventDetailManager(navController: NavHostController, id: Int) {
                     contentDescription = "contentDescription"
                 )
             }
-            //todo: pulsante deve avere testo in base a stato invito
         } else {
             Text(
                 text = "Loading details",
@@ -2042,6 +2017,38 @@ fun eventDetailManager(navController: NavHostController, id: Int) {
         ) {
             Text(text = "Invite users")
         }
+    }
+
+    if (showCamera) {
+
+        Log.d("MyCamera", "received message to open camera")
+
+        if (ContextCompat.checkSelfPermission(
+                LocalContext.current,
+                Manifest.permission.CAMERA
+            ) != PackageManager.PERMISSION_GRANTED
+        )
+        {
+
+            Log.d("MyCamera", "Need to acquire permissions")
+            // Request the CAMERA permission
+            val REQUEST_CAMERA_PERMISSION_CODE = 1001
+            ActivityCompat.requestPermissions(
+                LocalContext.current as Activity,
+                arrayOf(Manifest.permission.CAMERA),
+                REQUEST_CAMERA_PERMISSION_CODE
+            )
+        }
+
+        if (ContextCompat.checkSelfPermission(
+                LocalContext.current,
+                Manifest.permission.CAMERA
+            ) == PackageManager.PERMISSION_GRANTED
+        ) {
+            Log.d("MyCamera", "Permissions acquired")
+            BarcodeScannerAppObject.BarcodeScannerApp(LocalContext.current)
+        }
+        else showCamera=false
     }
 }
 

@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.AlertDialog
 import androidx.compose.material.Button
+import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.Card
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Snackbar
@@ -438,22 +439,20 @@ class Components {
 
             // Display button
             Button(
+                colors = ButtonDefaults.buttonColors(backgroundColor = buttonColor),
                 onClick = {
                     // Handle button click
                     if (invite.status == "accepted") {
                         showQRCode = true
                     }
-                },
-                modifier = Modifier
-                    .padding(8.dp)
-                    .background(buttonColor, shape = RoundedCornerShape(4.dp))
+                }
             ) {
                 if (invite.status == "accepted") {
-                    Text(text = "get the QR code", color = Color.White)
+                    Text(text = "Get the QR code", color = Color.Black)
 
                 }
                 else {
-                    Text(text = invite.status, color = Color.White)
+                    Text(text = invite.status.capitalize(), color = Color.Black)
                 }
             }
         }
