@@ -58,10 +58,13 @@ import androidx.compose.material.Typography
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Event
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.QrCodeScanner
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -71,6 +74,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
@@ -352,7 +356,7 @@ class MainActivity : ComponentActivity() {
                                 }
                             )
 
-                            // Profile Page
+                            /* Profile Page
                             BottomNavigationItem(
                                 selected = navController.currentDestination?.route == "ManagerProfile",
                                 onClick = {
@@ -367,7 +371,7 @@ class MainActivity : ComponentActivity() {
                                 label = {
                                     Text(text = "Profile")
                                 }
-                            )
+                            )*/
                         }
 
 
@@ -738,22 +742,6 @@ fun myInvitesPage(navController: NavHostController) {
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
 
-        // Logout Button
-        Button(
-            onClick = {
-                InformationHolder.token=""
-                navController.navigate("loginDestination")
-            },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(50.dp)
-        ) {
-            Text("Logout", color = Color.White)
-        }
-
-        // Add spacing
-        Spacer(modifier = Modifier.height(16.dp))
-
         // Display error message as a Snackbar
         errorMessage?.let {
             Components.ErrorSnackbar(errorMessage = errorMessage)
@@ -1071,6 +1059,7 @@ fun HomePage(navController: NavHostController) {
     val token = InformationHolder.token
     var fetched by remember { mutableStateOf(false) }
     var ActiveSearchFilter by remember { mutableStateOf("") }
+    var showDialog by remember { mutableStateOf(false) }
 
     // Fetch events data from the backend using the provided token
     LaunchedEffect(token) {
@@ -1110,12 +1099,30 @@ fun HomePage(navController: NavHostController) {
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(15.dp),
-                horizontalArrangement = Arrangement.Center
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically // Align vertically in the center
 
             ) {
                 Text(fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Color.Black,text = "EventiFro")
-            }
 
+
+            Button(
+                onClick = { showDialog = true },
+                modifier = Modifier
+                    .padding(start = 8.dp)
+
+            ) {
+                Text("Logout") // Use your preferred text here
+            }
+        }
+
+        if (showDialog) {
+            ConfirmationLogout(
+                onDismiss = { showDialog = false },
+                onConfirm = { InformationHolder.token=""
+                    navController.navigate("loginDestination") }
+            )
+        }
 
 
             Column(
@@ -1597,7 +1604,37 @@ fun eventDetail(navController: NavHostController, id: Int) {
 
 
 //MANAGER COMPOSABLES
+@Composable
+fun ConfirmationLogout(onDismiss: () -> Unit, onConfirm: () -> Unit) {
+    var openDialog by remember { mutableStateOf(true) }
 
+    if (openDialog) {
+        AlertDialog(
+            onDismissRequest = {
+                openDialog = false
+                onDismiss()
+            },
+            title = { Text("Confirmation") },
+            text = { Text("Are you sure you want to logout?") },
+            confirmButton = {
+                TextButton(onClick = {
+                    openDialog = false
+                    onConfirm()
+                }) {
+                    Text("Confirm")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = {
+                    openDialog = false
+                    onDismiss()
+                }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
+}
 @Composable
 fun HomePageManager(navController: NavHostController) {
     // Define mutable state variable to hold events data
@@ -1608,6 +1645,10 @@ fun HomePageManager(navController: NavHostController) {
     var showCamera by remember { mutableStateOf(false) }
     var qrCodeValue by remember { mutableStateOf<String?>(null) }
     var ActiveSearchFilter by remember { mutableStateOf("") }
+    var showDialog by remember { mutableStateOf(false) }
+
+
+
 
     // Fetch events data from the backend using the provided token
     LaunchedEffect(token) {
@@ -1650,11 +1691,30 @@ fun HomePageManager(navController: NavHostController) {
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(15.dp),
-                horizontalArrangement = Arrangement.Center
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically // Align vertically in the center
+
 
             ) {
-                Text(fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Color.Black,text = "EventiFro")
+                Text(fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Color.Black,text = "EventiFro",modifier = Modifier.weight(1f))
+
+            Button(
+                onClick = { showDialog = true },
+                modifier = Modifier
+                    .padding(start = 8.dp)
+
+            ) {
+                Text("Logout") // Use your preferred text here
             }
+        }
+
+        if (showDialog) {
+            ConfirmationLogout(
+                onDismiss = { showDialog = false },
+                onConfirm = { InformationHolder.token=""
+                    navController.navigate("loginDestination") }
+            )
+        }
 
             Column(
                 modifier = Modifier
