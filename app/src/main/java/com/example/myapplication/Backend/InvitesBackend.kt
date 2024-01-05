@@ -4,6 +4,7 @@ import android.util.Log
 import com.example.myapplication.DataHolders.InformationHolder
 import okhttp3.Call
 import okhttp3.Callback
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
@@ -152,6 +153,50 @@ object InvitesBackend {
             }
         })
     }*/
+
+    fun requestAnInvite(eventID: Int, inviteeID: Int, onResult: (Result<Boolean>) -> Unit) {
+        val client = OkHttpClient()
+
+        val jsonBody = JSONObject().apply {
+            put("event_id", eventID)
+            put("invitee_id", inviteeID)
+        }
+        val requestBody = jsonBody.toString().toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull())
+
+        val request = Request.Builder()
+            .url("$BASE_URL/createInvite")
+            .header("Authorization", InformationHolder.token)
+            .post(requestBody)
+            .build()
+
+        client.newCall(request).enqueue(object : Callback {
+            override fun onFailure(call: Call, e: IOException) {
+                // Handle connection failure
+                onResult(Result.failure(e))
+            }
+
+            override fun onResponse(call: Call, response: Response) {
+                val responseBody = response.body?.string()
+                Log.d("requestAnInvite", "Response body: $responseBody")
+
+                if (response.isSuccessful && responseBody != null) {
+                    try {
+                        val jsonObject = JSONObject(responseBody)
+                        val message = jsonObject.getString("message")
+                        Log.d("requestAnInvite", "Message: $message")
+                        onResult(Result.success(true))
+                    } catch (e: JSONException) {
+                        Log.e("requestAnInvite", "Failed to parse JSON response", e)
+                        onResult(Result.failure(e))
+                    }
+                } else {
+                    // Handle errors from the Flask server
+                    Log.e("requestAnInvite", "Unsuccessful response: ${response.code}")
+                    onResult(Result.failure(IOException("Failed to request an invite")))
+                }
+            }
+        })
+    }
 
     fun checkQRcode(eventID: Int, qrCode: String, onResult: (Result<Int>) -> Unit) {
         val client = OkHttpClient()

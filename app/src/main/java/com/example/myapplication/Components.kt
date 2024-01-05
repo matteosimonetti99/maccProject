@@ -175,9 +175,12 @@ class Components {
                             ),
                             color = Color.Black
                         )
-                        val km = event.distance?.div(1000f)?.toUInt()
+                        val distance = event.distance?.div(1000f)
+
+                        //round to 2 decimal places
+                        val roundedDistance = String.format("%.1f", distance)
                         Text(
-                            text = "$km km away",
+                            text = "$roundedDistance km away",
                             style = MaterialTheme.typography.h5.copy(
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 15.sp
@@ -322,9 +325,13 @@ class Components {
                             ),
                             color = Color.Black
                         )
-                        val km = event.distance?.div(1000f)
+                        val distance = event.distance?.div(1000f)
+
+                        //round to 2 decimal places
+                        val roundedDistance = String.format("%.1f", distance)
+
                         Text(
-                            text = "$km km away",
+                            text = "$roundedDistance km away",
                             style = MaterialTheme.typography.h5.copy(
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 15.sp
@@ -350,6 +357,42 @@ class Components {
                 }
             }
 
+        }
+
+        @Composable
+        fun SuccessScreen(message: String, onDismiss : () -> Unit) {
+            AlertDialog(
+                onDismissRequest = {
+                    // Close the dialog when onDismissRequest is called
+                    onDismiss()
+                },
+                title = { Text(text = "Success") },
+                text = {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(message)
+                    }
+                },
+                buttons = {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(8.dp),
+                        horizontalArrangement = Arrangement.End
+                    ) {
+                        TextButton(onClick = {
+                            // Close the dialog when the button is clicked
+                            onDismiss()
+                        }) {
+                            Text("Close")
+                        }
+                    }
+                }
+            )
         }
 
         @Composable
