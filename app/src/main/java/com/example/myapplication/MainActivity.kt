@@ -16,6 +16,8 @@ import android.app.TimePickerDialog
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -121,6 +123,7 @@ import com.google.maps.android.compose.MarkerInfoWindow
 import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.rememberCameraPositionState
 import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import java.time.LocalDateTime
@@ -606,7 +609,7 @@ fun LoginPage(navController: NavHostController) {
                                 Button(
                                     onClick = {
                                         errorMessage = null
-                                        LoginBackend.login(username, password) { token, userID, role, user_name ->
+                                        LoginBackend.login(username, password) { token, userID, user_name, role ->
                                             if (token != null) {
                                                 savedToken = token
                                                 if (userID != null) {
@@ -624,6 +627,7 @@ fun LoginPage(navController: NavHostController) {
                                                     if (user_name != null) {
                                                         InformationHolder.user_name = user_name
                                                         Log.d("tempaccio", "$user_name")
+                                                        Log.d("tempaccio", "$role")
                                                     }
                                                     if (role == "user") navController.navigate("homeDestination")
                                                     else if (role == "manager") navController.navigate("HomePageManager")
@@ -790,21 +794,6 @@ fun myInvitesPage(navController: NavHostController) {
 }
 
 
-//TODO: aggiungi parte utente
-//@Composable
-//fun UserProfileSection(user: User?) {
-//    // Customize this based on the user data you receive
-//    if (user != null) {
-//        // Display user profile information, e.g., name, email, etc.
-//        Text(text = "Name: ${user.name}", color = Color.White)
-//        Text(text = "Email: ${user.email}", color = Color.White)
-//
-//        // Display profile picture if available
-//        user.profilePictureUrl?.let { url ->
-//            ProfilePicture(url)
-//        }
-//    }
-//}
 
 
 
@@ -1006,17 +995,18 @@ fun EventCreation(navController: NavHostController) {
                     // Add a way to upload a picture
                     ImageUploadButton(onImageSelected = { uri ->
                         pictureUri = uri
-                        //todo: scegli formato immagine standard
                     })
 
 
                     val contentResolver = LocalContext.current.contentResolver
+                    var buttonEnabled by remember { mutableStateOf(true) }
 
 
                     // Create an "Create Event" button with a custom color
                     Button(
                         onClick = {
                             errorMessage = null
+                            buttonEnabled = false
 
 
                             val datetimeReal = LocalDateTime.of(
@@ -1038,9 +1028,14 @@ fun EventCreation(navController: NavHostController) {
                                 eventName,
                                 description
                             )
+                            Handler(Looper.getMainLooper()).postDelayed({
+                                // Code to execute after the delay
+                                navController.navigate("HomePageManager")
+                            }, 3000)
 
 
                         },
+                        enabled = buttonEnabled,
                         modifier = Modifier.fillMaxWidth(),
                         colors = ButtonDefaults.buttonColors(backgroundColor = Color.Blue) // Custom color for the button
                     ) {
@@ -1495,7 +1490,6 @@ fun eventDetail(navController: NavHostController, id: Int) {
                     contentDescription = "contentDescription"
                 )
             }
-            //todo: pulsante deve avere testo in base a stato invito
         } else {
             Text(
                 text = "Loading details",
@@ -1591,7 +1585,7 @@ fun eventDetail(navController: NavHostController, id: Int) {
 
         Button(onClick = {
             coroutineScope.launch {
-                //sendApiRequest() TODO: inserire entry in db per richiesta invito
+                //sendApiRequest()
             }
             navController.navigate("homeDestination")
         },

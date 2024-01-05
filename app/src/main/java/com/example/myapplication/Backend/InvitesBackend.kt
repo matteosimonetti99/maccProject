@@ -161,6 +161,8 @@ object InvitesBackend {
             .header("Authorization", InformationHolder.token)
             .get()
             .build()
+        Log.d("checkQrCode", "$BASE_URL/checkqr/$eventID/$qrCode")
+
 
         client.newCall(request).enqueue(object : Callback {
 

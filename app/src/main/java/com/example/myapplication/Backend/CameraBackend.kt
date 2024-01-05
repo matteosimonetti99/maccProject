@@ -42,6 +42,7 @@ object BarcodeScannerAppObject {
         // State variables for camera preview, QR code detection, and detected QR code value
         var previewView by remember { mutableStateOf<PreviewView?>(null) }
         var qrCodeDetected by remember { mutableStateOf(false) }
+        var flag by remember { mutableStateOf(false) }
         var detectedQRCodeValue by remember { mutableStateOf<String?>(null) }
         var res by remember { mutableStateOf(0) }
 
@@ -76,8 +77,9 @@ object BarcodeScannerAppObject {
 
                         scanner.process(inputImage)
                             .addOnSuccessListener { barcode ->
-                                if (barcode.isNotEmpty() && barcode[0].valueType == Barcode.TYPE_TEXT) {
+                                if (!flag && barcode.isNotEmpty() && barcode[0].valueType == Barcode.TYPE_TEXT) {
                                     // If a QR code is detected, handle the result
+                                    flag=true
                                     Log.d(
                                         "MyCamera",
                                         "QR Code Detected: ${barcode[0].displayValue}"
@@ -86,8 +88,7 @@ object BarcodeScannerAppObject {
                                     detectedQRCodeValue = barcode[0].displayValue
 
                                     // Check the QR code with the backend
-                                    //TODO: PER MATTEO: Ho hardcodato l'inviteid numero 4, perché avevo quel qr.
-                                    //TODO: PER MATTEO: Tu dovrai prenderlo dalla pagina dell'evento su cui viene messo il pulsante per il qr
+
                                     InvitesBackend.checkQRcode(eventID, detectedQRCodeValue!!) { result ->
                                         result.onSuccess { result ->
                                             Log.d("checkQRcode", "$result")
@@ -153,9 +154,6 @@ object BarcodeScannerAppObject {
             } else {
                 // If QR code is detected, show relevant UI
                 Text("QR Code Detected: $detectedQRCodeValue and $res")
-
-
-                //TODO: Add a button here to return to the home screen
             }
         }
     }

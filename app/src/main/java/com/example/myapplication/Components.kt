@@ -262,8 +262,7 @@ class Components {
                                         horizontalAlignment = Alignment.CenterHorizontally
                                     ){
                                         Log.d("ae", event.date)
-                                        //event date e null!!, non so perchè
-                                        /* TODO: uncomment
+
                                         val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss", Locale.ENGLISH)
                                         val date = LocalDateTime.parse(event.date, formatter)
 
@@ -290,7 +289,7 @@ class Components {
                                             ),
                                             color = Color.Black,
                                         )
-*/
+
                                     }
                                 }
                             }
@@ -349,23 +348,6 @@ class Components {
 
                     }
                 }
-            }
-
-        }
-
-        @Composable
-        fun requestInviteButton()  {
-            // Display button
-            Button(
-                onClick = {
-                    //todo: requestInviteButton
-                },
-                modifier = Modifier
-                    .padding(8.dp)
-                    .background(color = Color.Cyan, shape = RoundedCornerShape(4.dp))
-            )
-            {
-                Text(text = "request invite")
             }
 
         }

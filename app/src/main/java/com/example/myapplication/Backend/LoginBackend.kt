@@ -57,7 +57,6 @@ object LoginBackend {
                     val userID = jsonResponse.optInt("user_id", -1)
                     val user_name = jsonResponse.optString("user_name", null)
 
-                    Log.d("tempaccio", "$user_name")
 
                     // Passa il token al chiamante
                     onResult(token, userID, user_name, role)
