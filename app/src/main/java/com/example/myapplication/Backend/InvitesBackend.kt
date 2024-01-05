@@ -115,7 +115,7 @@ object InvitesBackend {
         })
     }
 
-    fun markInviteAsUsed(inviteID: Int, onResult: (Result<Boolean>) -> Unit) {
+    /*fun markInviteAsUsed(inviteID: Int, onResult: (Result<Boolean>) -> Unit) {
         val client = OkHttpClient()
 
         val request = Request.Builder()
@@ -151,13 +151,13 @@ object InvitesBackend {
                 }
             }
         })
-    }
+    }*/
 
-    fun checkQRcode(inviteID: Int, qrCode: String, onResult: (Result<Boolean>) -> Unit) {
+    fun checkQRcode(eventID: Int, qrCode: String, onResult: (Result<Int>) -> Unit) {
         val client = OkHttpClient()
 
         val request = Request.Builder()
-            .url("$BASE_URL/checkqr/$inviteID/$qrCode")
+            .url("$BASE_URL/checkqr/$eventID/$qrCode")
             .header("Authorization", InformationHolder.token)
             .get()
             .build()
@@ -176,7 +176,7 @@ object InvitesBackend {
                 if (response.isSuccessful && responseBody != null) {
                     try {
                         val jsonObject = JSONObject(responseBody)
-                        val isCorrect = jsonObject.getBoolean("result")
+                        val isCorrect = jsonObject.getInt("result")
                         Log.d("checkQRCode", "isCorrect: $isCorrect")
                         onResult(Result.success(isCorrect))
                     } catch (e: JSONException) {

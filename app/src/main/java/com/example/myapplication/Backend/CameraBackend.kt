@@ -38,11 +38,12 @@ object BarcodeScannerAppObject {
 
     // Composable function for the Barcode Scanner App
     @OptIn(ExperimentalGetImage::class) @Composable
-    fun BarcodeScannerApp(context: Context) {
+    fun BarcodeScannerApp(context: Context, eventID: Int) {
         // State variables for camera preview, QR code detection, and detected QR code value
         var previewView by remember { mutableStateOf<PreviewView?>(null) }
         var qrCodeDetected by remember { mutableStateOf(false) }
         var detectedQRCodeValue by remember { mutableStateOf<String?>(null) }
+        var res by remember { mutableStateOf(0) }
 
         // Initialize context and executor
         this.context = context
@@ -87,12 +88,13 @@ object BarcodeScannerAppObject {
                                     // Check the QR code with the backend
                                     //TODO: PER MATTEO: Ho hardcodato l'inviteid numero 4, perché avevo quel qr.
                                     //TODO: PER MATTEO: Tu dovrai prenderlo dalla pagina dell'evento su cui viene messo il pulsante per il qr
-                                    InvitesBackend.checkQRcode(4, detectedQRCodeValue!!) { result ->
+                                    InvitesBackend.checkQRcode(eventID, detectedQRCodeValue!!) { result ->
                                         result.onSuccess { result ->
                                             Log.d("checkQRcode", "$result")
 
                                             // If the QR code is valid, set the flag
-                                            if (result == true) qrCodeDetected = true
+                                            qrCodeDetected = true
+                                            res=result
                                         }
                                         result.onFailure { error ->
                                             Log.d(
@@ -150,9 +152,8 @@ object BarcodeScannerAppObject {
                 )
             } else {
                 // If QR code is detected, show relevant UI
-                Text("QR Code Detected: $detectedQRCodeValue")
+                Text("QR Code Detected: $detectedQRCodeValue and $res")
 
-                Text("Welcome!")
 
                 //TODO: Add a button here to return to the home screen
             }

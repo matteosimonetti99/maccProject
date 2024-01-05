@@ -2046,7 +2046,7 @@ fun eventDetailManager(navController: NavHostController, id: Int) {
             ) == PackageManager.PERMISSION_GRANTED
         ) {
             Log.d("MyCamera", "Permissions acquired")
-            BarcodeScannerAppObject.BarcodeScannerApp(LocalContext.current)
+            BarcodeScannerAppObject.BarcodeScannerApp(LocalContext.current, id)
         }
         else showCamera=false
     }
