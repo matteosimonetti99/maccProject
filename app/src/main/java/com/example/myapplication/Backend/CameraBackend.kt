@@ -8,16 +8,30 @@ import androidx.annotation.OptIn
 import androidx.camera.core.*
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
+import androidx.navigation.NavHostController
 import com.example.myapplication.Backend.InvitesBackend
 import com.google.mlkit.vision.barcode.BarcodeScanning
 import com.google.mlkit.vision.barcode.common.Barcode
@@ -38,13 +52,15 @@ object BarcodeScannerAppObject {
 
     // Composable function for the Barcode Scanner App
     @OptIn(ExperimentalGetImage::class) @Composable
-    fun BarcodeScannerApp(context: Context, eventID: Int) {
+    fun BarcodeScannerApp(navController: NavHostController, context: Context, eventID: Int) {
         // State variables for camera preview, QR code detection, and detected QR code value
         var previewView by remember { mutableStateOf<PreviewView?>(null) }
         var qrCodeDetected by remember { mutableStateOf(false) }
         var flag by remember { mutableStateOf(false) }
         var detectedQRCodeValue by remember { mutableStateOf<String?>(null) }
         var res by remember { mutableStateOf(0) }
+        var borderColor by remember { mutableStateOf(Color.Red) }
+        var text by remember { mutableStateOf<String>("Not valid") }
 
         // Initialize context and executor
         this.context = context
@@ -153,7 +169,49 @@ object BarcodeScannerAppObject {
                 )
             } else {
                 // If QR code is detected, show relevant UI
-                Text("QR Code Detected: $detectedQRCodeValue and $res")
+                //Text("QR Code Detected: $detectedQRCodeValue and $res")
+
+                if (res==0) {
+                    text="Not valid"
+                    borderColor=Color.Red
+                }
+                else if (res==1) {
+                    text="Already used"
+                    borderColor=Color(1.0f, 0.647f, 0.0f)
+                }
+                else {
+                    text="Valid"
+                    borderColor=Color(0xFF228B22)
+                }
+                Column(
+                    modifier = Modifier.fillMaxSize()
+                        .padding(0.dp, 0.dp, 0.dp, 60.dp)
+
+
+
+                    ) {
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxWidth()
+                            .border(BorderStroke(10.dp, borderColor)),
+
+
+                    contentAlignment = Alignment.Center
+                    ) {
+                        Text(text = text, color = Color.Black, fontSize = 24.sp)
+
+                        Button(
+                            onClick = { navController.popBackStack() },
+                            modifier = Modifier.align(Alignment.BottomCenter).padding(0.dp, 0.dp, 0.dp, 30.dp)
+                        ) {
+                            Text("Go back")
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                }
             }
         }
     }
