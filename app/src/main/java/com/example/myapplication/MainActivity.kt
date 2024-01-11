@@ -804,7 +804,9 @@ fun EventCreation(navController: NavHostController) {
     var dateready by remember { mutableStateOf(false) }
     var dateready2 by remember { mutableStateOf(false) }
 
-
+    // State variables for location
+    var selectedPosition by remember { mutableStateOf<LatLng?>(null) }
+    var showMapSelector by remember { mutableStateOf(false) }
 
     // Create a Box with a custom background color
     Box(
@@ -954,6 +956,56 @@ fun EventCreation(navController: NavHostController) {
                                 }
                             }
 
+                            Spacer(modifier = Modifier.height(10.dp))
+
+                            Row(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(16.dp))
+                                    .fillMaxWidth(),
+                            ) {
+                                Row(
+                                    modifier = Modifier
+                                        .background(Color(238, 118, 57))
+                                        .padding(10.dp),
+                                    horizontalArrangement = Arrangement.Center,
+                                    verticalAlignment = Alignment.CenterVertically,
+                                ) {
+                                    Text(
+                                        fontSize = 18.sp,
+                                        modifier = Modifier
+                                            .fillMaxWidth(.8f)
+                                            .fillMaxHeight(),
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color.White,
+                                        text =
+                                            if (selectedPosition != null) {
+                                                "Lat: %.3f, Lng: %.3f".format(
+                                                    selectedPosition!!.latitude,
+                                                    selectedPosition!!.longitude
+                                                )
+                                            } else {
+                                                "Select a position"
+                                            }
+                                    )
+
+                                    if (showMapSelector) {
+                                        Components.MapSelector(
+                                            onDismiss = {showMapSelector = false },
+                                            onSelectedPosition = { position ->
+                                                selectedPosition = position
+                                                showMapSelector = false
+                                            }
+                                        )
+
+
+                                    }
+
+                                    Button(colors = ButtonDefaults.buttonColors(backgroundColor = Color(193,90,23)),onClick = { showMapSelector = true }) {
+                                        Image(painter = painterResource(R.drawable.map), contentDescription = "ae")
+                                    }
+                                }
+                            }
+
                         }
 
                     }
@@ -1009,15 +1061,12 @@ fun EventCreation(navController: NavHostController) {
                             val base64Image =
                                 Utility.convertImageUriToBase64(contentResolver, pictureUri)
                                     .toString()
-                            val position: LatLng = PositionHolder.lastPostion
-                            val latitude: Double = position.latitude
-                            val longitude: Double = position.longitude
                             //eventName e description
                             EventCreationBackend.register(
                                 datetimeReal,
                                 base64Image,
-                                latitude,
-                                longitude,
+                                selectedPosition!!.latitude,
+                                selectedPosition!!.longitude,
                                 eventName,
                                 description
                             )

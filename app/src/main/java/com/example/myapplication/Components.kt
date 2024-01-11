@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.absoluteOffset
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -48,6 +49,15 @@ import com.example.myapplication.Backend.Invite
 import com.example.myapplication.Backend.InviteDetailsBackend
 import com.example.myapplication.Backend.InvitesBackend.fetchInviteHashFromAPI
 import com.example.myapplication.DataHolders.InformationHolder
+import com.example.myapplication.DataHolders.PositionHolder
+import com.google.android.gms.maps.model.CameraPosition
+import com.google.android.gms.maps.model.LatLng
+import com.google.maps.android.compose.GoogleMap
+import com.google.maps.android.compose.MapProperties
+import com.google.maps.android.compose.MapUiSettings
+import com.google.maps.android.compose.Marker
+import com.google.maps.android.compose.MarkerState
+import com.google.maps.android.compose.rememberCameraPositionState
 import com.google.zxing.BarcodeFormat
 import com.google.zxing.qrcode.QRCodeWriter
 import java.time.LocalDateTime
@@ -395,6 +405,62 @@ class Components {
             )
         }
 
+        //Composable to display a map to select a location
+        @Composable
+        fun MapSelector(onDismiss: () -> Unit, onSelectedPosition: (LatLng) -> Unit) {
+
+            var selectedPosition by remember { mutableStateOf(LatLng(0.0, 0.0)) }
+
+            val cameraPositionState = rememberCameraPositionState {
+                position = CameraPosition.fromLatLngZoom(PositionHolder.lastPostion, 8f)
+            }
+
+            val mapUiSettings = MapUiSettings(
+                zoomControlsEnabled = false,
+                zoomGesturesEnabled = true,
+                myLocationButtonEnabled = true,
+                mapToolbarEnabled = false
+            )
+            val mapProperties = MapProperties(
+                maxZoomPreference = 12.0f,
+                minZoomPreference = 2f,
+                isMyLocationEnabled = true
+            )
+
+            AlertDialog(
+                onDismissRequest = { onDismiss() },
+                title = { Text(text = "Select Location") },
+                text = {
+                    GoogleMap(
+                        modifier = Modifier.fillMaxSize(),
+                        cameraPositionState = cameraPositionState,
+                        uiSettings = mapUiSettings,
+                        properties = mapProperties,
+                    ) {
+                        selectedPosition = cameraPositionState.position.target
+
+                        Marker(
+                            state = MarkerState(position = selectedPosition),
+                            title = "Selected Position",
+                            snippet = "Event Location"
+                        )
+
+                    }
+                },
+                confirmButton = {
+                    TextButton(onClick = { onSelectedPosition(selectedPosition) }) {
+                        Text("Confirm")
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = {onDismiss()}) {
+                        Text("Cancel")
+                    }
+                }
+            )
+        }
+
+
         @Composable
         fun StatusButton(invite: Invite) {
             var showQRCode by remember { mutableStateOf(false) }
@@ -611,5 +677,6 @@ class Components {
                 }
             }
         }
+
     }
 }
