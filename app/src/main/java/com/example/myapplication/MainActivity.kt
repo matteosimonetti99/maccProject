@@ -328,7 +328,7 @@ class MainActivity : ComponentActivity() {
                                 icon = {
                                     Icon(
                                         imageVector = Icons.Default.Home,
-                                        contentDescription = "Home"
+                                        contentDescription = "My Events"
                                     )
                                 },
                                 label = {
@@ -442,7 +442,11 @@ fun ComposeMap(navController: NavHostController, activity: MainActivity) {
         ) { marker ->
             eventCard(
                 event = event,
-                onClick = {navController.navigate("eventDetail/${event.id}")}
+                onClick = {
+                    Log.d("Giovannone", "Clicked1 on marker")
+                    navController.navigate("eventDetail/${event.id}")
+                    Log.d("Giovannone", "Clicked2 on marker")
+                }
             )
         }
     }
@@ -1110,7 +1114,7 @@ fun HomePage(navController: NavHostController) {
                 verticalAlignment = Alignment.CenterVertically // Align vertically in the center
 
             ) {
-                Text(fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Color.Black,text = "EventiFro")
+                Text(fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Color.Black,text = "Eventi")
 
 
             Button(
@@ -1746,7 +1750,7 @@ fun HomePageManager(navController: NavHostController) {
 
 
             ) {
-                Text(fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Color.Black,text = "EventiFro",modifier = Modifier.weight(1f))
+                Text(fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Color.Black,text = "Eventi",modifier = Modifier.weight(1f))
 
             Button(
                 onClick = { showDialog = true },
@@ -1819,7 +1823,7 @@ fun HomePageManager(navController: NavHostController) {
                         .padding(10.dp),
                     horizontalArrangement = Arrangement.Start
                 ) {
-                    Text(fontSize = 20.sp, color = Color.Gray, text = "YOUR EVENTS")
+                    Text(fontSize = 20.sp, color = Color.Gray, text = "MY EVENTS")
                 }
                 Column(
                     modifier = Modifier
