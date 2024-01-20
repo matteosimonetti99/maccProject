@@ -36,11 +36,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.BottomNavigation
@@ -60,14 +58,11 @@ import androidx.compose.material.TextFieldDefaults
 import androidx.compose.material.TopAppBar
 import androidx.compose.material.Typography
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Event
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.PersonAdd
 import androidx.compose.material.icons.filled.Place
-import androidx.compose.material.icons.filled.QrCode
 import androidx.compose.material.icons.filled.QrCodeScanner
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.TextButton
@@ -80,7 +75,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
@@ -88,7 +82,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
@@ -123,7 +116,6 @@ import com.google.maps.android.compose.MarkerInfoWindow
 import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.rememberCameraPositionState
 import kotlinx.coroutines.MainScope
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import java.time.LocalDateTime
@@ -207,8 +199,6 @@ class MainActivity : ComponentActivity() {
                         composable("myInvitesDestination") {
                             myInvitesPage(navController)
                         }
-
-
 
                         //Manager section
                         composable("HomePageManager") {
@@ -450,44 +440,10 @@ fun ComposeMap(navController: NavHostController, activity: MainActivity) {
         MarkerInfoWindow(
             state = MarkerState(position = marker),
         ) { marker ->
-            Box(
-                modifier = Modifier
-                    .background(
-                        color = MaterialTheme.colors.onPrimary,
-                        shape = RoundedCornerShape(35.dp, 35.dp, 35.dp, 35.dp)
-                    )
-            ) {
-                Column(
-                    modifier = Modifier.padding(16.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Text(
-                        text = event.name,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier
-                            .padding(top = 10.dp)
-                            .fillMaxWidth(),
-                        style = MaterialTheme.typography.h3,
-                        color = MaterialTheme.colors.primary,
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    //.........................Text : description
-                    Text(
-                        text = desc,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier
-                            .padding(top = 10.dp, start = 25.dp, end = 25.dp)
-                            .fillMaxWidth(),
-                        style = MaterialTheme.typography.body1,
-                        color = MaterialTheme.colors.primary,
-                    )
-                    //.........................Spacer
-                    Spacer(modifier = Modifier.height(24.dp))
-
-                }
-
-            }
-
+            eventCard(
+                event = event,
+                onClick = {navController.navigate("eventDetail/${event.id}")}
+            )
         }
     }
 
@@ -916,6 +872,9 @@ fun EventCreation(navController: NavHostController) {
                                     .clip(RoundedCornerShape(16.dp))
                                     .fillMaxWidth(),
                             ) {
+                                var minutes = datetime2.minute.toString()
+                                if(datetime2.minute.toInt()<10)
+                                    minutes = "0${datetime2.minute.toString()}"
                                 Row(
                                     modifier = Modifier
                                         .background(Color(238, 118, 57))
@@ -930,7 +889,7 @@ fun EventCreation(navController: NavHostController) {
                                             .fillMaxHeight(),
                                         fontWeight = FontWeight.Bold,
                                         color = Color.White,
-                                        text = "${datetime2.hour}:${datetime2.minute}"
+                                        text = "${datetime2.hour}:${minutes}"
                                     )
 
                                     if (showTimePicker) {
@@ -1865,31 +1824,6 @@ fun eventDetailManager(navController: NavHostController, id: Int) {
         verticalArrangement = Arrangement.Top,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp)
-        ) {
-            // QR code button
-            IconButton(
-                onClick = {
-                    var qr_code =
-                        "5297fd949ca3f9c3b98d4e40a01812caa508c247e3cf9e57fabb79b0dcf08397"
-                    var invite_id = 4
-
-                    showCamera = true
-                },
-                modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .padding(8.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.QrCodeScanner,
-                    contentDescription = null,
-                    tint = Color.Black
-                )
-            }
-        }
 
         if (event.encoded_image != null && event.encoded_image != "") {
             val image = Utility.base64ToBitmap(event.encoded_image)
@@ -1913,10 +1847,35 @@ fun eventDetailManager(navController: NavHostController, id: Int) {
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(0.dp, 5.dp, 0.dp, 5.dp),
-            horizontalArrangement = Arrangement.Start
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
 
         ) {
-            Text(text = event.name, fontWeight = FontWeight.Bold, fontSize = 30.sp)
+            Text(text = event.name,fontWeight = FontWeight.Bold, fontSize = 30.sp)
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+            ) {
+                // QR code button
+                IconButton(
+                    onClick = {
+                        var qr_code =
+                            "5297fd949ca3f9c3b98d4e40a01812caa508c247e3cf9e57fabb79b0dcf08397"
+                        var invite_id = 4
+
+                        showCamera = true
+                    },
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(8.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.QrCodeScanner,
+                        contentDescription = null,
+                        tint = Color.Black
+                    )
+                }
+            }
         }
         if (!event.date.isNullOrBlank()){
 
@@ -2073,7 +2032,7 @@ fun joinRequests(navController: NavHostController, eventId: Int) {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Utility.bootstrapDark), // Set the background color
+            .background(Color.White), // Set the background color
     ) {
         // Column with content
         LazyColumn(
@@ -2096,8 +2055,8 @@ fun joinRequests(navController: NavHostController, eventId: Int) {
                     Icon(imageVector = Icons.Filled.ArrowBack, contentDescription = "Back")
                 }
             },
-            title = { Text("Join Requests", color = Color.White) }, // Change as needed
-            backgroundColor = Utility.bootstrapSecondary // Set the background color
+            title = { Text("Join Requests", color = Color.Black) }, // Change as needed
+            backgroundColor = Color.White // Set the background color
         )
     }
 }
@@ -2117,8 +2076,8 @@ fun InviteUserForm(navController: NavHostController, eventId: Int) {
     Scaffold(
         topBar = {
             TopAppBar(
-                backgroundColor = Utility.bootstrapSecondary,
-                contentColor = Color.White,
+                backgroundColor = Color.White,
+                contentColor = Color.Black,
                 title = {
                     Text("Invite User")
                 },
@@ -2136,7 +2095,8 @@ fun InviteUserForm(navController: NavHostController, eventId: Int) {
         },
         modifier = Modifier
             .fillMaxSize(),
-        backgroundColor = Utility.bootstrapDark,
+        backgroundColor = Color.White
+        ,
 
         ) {
         Column(
@@ -2150,7 +2110,7 @@ fun InviteUserForm(navController: NavHostController, eventId: Int) {
 
             Text(
                 "Here you can invite users using their email.\nYou can't invite other managers",
-                color = Color.White,
+                color = Color.Black,
                 modifier = Modifier.padding(bottom = 32.dp)
             )
             if(showSuccess) Components.SuccessSnackbar(successMessage = "User invited correctly")
@@ -2160,12 +2120,7 @@ fun InviteUserForm(navController: NavHostController, eventId: Int) {
                 label = { Text("Enter email address") },
                 value = email,
                 onValueChange = { email = it },
-                colors = TextFieldDefaults.textFieldColors(
-                    backgroundColor = Color.White,
-                    cursorColor = Color.Black,
-                    focusedIndicatorColor = Color.Transparent,
-                    unfocusedIndicatorColor = Color.Transparent
-                )
+                colors = TextFieldDefaults.textFieldColors(backgroundColor = Color(244,245,250))
             )
 
             // Add spacing between form and button

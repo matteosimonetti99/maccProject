@@ -64,7 +64,10 @@ class Components {
                 modifier = Modifier
                     .fillMaxWidth()
                     .clickable { onClick() }
-                    .padding(8.dp),
+                    .padding(8.dp)
+                    .background(color = Color.White,
+                                shape = RoundedCornerShape(15.dp)
+                    ),
             ) {
                 // Use Row to create a two-column layout
                 Row(
