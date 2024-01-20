@@ -767,7 +767,9 @@ fun EventCreation(navController: NavHostController) {
     var dateready by remember { mutableStateOf(false) }
     var dateready2 by remember { mutableStateOf(false) }
 
-
+    // State variables for location
+    var selectedPosition by remember { mutableStateOf<LatLng?>(null) }
+    var showMapSelector by remember { mutableStateOf(false) }
 
     // Create a Box with a custom background color
     Box(
@@ -920,6 +922,56 @@ fun EventCreation(navController: NavHostController) {
                                 }
                             }
 
+                            Spacer(modifier = Modifier.height(10.dp))
+
+                            Row(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(16.dp))
+                                    .fillMaxWidth(),
+                            ) {
+                                Row(
+                                    modifier = Modifier
+                                        .background(Color(238, 118, 57))
+                                        .padding(10.dp),
+                                    horizontalArrangement = Arrangement.Center,
+                                    verticalAlignment = Alignment.CenterVertically,
+                                ) {
+                                    Text(
+                                        fontSize = 18.sp,
+                                        modifier = Modifier
+                                            .fillMaxWidth(.8f)
+                                            .fillMaxHeight(),
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color.White,
+                                        text =
+                                            if (selectedPosition != null) {
+                                                "Lat: %.3f, Lng: %.3f".format(
+                                                    selectedPosition!!.latitude,
+                                                    selectedPosition!!.longitude
+                                                )
+                                            } else {
+                                                "Select a position"
+                                            }
+                                    )
+
+                                    if (showMapSelector) {
+                                        Components.MapSelector(
+                                            onDismiss = {showMapSelector = false },
+                                            onSelectedPosition = { position ->
+                                                selectedPosition = position
+                                                showMapSelector = false
+                                            }
+                                        )
+
+
+                                    }
+
+                                    Button(colors = ButtonDefaults.buttonColors(backgroundColor = Color(193,90,23)),onClick = { showMapSelector = true }) {
+                                        Image(painter = painterResource(R.drawable.map), contentDescription = "ae")
+                                    }
+                                }
+                            }
+
                         }
 
                     }
@@ -975,15 +1027,12 @@ fun EventCreation(navController: NavHostController) {
                             val base64Image =
                                 Utility.convertImageUriToBase64(contentResolver, pictureUri)
                                     .toString()
-                            val position: LatLng = PositionHolder.lastPostion
-                            val latitude: Double = position.latitude
-                            val longitude: Double = position.longitude
                             //eventName e description
                             EventCreationBackend.register(
                                 datetimeReal,
                                 base64Image,
-                                latitude,
-                                longitude,
+                                selectedPosition!!.latitude,
+                                selectedPosition!!.longitude,
                                 eventName,
                                 description
                             )
@@ -1391,10 +1440,8 @@ fun eventDetail(navController: NavHostController, id: Int) {
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var invite by remember { mutableStateOf<Invite?>(null) }
     var inviteHasBeenFetched by remember { mutableStateOf(false) }
-
-
-    Log.d("inviteDetailDebug", "fetcho l'evento $id")
-
+    var inviteAbsent by remember { mutableStateOf(false) }
+    var showSuccessScreen by remember { mutableStateOf(false) }
 
     // Fetch events data from the backend using the provided token
     LaunchedEffect(token) {
@@ -1415,13 +1462,24 @@ fun eventDetail(navController: NavHostController, id: Int) {
                 userID = InformationHolder.userID,
                 eventID = id
             ) { result ->
-                val fetchedInvite = result.getOrThrow()
-                if (fetchedInvite.inviteID != -1) {
-                    invite = fetchedInvite
-                }
-                inviteHasBeenFetched = true
-                Log.d("fetchInvite", "Fetched the invite in details page")
+                    result.onSuccess { inviteData ->
 
+                        if (inviteData.inviteID == -1) {
+                            inviteAbsent = true
+                            Log.d("fetchInvite", "Invite absent")
+                        }
+
+                        else {
+
+                            invite = inviteData
+                            inviteHasBeenFetched = true
+                            Log.d("fetchInvite", "Success fetching the invite $invite")
+
+                        }
+                    }
+                    result.onFailure { error ->
+                        Log.d("fetchInvite", "Failed fetching the invite in details page")
+                    }
             }
         } catch (e: Exception) {
             Log.d("fetchInvite", "Failed fetching the invite in details page")
@@ -1510,7 +1568,11 @@ fun eventDetail(navController: NavHostController, id: Int) {
         }
 
         //distance in km
-        val dis = event.distance?.div(1000)
+        val distance = event.distance?.div(1000f)
+
+        //round to 2 decimal places
+        val roundedDistance = String.format("%.1f", distance)
+
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -1518,7 +1580,7 @@ fun eventDetail(navController: NavHostController, id: Int) {
             horizontalArrangement = Arrangement.Start
 
         ) {
-            Text(text = "Distant $dis km", modifier = Modifier.padding(0.dp), fontWeight = FontWeight.Bold,fontSize = 20.sp)
+            Text(text = "Distant $roundedDistance km", modifier = Modifier.padding(0.dp), fontWeight = FontWeight.Bold,fontSize = 20.sp)
 
         }
 
@@ -1542,18 +1604,48 @@ fun eventDetail(navController: NavHostController, id: Int) {
 
         Divider(color = Color.Black, thickness = 1.dp, modifier = Modifier.padding(1.dp))
 
-        Button(onClick = {
-            coroutineScope.launch {
-                //sendApiRequest()
+        if (inviteAbsent) {
+            Button(
+                onClick = {
+                    coroutineScope.launch {
+                        // call the request an invite function from Invites_backend
+                        InvitesBackend.requestAnInvite(
+                            eventID = event.id,
+                            inviteeID = InformationHolder.userID,
+                        ) { result ->
+                            result.onSuccess {
+                                Log.d("requestAnInvite", "Success")
+
+                                showSuccessScreen = true
+                            }
+                        }
+                    }
+                },
+                colors = ButtonDefaults.buttonColors(backgroundColor = Utility.bootstrapBlue) // Change the background color to red
+            ) {
+                Text(
+                    text = "Request an invite",
+                    style = MaterialTheme.typography.h6,
+                    color = Color.White
+                )
             }
-            navController.navigate("homeDestination")
-        },
-            colors = ButtonDefaults.buttonColors(backgroundColor = Utility.bootstrapBlue) // Change the background color to red
-        ) {
-            Text(
-                text = "Request an invite",
-                style = MaterialTheme.typography.h6,
-                color = Color.White
+        }
+
+        if (inviteHasBeenFetched) {
+            invite?.let { Components.StatusButton(invite = it) }
+        }
+
+        if (showSuccessScreen) {
+            //call the success screen from components
+            Components.SuccessScreen(
+                message = "Your request has been sent!",
+                onDismiss = {
+
+                    // Reload the same page
+                    navController.navigate("eventDetail/$id")
+
+                    showSuccessScreen = false
+                }
             )
         }
     }
@@ -1727,7 +1819,7 @@ fun HomePageManager(navController: NavHostController) {
                         .padding(10.dp),
                     horizontalArrangement = Arrangement.Start
                 ) {
-                    Text(fontSize = 20.sp, color = Color.Gray, text = "NEAREST EVENTS")
+                    Text(fontSize = 20.sp, color = Color.Gray, text = "YOUR EVENTS")
                 }
                 Column(
                     modifier = Modifier
@@ -1797,10 +1889,6 @@ fun eventDetailManager(navController: NavHostController, id: Int) {
     var errorMessage by remember { mutableStateOf<String?>(null) }
     val AppBarHeight = 56.dp
     var showCamera by remember { mutableStateOf(false) }
-
-
-    Log.d("inviteDetailDebugManager", "fetcho l'evento $id")
-
 
     // Fetch events data from the backend using the provided token
     LaunchedEffect(token) {
