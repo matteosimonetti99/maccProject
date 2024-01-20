@@ -481,7 +481,7 @@ fun LoginPage(navController: NavHostController) {
                 {
                     Column (modifier = Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally){
                         Image(painter = painterResource(id = R.drawable.map), contentDescription = "ae")
-                        Text(fontSize = 30.sp, fontWeight = FontWeight.Bold, color = Color.Black,text = "Eventi æ")
+                        Text(fontSize = 30.sp, fontWeight = FontWeight.Bold, color = Color.Black,text = "Eventi")
                         Card(
                             modifier = Modifier
                                 .padding(0.dp, 10.dp, 0.dp, 0.dp)
@@ -1500,6 +1500,18 @@ fun eventDetail(navController: NavHostController, id: Int) {
         verticalArrangement = Arrangement.Top,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        // TopAppBar with navigation icon
+        TopAppBar(
+            modifier = Modifier.fillMaxWidth(),
+            navigationIcon = {
+                IconButton(onClick = { navController.popBackStack() }) {
+                    Icon(imageVector = Icons.Default.ArrowBack, contentDescription = "Back")
+                }
+            },
+            title = { /* Your title here */ },
+            backgroundColor = Color.Transparent, // Set your desired background color
+            elevation = 0.dp // Set elevation as needed
+        )
 
         if (event.encoded_image != null && event.encoded_image != "") {
             val image = Utility.base64ToBitmap(event.encoded_image)

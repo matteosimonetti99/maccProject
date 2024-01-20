@@ -470,6 +470,8 @@ class Components {
             var qrCodeBitmap by remember { mutableStateOf<Bitmap?>(null) }
 
             val buttonColor = getButtonColor(invite.status)
+            var isButtonEnabled by remember { mutableStateOf(false) }
+            if (invite.status=="accepted") isButtonEnabled = true
 
             if (showQRCode) {
 
@@ -539,7 +541,8 @@ class Components {
                     if (invite.status == "accepted") {
                         showQRCode = true
                     }
-                }
+                },
+                enabled = isButtonEnabled
             ) {
                 if (invite.status == "accepted") {
                     Text(text = "Get the QR code", color = Color.Black)
