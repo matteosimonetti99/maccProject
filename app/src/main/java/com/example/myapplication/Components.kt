@@ -1,5 +1,6 @@
 package com.example.myapplication
 
+import ChatMessage
 import Event
 import JoinRequestsBackend
 import android.graphics.Bitmap
@@ -25,6 +26,7 @@ import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.Card
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Snackbar
+import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.compose.material.TextButton
 import androidx.compose.runtime.Composable
@@ -170,7 +172,6 @@ class Components {
                             color = Color.Black
                         )
                         //event desc
-                        Log.d("temporaneo", event.toString())
                         Text(
                             text = "by ${event.organizerName}",
                             style = MaterialTheme.typography.h5.copy(
@@ -201,6 +202,28 @@ class Components {
                             color = Color.Black
                         )
                     }
+                }
+            }
+        }
+
+        @Composable
+        fun MessageBubble(message: ChatMessage) {
+            Box(
+                contentAlignment = if (message.userId == InformationHolder.userID) Alignment.CenterEnd else Alignment.CenterStart,
+                modifier = Modifier.fillMaxWidth().padding(4.dp)
+            ) {
+                Surface(
+                    shape = RoundedCornerShape(8.dp),
+                    elevation = 1.dp,
+                    color = if (message.userId == InformationHolder.userID) MaterialTheme.colors.primary else Color.LightGray,
+                    modifier = Modifier.padding(4.dp)
+                ) {
+                    Text(
+                        text = "${message.userName}: ${message.message}",
+                        style = MaterialTheme.typography.body2,
+                        modifier = Modifier.padding(8.dp),
+                        color = if (message.userId == InformationHolder.userID) Color.White else Color.Black
+                    )
                 }
             }
         }

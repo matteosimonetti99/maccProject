@@ -4,6 +4,8 @@ package com.example.myapplication
 // Other necessary imports
 
 import BarcodeScannerAppObject
+import ChatMessage
+import ChatRepository
 import Event
 import EventDetailsBackend
 import InviteUserBackend
@@ -36,10 +38,13 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.BottomNavigation
 import androidx.compose.material.BottomNavigationItem
@@ -58,12 +63,15 @@ import androidx.compose.material.TextFieldDefaults
 import androidx.compose.material.TopAppBar
 import androidx.compose.material.Typography
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Event
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.PersonAdd
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.QrCodeScanner
+import androidx.compose.material.primarySurface
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -103,6 +111,7 @@ import com.example.myapplication.Backend.InvitesBackend
 import com.example.myapplication.Backend.LoginBackend
 import com.example.myapplication.Backend.RegistrationBackend
 import com.example.myapplication.Components.Companion.JoinRequestItem
+import com.example.myapplication.Components.Companion.MessageBubble
 import com.example.myapplication.Components.Companion.eventCard
 import com.example.myapplication.Components.Companion.inviteCard
 import com.example.myapplication.DataHolders.InformationHolder
@@ -243,6 +252,11 @@ class MainActivity : ComponentActivity() {
                         }
                         composable("ManagerProfile") {
                             ManagerProfile(navController)
+                        }
+                        composable("eventChat/{eventId}") { backStackEntry ->
+                            // Obtain eventId from the backStackEntry and convert it to an Int
+                            val eventId = backStackEntry.arguments?.getString("eventId")?.toIntOrNull() ?: return@composable
+                            EventChat(eventId = eventId, navController = navController)
                         }
                     }
 
@@ -1432,7 +1446,127 @@ fun RegisterPage(navController: NavHostController) {
 
 
 
+@Composable
+fun EventChat(eventId: Int, navController: NavHostController) {
+    val coroutineScope = rememberCoroutineScope()
+    var messages by remember { mutableStateOf(listOf<ChatMessage>()) }
+    var newMessageText by remember { mutableStateOf("") }
+    val token = "Your_Token_Here" // Assuming you have a way to retrieve your token
 
+    // Function to fetch chat messages
+    val fetchMessages = {
+        coroutineScope.launch {
+            ChatRepository.getMessages(eventId, token) { result ->
+                result.onSuccess { fetchedMessages ->
+                    messages = fetchedMessages
+                }
+                result.onFailure { exception ->
+                    Log.e("EventChat", "Failed to fetch messages: $exception")
+                }
+            }
+        }
+    }
+
+    // Call fetchMessages when the composable enters the Composition
+    LaunchedEffect(Unit) {
+        fetchMessages()
+    }
+
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text(text = "Event Chat") },
+                backgroundColor = MaterialTheme.colors.primarySurface,
+                navigationIcon = {
+                    IconButton(onClick = { navController.navigateUp() }) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back")
+                    }
+                }
+            )
+        }
+    ) { innerPadding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+                .padding(bottom = 56.dp) // Increase bottom padding to lift input area above the navbar
+        )
+        {
+            // Messages list
+            LazyColumn(
+                modifier = Modifier.weight(1f),
+                reverseLayout = true,
+                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 8.dp)
+            ) {
+                items(messages.reversed()) { message ->
+                    MessageBubble(message = message)
+                }
+            }
+
+            // New message input
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                TextField(
+                    value = newMessageText,
+                    onValueChange = { newMessageText = it },
+                    modifier = Modifier.weight(1f),
+                    colors = TextFieldDefaults.textFieldColors(backgroundColor = Color.LightGray),
+                    shape = RoundedCornerShape(20.dp),
+                    placeholder = { Text("Type a message") },
+                    keyboardActions = KeyboardActions(
+                        onSend = {
+                            coroutineScope.launch {
+                                ChatRepository.postMessage(
+                                    eventId,
+                                    userId = InformationHolder.userID,
+                                    message = newMessageText,
+                                    token
+                                ) { result ->
+                                    result.onSuccess {
+                                        newMessageText = "" // Clear input field
+                                        fetchMessages() // Refresh messages
+                                    }
+                                    result.onFailure { exception ->
+                                        Log.e("ChatDebug", "Failed to post message: $exception")
+                                    }
+                                }
+                            }
+                        }
+                    ),
+                    singleLine = true
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Button(
+                    onClick = {
+                        coroutineScope.launch {
+                            ChatRepository.postMessage(
+                                eventId,
+                                userId = InformationHolder.userID,
+                                message = newMessageText,
+                                token
+                            ) { result ->
+                                result.onSuccess {
+                                    newMessageText = "" // Clear input field
+                                    fetchMessages() // Refresh messages
+                                }
+                                result.onFailure { exception ->
+                                    Log.e("ChatDebug", "Failed to post message: $exception")
+                                }
+                            }
+                        }
+                    },
+                    shape = CircleShape
+                ) {
+                    Icon(Icons.AutoMirrored.Filled.Send, contentDescription = "Send", tint = Color.White)
+                }
+            }
+        }
+    }
+}
 
 
 
@@ -1619,6 +1753,18 @@ fun eventDetail(navController: NavHostController, id: Int) {
         }
 
         Divider(color = Color.Black, thickness = 1.dp, modifier = Modifier.padding(1.dp))
+
+        Button(
+            onClick = { navController.navigate("eventChat/$id") },
+            colors = ButtonDefaults.buttonColors(backgroundColor = Utility.bootstrapBlue) // Change the background color to red
+        ) {
+            Text(
+                text = "Chat",
+                style = MaterialTheme.typography.h6,
+                color = Color.White
+            )
+        }
+
 
         if (inviteAbsent) {
             Button(
@@ -2056,6 +2202,18 @@ fun eventDetailManager(navController: NavHostController, id: Int) {
         }
 
         Divider(color = Color.Black, thickness = 1.dp, modifier = Modifier.padding(1.dp))
+
+        // Button to view the chat
+        Button(
+            onClick = { navController.navigate("eventChat/$id") },
+            colors = ButtonDefaults.buttonColors(backgroundColor = Utility.bootstrapBlue) // Change the background color to red
+        ) {
+            Text(
+                text = "Chat",
+                style = MaterialTheme.typography.h6,
+                color = Color.White
+            )
+        }
 
         Button(
             onClick = {
