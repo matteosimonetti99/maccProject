@@ -1,4 +1,4 @@
-// Assuming your package is defined as follows
+// Assuming your  package is defined as follows
 package com.example.myapplication
 
 // Other necessary imports
@@ -1754,7 +1754,8 @@ fun eventDetail(navController: NavHostController, id: Int) {
 
         Divider(color = Color.Black, thickness = 1.dp, modifier = Modifier.padding(1.dp))
 
-        Button(
+        if(invite?.status == "accepted")
+            Button(
             onClick = { navController.navigate("eventChat/$id") },
             colors = ButtonDefaults.buttonColors(backgroundColor = Utility.bootstrapBlue) // Change the background color to red
         ) {
