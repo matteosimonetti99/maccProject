@@ -40,6 +40,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.BottomNavigation
 import androidx.compose.material.BottomNavigationItem
@@ -79,8 +81,10 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -126,6 +130,9 @@ import java.time.format.TextStyle
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
+
+
+
 
 
 class MainActivity : ComponentActivity() {
@@ -439,14 +446,14 @@ fun ComposeMap(navController: NavHostController, activity: MainActivity) {
              desc = event.description.toString()
         MarkerInfoWindow(
             state = MarkerState(position = marker),
+            onInfoWindowClick = {
+                navController.navigate("homeDestination")
+                        Log.d("tempaccio", "AE")
+            }
         ) { marker ->
             eventCard(
                 event = event,
-                onClick = {
-                    Log.d("Giovannone", "Clicked1 on marker")
-                    navController.navigate("eventDetail/${event.id}")
-                    Log.d("Giovannone", "Clicked2 on marker")
-                }
+                onClick = { Log.d("tempaccio", "AEE")}
             )
         }
     }
@@ -465,6 +472,8 @@ fun LoginPage(navController: NavHostController) {
     var savedToken by remember { mutableStateOf("") }
     var savedID by remember { mutableStateOf(-1) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
+
+    val softwareKeyboardController = LocalSoftwareKeyboardController.current
 
     MaterialTheme(
         typography = Typography(),
@@ -551,7 +560,15 @@ fun LoginPage(navController: NavHostController) {
                                     label = { Text("Username") },
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .padding(bottom = 16.dp)
+                                        .padding(bottom = 16.dp),
+                                    keyboardOptions = KeyboardOptions(
+                                        imeAction = ImeAction.Done // or ImeAction.Default
+                                    ),
+                                    keyboardActions = KeyboardActions(
+                                        onDone = {
+                                            softwareKeyboardController?.hide()
+                                        }
+                                    )
                                 )
 
                                 // Create an input field for the password with a label and password visual transformation
@@ -563,6 +580,15 @@ fun LoginPage(navController: NavHostController) {
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .padding(bottom = 16.dp)
+                                    ,
+                                    keyboardOptions = KeyboardOptions(
+                                        imeAction = ImeAction.Done // or ImeAction.Default
+                                    ),
+                                    keyboardActions = KeyboardActions(
+                                        onDone = {
+                                            softwareKeyboardController?.hide()
+                                        }
+                                    )
                                 )
 
                                 // Create a "Login" button with a custom primary color
