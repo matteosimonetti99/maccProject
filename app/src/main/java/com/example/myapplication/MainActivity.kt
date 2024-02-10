@@ -460,7 +460,7 @@ fun ComposeMap(navController: NavHostController, activity: MainActivity) {
         MarkerInfoWindow(
             state = MarkerState(position = marker),
             onInfoWindowClick = {
-                navController.navigate("homeDestination")
+                navController.navigate("eventDetail/${event.id}")
                         Log.d("tempaccio", "AE")
             }
         ) { marker ->
