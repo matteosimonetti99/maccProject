@@ -1748,6 +1748,7 @@ fun HomePageManager(navController: NavHostController) {
         EventsBackend.fetchEvents(token) { result ->
             result.onSuccess { eventsData ->
                 events = eventsData
+                events = events.sortedBy { e -> e.distance  }
                 fetched=true
             }
             result.onFailure { error ->
