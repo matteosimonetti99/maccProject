@@ -503,7 +503,7 @@ fun LoginPage(navController: NavHostController) {
                 {
                     Column (modifier = Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally){
                         Image(painter = painterResource(id = R.drawable.map), contentDescription = "ae")
-                        Text(fontSize = 30.sp, fontWeight = FontWeight.Bold, color = Color.Black,text = "Eventi")
+                        Text(fontSize = 30.sp, fontWeight = FontWeight.Bold, color = Color.Black,text = "Events")
                         Card(
                             modifier = Modifier
                                 .padding(0.dp, 10.dp, 0.dp, 0.dp)
@@ -521,7 +521,7 @@ fun LoginPage(navController: NavHostController) {
                                 verticalArrangement = Arrangement.Center
                             ) {
 
-                                //DA RIMUOVERE
+                                /*DA RIMUOVERE
 
                                 Button(
                                     onClick = {
@@ -551,6 +551,7 @@ fun LoginPage(navController: NavHostController) {
                                     Text("SKIP Login admin")
                                 }
 
+                                */
                                 //DA RIMUOVERE SOPRA
 
 
@@ -1153,7 +1154,7 @@ fun HomePage(navController: NavHostController) {
                 verticalAlignment = Alignment.CenterVertically // Align vertically in the center
 
             ) {
-                Text(fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Color.Black,text = "Eventi")
+                Text(fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Color.Black,text = "Events")
 
 
             Button(
@@ -1934,7 +1935,7 @@ fun HomePageManager(navController: NavHostController) {
 
 
             ) {
-                Text(fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Color.Black,text = "Eventi",modifier = Modifier.weight(1f))
+                Text(fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Color.Black,text = "Events",modifier = Modifier.weight(1f))
 
             Button(
                 onClick = { showDialog = true },
