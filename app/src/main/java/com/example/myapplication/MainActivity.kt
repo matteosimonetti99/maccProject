@@ -252,7 +252,7 @@ class MainActivity : ComponentActivity() {
                             )
                         ) { backStackEntry ->
                             // Retrieve the token from the arguments
-                            val id = backStackEntry.arguments?.getInt("id") ?: 0
+                            val id = backStackEntry.arguments!!.getInt("id")
 
                             InviteUserForm(navController, id)
                         }
@@ -1355,6 +1355,7 @@ fun RegisterPage(navController: NavHostController) {
     var password by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
     var errorMessage by remember { mutableStateOf<String?>(null) }
+    val softwareKeyboardController = LocalSoftwareKeyboardController.current
 
     // Create a Box with a custom background color
     Box(
@@ -1391,7 +1392,15 @@ fun RegisterPage(navController: NavHostController) {
                 label = { Text("Email") },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(bottom = 16.dp)
+                    .padding(bottom = 16.dp),
+                keyboardOptions = KeyboardOptions(
+                    imeAction = ImeAction.Done // or ImeAction.Default
+                ),
+                keyboardActions = KeyboardActions(
+                    onDone = {
+                        softwareKeyboardController?.hide()
+                    }
+                )
             )
 
             TextField(
@@ -1400,7 +1409,15 @@ fun RegisterPage(navController: NavHostController) {
                 label = { Text("Name") },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(bottom = 16.dp)
+                    .padding(bottom = 16.dp),
+                keyboardOptions = KeyboardOptions(
+                    imeAction = ImeAction.Done // or ImeAction.Default
+                ),
+                keyboardActions = KeyboardActions(
+                    onDone = {
+                        softwareKeyboardController?.hide()
+                    }
+                )
             )
 
             TextField(
@@ -1410,7 +1427,15 @@ fun RegisterPage(navController: NavHostController) {
                 visualTransformation = PasswordVisualTransformation(),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(bottom = 16.dp)
+                    .padding(bottom = 16.dp),
+                keyboardOptions = KeyboardOptions(
+                    imeAction = ImeAction.Done // or ImeAction.Default
+                ),
+                keyboardActions = KeyboardActions(
+                    onDone = {
+                        softwareKeyboardController?.hide()
+                    }
+                )
             )
 
             TextField(
@@ -1420,7 +1445,15 @@ fun RegisterPage(navController: NavHostController) {
                 visualTransformation = PasswordVisualTransformation(),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(bottom = 16.dp)
+                    .padding(bottom = 16.dp),
+                keyboardOptions = KeyboardOptions(
+                    imeAction = ImeAction.Done // or ImeAction.Default
+                ),
+                keyboardActions = KeyboardActions(
+                    onDone = {
+                        softwareKeyboardController?.hide()
+                    }
+                )
             )
 
             // Create a "Register" button with a custom color
@@ -1477,7 +1510,10 @@ fun EventChat(eventId: Int, navController: NavHostController) {
     val coroutineScope = rememberCoroutineScope()
     var messages by remember { mutableStateOf(listOf<ChatMessage>()) }
     var newMessageText by remember { mutableStateOf("") }
+    var sendable by remember { mutableStateOf(true) }
     val token = "Your_Token_Here" // Assuming you have a way to retrieve your token
+    val softwareKeyboardController = LocalSoftwareKeyboardController.current
+
 
     // Function to fetch chat messages
     val fetchMessages = {
@@ -1561,14 +1597,21 @@ fun EventChat(eventId: Int, navController: NavHostController) {
                                     }
                                 }
                             }
+                        },
+                        onDone = {
+                            softwareKeyboardController?.hide()
                         }
+                    ),
+                    keyboardOptions = KeyboardOptions(
+                        imeAction = ImeAction.Done // or ImeAction.Default
                     ),
                     singleLine = true
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Button(
                     onClick = {
-                        coroutineScope.launch {
+                        if(sendable)coroutineScope.launch {
+                            sendable=false
                             ChatRepository.postMessage(
                                 eventId,
                                 userId = InformationHolder.userID,
@@ -1576,6 +1619,7 @@ fun EventChat(eventId: Int, navController: NavHostController) {
                                 token
                             ) { result ->
                                 result.onSuccess {
+                                    sendable=true
                                     newMessageText = "" // Clear input field
                                     fetchMessages() // Refresh messages
                                 }
@@ -2024,14 +2068,24 @@ fun HomePageManager(navController: NavHostController) {
                     // Display events in a list
                     if (events.isNotEmpty()) {
                         events.forEach { event ->
-                            if (!ActiveSearchFilter.isBlank()) {
-                                if (event.name.contains(
-                                        Regex(
-                                            ActiveSearchFilter,
-                                            RegexOption.IGNORE_CASE
+                            if(event.organizerName==InformationHolder.user_name) {
+                                if (!ActiveSearchFilter.isBlank()) {
+                                    if (event.name.contains(
+                                            Regex(
+                                                ActiveSearchFilter,
+                                                RegexOption.IGNORE_CASE
+                                            )
                                         )
-                                    )
-                                ) {
+                                    ) {
+                                        var id = event.id
+                                        eventCard(
+                                            event = event,
+                                            onClick = { navController.navigate("eventDetailManager/$id") }
+                                        )
+                                        Spacer(modifier = Modifier.height(8.dp))
+                                    }
+                                } else {
+
                                     var id = event.id
                                     eventCard(
                                         event = event,
@@ -2039,14 +2093,6 @@ fun HomePageManager(navController: NavHostController) {
                                     )
                                     Spacer(modifier = Modifier.height(8.dp))
                                 }
-                            } else {
-
-                                var id = event.id
-                                eventCard(
-                                    event = event,
-                                    onClick = { navController.navigate("eventDetailManager/$id") }
-                                )
-                                Spacer(modifier = Modifier.height(8.dp))
                             }
                         }
 
